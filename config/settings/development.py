@@ -8,7 +8,7 @@ from .base import *
 
 DEBUG = True
 ALLOWED_HOSTS = ['*']
-
+SECRET_KEY    = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-production')
 # Désactiver HTTPS en dev
 CSRF_COOKIE_SECURE    = False
 SESSION_COOKIE_SECURE = False
@@ -16,7 +16,7 @@ SESSION_COOKIE_SECURE = False
 DATABASES = {
     'default': {
         'ENGINE':   'django.db.backends.postgresql',
-        'NAME':     'empotage_local2',
+        'NAME':     'empotage_local',
         'USER':     'postgres',
         'PASSWORD': '1234',
         'HOST':     '127.0.0.1',

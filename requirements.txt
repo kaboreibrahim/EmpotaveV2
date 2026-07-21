@@ -20,6 +20,7 @@ packaging==26.2
 pillow==12.3.0
 psycopg2-binary==2.9.12
 pycparser==3.0
+python-dotenv==1.2.2
 pydyf==0.12.1
 pyphen==0.17.2
 pytz==2026.2

@@ -5,10 +5,13 @@ Django 5.0.6 — PostgreSQL — Templates HTML — Auth custom
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from django.contrib.messages import constants as messages
 from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+load_dotenv(BASE_DIR / '.env')
 
 # ---------------------------------------------------------------
 # Patch MySQL (conservé au cas où on rebascule sur MySQL)
@@ -18,10 +21,6 @@ try:
     DatabaseFeatures.minimum_database_version = None
 except ImportError:
     pass
-
-SECRET_KEY = 'django-insecure-change-me-in-production'
-
-DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
