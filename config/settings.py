@@ -180,7 +180,7 @@ STORAGES = {
     },
 }
 
-MEDIA_URL = 'medias/'
+MEDIA_URL = '/medias/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'medias')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
