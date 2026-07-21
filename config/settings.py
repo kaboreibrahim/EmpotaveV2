@@ -1,7 +1,5 @@
 """
-config/settings/base.py
-Adapté depuis gestion_conteneurs/settings.py (projet monolithique → multi-apps)
-Django 5.0.6 — PostgreSQL — Templates HTML — Auth custom
+Django settings for config project.
 """
 import os
 from pathlib import Path
@@ -9,7 +7,7 @@ from dotenv import load_dotenv
 from django.contrib.messages import constants as messages
 from django.utils.translation import gettext_lazy as _
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / '.env')
 
@@ -22,7 +20,18 @@ try:
 except ImportError:
     pass
 
-ALLOWED_HOSTS = ['*']
+# ---------------------------------------------------------------
+# Sécurité de base
+# ---------------------------------------------------------------
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-production')
+
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin
+]
 
 # ---------------------------------------------------------------
 # Auth
@@ -73,6 +82,7 @@ CRISPY_CLASS_CONVERTERS = {
 # ---------------------------------------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -117,6 +127,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ---------------------------------------------------------------
+# Base de données
+# ---------------------------------------------------------------
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'empotage_local'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '1234'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    },
+}
+
+# ---------------------------------------------------------------
 # Auth Password Validators
 # ---------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
@@ -141,58 +165,60 @@ USE_TZ = True
 # ---------------------------------------------------------------
 # Fichiers statiques et médias
 # ---------------------------------------------------------------
-STATIC_URL  = '/static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-MEDIA_URL  = 'medias/'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+MEDIA_URL = 'medias/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'medias')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------
-# Auth URLs (identiques à la prod existante)
+# Auth URLs
 # ---------------------------------------------------------------
-LOGIN_URL            = 'login'
-LOGIN_REDIRECT_URL   = 'index'
-LOGOUT_REDIRECT_URL  = 'login'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'login'
 
-# ── Email (SMTP cPanel) ──────────────────────────────────────
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = "mail.oils-of-africa.com"
-# EMAIL_PORT = 465
-# EMAIL_USE_SSL = True
-# EMAIL_USE_TLS = False
-# EMAIL_HOST_USER = "contact@oils-of-africa.com"
-# EMAIL_HOST_PASSWORD = "@AbNnD[G@rSnHFD8"
-# DEFAULT_FROM_EMAIL = "contact@oils-of-africa.com"
-
-# Email settings
-DEBUG=True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ibrahimkabore025@gmail.com'  # Replace with your Gmail address
-EMAIL_HOST_PASSWORD = 'hrwc jlvv ksqy gfeq'
+# ---------------------------------------------------------------
+# Email (SMTP)
+# ---------------------------------------------------------------
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend' if not DEBUG else 'django.core.mail.backends.console.EmailBackend',
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # ---------------------------------------------------------------
 # Messages Bootstrap
 # ---------------------------------------------------------------
 MESSAGE_TAGS = {
-    messages.DEBUG:   'alert-secondary',
-    messages.INFO:    'alert-info',
+    messages.DEBUG: 'alert-secondary',
+    messages.INFO: 'alert-info',
     messages.SUCCESS: 'alert-success',
     messages.WARNING: 'alert-warning',
-    messages.ERROR:   'alert-danger',
+    messages.ERROR: 'alert-danger',
 }
 
 # ---------------------------------------------------------------
 # Sécurité
 # ---------------------------------------------------------------
-CSRF_COOKIE_SECURE  = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 APPEND_SLASH = True
-
