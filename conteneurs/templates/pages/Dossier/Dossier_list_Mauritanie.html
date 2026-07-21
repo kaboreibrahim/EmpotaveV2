@@ -1,0 +1,162 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load static i18n %}
+{% block content %}
+<div class="row">
+ {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+    <a href="{% url 'dossier_mauritanie_create' %}" class="btn btn-primary float-right ml-3">Ajouter +</a>
+    {% endif %}
+
+
+    <!-- Small table -->
+    <div class="col-md-12 my-4">
+        <h2 class="h4 mb-1">Dossiers Mauritanie <img src="{% static 'img/mauritanie.png' %}" alt="Mauritanie" class="country-flag"> : ( {{ nombre_dossiers }} Dossiers )</h2>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="toolbar">
+                    <form class="form" method="GET" action="">
+                        <div class="form-row">
+                            <div class="form-group col-auto mr-auto">
+                                <label class="my-1 mr-2 sr-only" for="inlineFormCustomSelectPref1">Statut</label>
+                                <select class="custom-select mr-sm-2" id="inlineFormCustomSelectPref1" name="statut" onchange="this.form.submit()">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="en_attente" {% if request.GET.statut == "en_attente" %}selected{% endif %}>Attente</option>
+                                    <option value="selection_en_cours" {% if request.GET.statut == "selection_en_cours" %}selected{% endif %}>Sélection en cours</option>
+                                    <option value="Aconage_en_cours" {% if request.GET.statut == "Aconage_en_cours" %}selected{% endif %}>En Attente d'empotage</option>
+                                    <option value="ACCONAGE_FAIT" {% if request.GET.statut == "ACCONAGE_FAIT" %}selected{% endif %}>empotage en cours</option>
+                                    <option value="dossier_termine" {% if request.GET.statut == "dossier_termine" %}selected{% endif %}>Terminé</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-auto">
+                                <label for="search" class="sr-only">Recherche</label>
+                                <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="TDR,PROJET,BOOKING">
+                            </div>
+                            <div class="form-group col-auto">
+                                <button type="submit" class="btn btn-primary">Recherche</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Container for the list of dossiers -->
+                <div class="row">
+                    {% for dossier in Dossier_list %}
+                    <div class="col-md-3 mb-4"> <!-- Adjust to fit 4 per row on medium screens -->
+                        <div class="card shadow">
+                            <div class="card-body text-center">
+                                <div class="avatar avatar-lg mt-4">
+                                    <a href="{% url 'dossier_detail_mauritanie' dossier.pk %}">
+                                        <div class="circle circle-lg bg-secondary my-4">
+                                            <span class="fe fe-folder fe-24 text-white"></span>
+                                        </div>                    
+                                    </a>
+                                </div><br>
+                                <div class="card-text my-2">
+                                    <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                    <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                    {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                    <strong>Nombre d'ISO Tanks :</strong> {{ dossier.conteneurs.count }}<br>
+                                    {% else %}
+                                        <strong>Nombre de Conteneurs :</strong> {{ dossier.conteneurs.count }}<br>
+                                    {% endif %}
+                                
+                                    {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                        <p style="color: green;">Ce dossier contient des conteneurs de type ISO 20 Pieds.</p>
+                                    {% elif dossier.type_conteneur == "10_pieds" %}
+                                        <p style="color: blue;">Ce dossier contient des conteneurs de type 10 Pieds.</p>
+                                    {% elif dossier.type_conteneur == "20_pieds" %}
+                                        <p style="color: orange;">Ce dossier contient des conteneurs de type 20 Pieds.</p>
+                                    {% elif dossier.type_conteneur == "40_pieds" %}
+                                        <p style="color: purple;">Ce dossier contient des conteneurs de type 40 Pieds.</p>
+                                    {% else %}
+                                        <p style="color: red;">Type de conteneur non spécifié.</p>
+                                    {% endif %}
+                                                                        <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                </div>
+                            </div> <!-- ./card-text -->
+                            <div class="card-footer">
+                                <div class="row align-items-center justify-content-between">
+                                    <div class="col-auto">
+                                        <small>
+                                            <span class="dot dot-lg 
+                                                {% if dossier.statut == "en_attente" %} bg-danger
+                                                {% elif dossier.statut == "selection_en_cours" %} bg-warning
+                                                {% elif dossier.statut == "Aconage_en_cours" %} bg-primary
+                                                {% elif dossier.statut == "ACCONAGE_FAIT" %} bg-info
+                                                {% elif dossier.statut == "dossier_termine" %} bg-success
+                                                {% else %} bg-dark
+                                                {% endif %} mr-1"></span> 
+                                            {{ dossier.get_statut_display }}
+                                        </small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="file-action">
+                                            <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <span class="text-muted sr-only">Action</span>
+                                            </button>
+                                            <div class="dropdown-menu m-2">
+                                                <a class="dropdown-item" href="{% url 'dossier_detail_mauritanie' dossier.pk %}" >
+                                                    <i class="fe fe-eye fe-12 mr-4"></i>Détail
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'generate_dossier_mauritanie_pdf' dossier.pk %}">
+                                                    <i class="fe fe-file fe-12 mr-4"></i>Rapport suivi selecton 
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'generate_dossier_aconage_mauritanie_pdf' dossier.pk %}">
+                                                    <i class="fe fe-file-plus fe-12 mr-4"></i>Rapport d'habillage & empotage
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'dossier_mauritanie_edit' pk=dossier.pk %}">
+                                                    <i class="fe fe-edit fe-12 mr-4"></i>Modifier
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'dossier_mauritanie_delete' pk=dossier.pk %}">
+                                                    <i class="fe fe-trash-2 fe-12 mr-4"></i>Supprimer
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- /.card-footer -->
+                        </div>
+                    </div> <!-- .col-md-3 -->
+                    {% endfor %}
+                </div> <!-- .row -->
+
+                <!-- Pagination section -->
+                <nav aria-label="Table Paging" class="my-3">
+                    <ul class="pagination justify-content-end mb-0">
+                        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div> <!-- .card-body -->
+        </div> <!-- .card -->
+    </div> <!-- .col-md-12 -->
+</div>
+
+<!-- Modal structure -->
+<div class="modal fade" id="dossierDetailModal" tabindex="-1" role="dialog" aria-labelledby="dossierDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dossierDetailModalLabel">Détails du Dossier</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Le contenu sera chargé dynamiquement via AJAX -->
+                <div id="modal-body-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

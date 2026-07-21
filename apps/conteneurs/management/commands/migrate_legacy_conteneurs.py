@@ -12,7 +12,7 @@ from django.db import connection, transaction
 from apps.referentiels.models import (
     Pays, Commodite, POL, POD, CompagnieMaritime, SiteSelection, SiteEmpotage,
 )
-from apps.users.models import Users, Personel, Client, Agent_selection, Agent_empotage
+from apps.users.models import Users, Personnel, Client, Agent_selection, Agent_empotage
 from apps.conteneurs.models import Dossier, ISOTanks, Flexitanks
 
 
@@ -27,8 +27,8 @@ STATUT_DOSSIER_MAP = {
 PERSONNEL_TYPE_TO_USER_TYPE = {
     'agent_selection': 'agent_selection',
     'agent_acconage': 'agent_empotage',
-    'secretaire': 'personel',
-    'chef': 'personel',
+    'secretaire': 'personnel',
+    'chef': 'personnel',
 }
 
 
@@ -108,7 +108,7 @@ class Command(BaseCommand):
     def _migrate_personnel(self):
         rows = self._fetch("SELECT * FROM legacy_conteneurs_personnel WHERE deleted IS NULL")
         for row in rows:
-            user_type = PERSONNEL_TYPE_TO_USER_TYPE.get(row['Personnel_type'], 'personel')
+            user_type = PERSONNEL_TYPE_TO_USER_TYPE.get(row['Personnel_type'], 'personnel')
             user, _ = Users.objects.update_or_create(
                 id=row['id'],
                 defaults={
@@ -134,7 +134,7 @@ class Command(BaseCommand):
             elif user_type == 'agent_empotage':
                 wrapper, _ = Agent_empotage.objects.update_or_create(user=user)
             else:
-                wrapper, _ = Personel.objects.update_or_create(user=user)
+                wrapper, _ = Personnel.objects.update_or_create(user=user)
             self.personnel_map[row['id']] = (user_type, wrapper)
 
     # ------------------------------------------------------------------
@@ -165,6 +165,8 @@ class Command(BaseCommand):
                 password=make_password(None),
                 user_type='client',
                 date_joined=row['Date_ajout'],
+                numero=row['contact'],
+                pays_id=row['pays_id'],
             )
             client, _ = Client.objects.update_or_create(id=row['id'], defaults={'user': user})
             self.client_map[row['id']] = client
@@ -190,7 +192,7 @@ class Command(BaseCommand):
 
             if row['secretaire_id'] is not None:
                 utype, wrapper = self.personnel_map.get(row['secretaire_id'], (None, None))
-                if utype == 'personel':
+                if utype == 'personnel':
                     personel = wrapper
 
             client = self.client_map.get(row['client_id'])
@@ -209,7 +211,6 @@ class Command(BaseCommand):
                 type_conteneur=row['type_conteneur'],
                 date_de_selection=row['Date_selection'],
                 date_de_empotage=row['Date_acconage'],
-                date_de_fin_d_empotage=row['Date_terminer'],
                 Id_Pays_id=row['pays_id'],
                 Id_POD_id=row['port_de_dechargement_id'],
                 Id_POL_id=row['port_de_chargement_id'],
@@ -220,7 +221,7 @@ class Command(BaseCommand):
                 Id_Agent_selection=agent_selection,
                 Id_Agent_empotage=agent_empotage,
                 id_client=client,
-                Id_Personel=personel,
+                Id_Personnel=personel,
             )
             self.dossier_map[row['id']] = dossier
         return len(self.dossier_map)

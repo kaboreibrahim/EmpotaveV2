@@ -34,6 +34,14 @@ LEGACY_TABLES = {
     'conteneurs_ier_sortie':                'IER DE SORTIE',
 }
 
+# Tables sans colonne `fichier`/`statut` (colonne fichier nommée différemment,
+# pas de suivi de validation) : mappées à part.
+LEGACY_TABLES_SANS_STATUT = {
+    'conteneurs_autredocument':       ('document', 'Autre document'),
+    'conteneurs_document_facture':    ('document', 'Document de facture'),
+    'conteneurs_images':              ('image',    'Images'),
+}
+
 
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
@@ -75,6 +83,59 @@ class Command(BaseCommand):
                         count += 1
                     else:
                         skipped += 1
+
+            for table, (colonne_fichier, type_label) in LEGACY_TABLES_SANS_STATUT.items():
+                type_doc, _ = TypeDocument.objects.get_or_create(type_document=type_label)
+                with connection.cursor() as cur:
+                    cur.execute(f"SELECT * FROM {table} WHERE deleted IS NULL")
+                    rows = dictfetchall(cur)
+                for row in rows:
+                    try:
+                        dossier = Dossier.objects.get(id=row['dossier_id'])
+                    except Dossier.DoesNotExist:
+                        self.stdout.write(self.style.WARNING(
+                            f"{type_label} #{row['id']} : dossier {row['dossier_id']} introuvable, ignoré."
+                        ))
+                        skipped += 1
+                        continue
+                    _, created = Document.objects.get_or_create(
+                        dossier=dossier,
+                        type_document=type_doc,
+                        fichier=row[colonne_fichier],
+                    )
+                    if created:
+                        count += 1
+                    else:
+                        skipped += 1
+
+            # Table de liaison M2M conteneurs_dossier_fichiers / conteneurs_fichierjoint
+            type_doc_joint, _ = TypeDocument.objects.get_or_create(type_document='Fichier joint')
+            with connection.cursor() as cur:
+                cur.execute(
+                    "SELECT df.dossier_id, fj.fichier "
+                    "FROM conteneurs_dossier_fichiers df "
+                    "JOIN conteneurs_fichierjoint fj ON fj.id = df.fichierjoint_id"
+                )
+                rows = dictfetchall(cur)
+            for row in rows:
+                try:
+                    dossier = Dossier.objects.get(id=row['dossier_id'])
+                except Dossier.DoesNotExist:
+                    self.stdout.write(self.style.WARNING(
+                        f"Fichier joint : dossier {row['dossier_id']} introuvable, ignoré."
+                    ))
+                    skipped += 1
+                    continue
+                _, created = Document.objects.get_or_create(
+                    dossier=dossier,
+                    type_document=type_doc_joint,
+                    fichier=row['fichier'],
+                )
+                if created:
+                    count += 1
+                else:
+                    skipped += 1
+
             self.stdout.write(self.style.SUCCESS(f"OK — {count} documents migrés, {skipped} ignorés."))
             if dry_run:
                 transaction.set_rollback(True)

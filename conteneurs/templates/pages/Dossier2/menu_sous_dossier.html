@@ -1,0 +1,78 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h3 class="h4 mb-0"> Dossier : <a href="{% url 'Dossier_list2' %}">{{ dossier.projet }}</a></h3>
+  <div class="border-bottom flex-grow-1 ml-3"></div>
+</div>
+ <div class="row">
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow mb-4">
+          <div class="card-body file-list">
+            <div class="d-flex align-items-center">
+              <div class="circle circle-md bg-secondary">
+                <!-- Ajout d'un lien sur l'icône -->
+                
+                  <span class="fe fe-folder fe-16 text-white"></span>
+                </a>
+              </div>
+              <div class="flex-fill ml-4 fname">
+                <a href="{% url 'facture_list' dossier.pk%}">
+                    <strong>Facture</strong><br /></a>
+                <span class="badge badge-light text-muted">{{cont_facture}} fichiers</span>
+                {% comment %} <i class="fe fe-users fe-12 ml-2 text-muted"></i> {% endcomment %}
+              </div>
+              <div class="file-action">
+                 
+                
+              </div>
+            </div>
+          </div> <!-- .card-body -->
+        </div>
+      </div>
+      
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow mb-4">
+        <div class="card-body file-list">
+          <div class="d-flex align-items-center">
+            <div class="text-center">
+              <div class="circle circle-md bg-secondary">
+                <span class="fe fe-folder fe-16 text-white"></span>
+              </div>
+            </div>
+            <div class="flex-fill ml-4 fname">
+              <a href="{% url 'autre_dossier_list' dossier.pk%}">
+              <strong>Autre Dossier</strong><br/></a>
+              <span class="badge badge-light text-muted">{{cont_autre_document}} fichiers</span>
+             </div>
+            <div class="file-action">
+               
+               
+            </div>
+          </div>
+        </div> <!-- .card-body -->
+      </div> <!-- .card -->
+    </div> <!-- .col -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow mb-4">
+        <div class="card-body file-list">
+          <div class="d-flex align-items-center">
+            <div class="circle circle-md bg-secondary">
+              <span class="fe fe-folder fe-16 text-white"></span>
+            </div>
+            <div class="flex-fill ml-4 fname">
+                <a href="{% url 'images_list' dossier.pk%}">              
+                    <strong>Images & videos</strong><br /></a>
+              <span class="badge badge-light text-muted">{{cont_images}}fichiers</span>
+             </div>
+            <div class="file-action">
+              
+            </div>
+          </div>
+        </div> <!-- .card-body -->
+      </div> <!-- .card -->
+    </div> <!-- .col --> 
+
+{% endblock %}
+

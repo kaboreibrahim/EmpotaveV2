@@ -1,0 +1,274 @@
+{% extends "layouts/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+    <div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+        <div class="row align-items-center my-4">
+            <div class="col">
+            <h2 class="h3 mb-0 page-title">modfier un  dossier</h2>
+            </div>
+            <div class="col-auto">
+            </div>
+        </div>
+        <form method="post" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <hr class="my-4">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="id_projet">Projet</label>
+                    <input type="text" name="projet" id="id_projet" class="form-control" value="{{ form.projet.value|default_if_none:'' }}">
+                    {% if form.projet.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.projet.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="id_TRD">TRD</label>
+                    <input type="text" name="TRD" id="id_TRD" class="form-control" value="{{ form.TRD.value|default_if_none:'' }}">
+                    {% if form.TRD.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.TRD.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label for="id_booking">Booking</label>
+                    <input type="text" name="booking" id="id_booking" class="form-control" value="{{ form.booking.value|default_if_none:'' }}">
+                    {% if form.booking.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.booking.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="id_type_conteneur">Type conteneur</label>
+                    <select name="type_conteneur" id="id_type_conteneur" class="form-control">
+                        {% for option in form.type_conteneur.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.type_conteneur.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.type_conteneur.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.type_conteneur.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="id_client">Client</label>
+                    <select name="client" id="id_client" class="form-control">
+                        {% for option in form.client.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.client.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.client.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.client.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="id_commodite">Commodité</label>
+                    <select name="commodite" id="id_commodite" class="form-control">
+                        {% for option in form.commodite.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.commodite.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.commodite.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.commodite.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="id_port_de_chargement">Port de chargement</label>
+                    <select name="port_de_chargement" id="id_port_de_chargement" class="form-control">
+                        {% for option in form.port_de_chargement.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.port_de_chargement.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.port_de_chargement.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.port_de_chargement.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="id_port_de_dechargement">Port de déchargement</label>
+                    <select name="port_de_dechargement" id="id_port_de_dechargement" class="form-control">
+                        {% for option in form.port_de_dechargement.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.port_de_dechargement.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.port_de_dechargement.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.port_de_dechargement.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_compagnie_maritime">Compagnie maritime</label>
+                <select name="compagnie_maritime" id="id_compagnie_maritime" class="form-control">
+                    {% for option in form.compagnie_maritime.field.choices %}
+                        <option value="{{ option.0 }}" {% if option.0 == form.compagnie_maritime.value %}selected{% endif %}>{{ option.1 }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.compagnie_maritime.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.compagnie_maritime.errors %}
+                        <span style="font-size: 13px;">{{ error|escape }}</span>
+                    {% endfor %}
+                </div>   
+                {% endif %}
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="id_site">Site de sélection</label>
+                    <select name="site" id="id_site" class="form-control">
+                        {% for option in form.site.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.site.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.site.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.site.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="id_Site_empotage">Site habillage & empotage</label>
+                    <select name="Site_empotage" id="id_Site_empotage" class="form-control">
+                        {% for option in form.Site_empotage.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.Site_empotage.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.Site_empotage.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.Site_empotage.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="id_agent_selection">Agent de sélection</label>
+                    <select name="agent_selection" id="id_agent_selection" class="form-control">
+                        {% for option in form.agent_selection.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.agent_selection.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.agent_selection.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.agent_selection.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="id_agent_acconage">Agent de pose & empotage </label>
+                    <select name="agent_acconage" id="id_agent_acconage" class="form-control">
+                        {% for option in form.agent_acconage.field.choices %}
+                            <option value="{{ option.0 }}" {% if option.0 == form.agent_acconage.value %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.agent_acconage.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.agent_acconage.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>   
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="id_date_creation">date de creation du dossier</label>
+                    <input type="date" name="date_creation" id="id_date_creation" class="form-control {% if form.date_creation.errors %}is-invalid{% endif %}" value="{{ form.date_creation.value|default_if_none:'' }}" multiple>
+                    
+                    {% if form.date_creation.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.date_creation.errors %}
+                                <span style="font-size: 13px;">{{ error|escape }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="form-row">
+                <div class="col-md-6">
+                    <!-- Autres champs si nécessaire -->
+                </div>
+                <div class="col-md-6 text-right">
+                    <button class="btn btn-primary" type="submit">Enregistrer</button>
+                </div>
+            </div>
+        </form>
+    </div> <!-- .col-12 -->
+</div> <!-- .row -->
+</div> <!-- .container-fluid -->
+
+{% endblock content %}
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+
+            let datatable_language = {
+                processing: "Traitement en cours...",
+                search: "Rechercher&nbsp;:",
+                lengthMenu: "Afficher _MENU_ &eacute;l&eacute;ments",
+                info: "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
+                infoEmpty: "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
+                infoFiltered: "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
+                infoPostFix: "",
+                loadingRecords: "Chargement en cours...",
+                zeroRecords: "Aucun &eacute;l&eacute;ment &agrave; afficher",
+                emptyTable: "Aucune donnée disponible dans le tableau",
+                paginate: {
+                    first: "Premier",
+                    previous: "Pr&eacute;c&eacute;dent",
+                    next: "Suivant",
+                    last: "Dernier"
+                },
+                aria: {
+                    sortAscending: ": activer pour trier la colonne par ordre croissant",
+                    sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                }
+            };
+
+            $(".form").append("<br><input type='submit' class='btn btn-sm btn-success' value='Enregistrer' />");
+            $('.table').DataTable({
+                language: datatable_language,
+            });
+        });
+    </script>
+{% endblock scripts %}
+

@@ -1,0 +1,289 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<style>
+    .search-toolbar {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+
+    .search-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .custom-select {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        transition: border-color 0.15s ease-in-out;
+    }
+
+    .custom-select:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .search-btn {
+        padding: 0.375rem 1.5rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+        .search-form {
+            flex-direction: column;
+        }
+
+        .form-group {
+            width: 100%;
+        }
+    }
+</style>
+<div class="row">
+    {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+    <a href="{% url 'dossier_liberia_create' %}" class="btn btn-primary float-right ml-3">{% trans "Ajouter" %} +</a>
+    {% endif %}
+
+    <!-- Small table -->
+    <div class="col-md-12 my-4">
+        <h2 class="h4 mb-1">{% trans "Dossiers Liberia" %} <img src="{% static 'img/liberia.png' %}" alt="liberia" class="country-flag"> : ( {{ nombre_dossiers }} {% trans "Dossiers" %} )</h2>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="search-toolbar">
+                    <form class="search-form" method="GET" action="" id="searchForm">
+                        <div class="form-group col-auto mr-auto">
+                            <label class="my-1 mr-2 sr-only" for="inlineFormCustomSelectPref1">{% trans "Statut" %}</label>
+                            <select class="custom-select mr-sm-2" id="inlineFormCustomSelectPref1" name="statut" onchange="this.form.submit()">
+                                <option value="">{% trans "Tous les statuts" %}</option>
+                                <option value="en_attente" {% if request.GET.statut == "en_attente" %}selected{% endif %}>{% trans "Attente" %}</option>
+                                <option value="selection_en_cours" {% if request.GET.statut == "selection_en_cours" %}selected{% endif %}>{% trans "Sélection en cours" %}</option>
+                                <option value="Aconage_en_cours" {% if request.GET.statut == "Aconage_en_cours" %}selected{% endif %}>{% trans "En Attente d'empotage" %}</option>
+                                <option value="ACCONAGE_FAIT" {% if request.GET.statut == "ACCONAGE_FAIT" %}selected{% endif %}>{% trans "Empotage en cours" %}</option>
+                                <option value="dossier_termine" {% if request.GET.statut == "dossier_termine" %}selected{% endif %}>{% trans "Terminé" %}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{% trans "Année" %}</label>
+                            <select class="custom-select" name="year" onchange="this.form.submit()">
+                                {% for year in available_years %}
+                                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                                        {{ year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">{% trans "Recherche" %}</label>
+                            <input type="text" class="form-control search-input" name="search"
+                                   value="{{ request.GET.search }}" placeholder="{% trans "TDR, PROJET, BOOKING" %}">
+                        </div>
+
+                        {% comment %} <div class="form-group" style="flex: 0 0 auto;">
+                            <button type="submit" class="btn btn-primary search-btn">{% trans "Recherche" %}</button>
+                        </div> {% endcomment %}
+                    </form>
+                </div>
+
+                <!-- Liste des dossiers groupés par mois -->
+                <div class="card-body">
+                    {% for month, Dossier_list in dossiers_by_month.items %}
+                    <div class="mb-6">
+                        <div class="d-flex align-items-center mb-4">
+                            <h3 class="h4 mb-0">{{ month }}</h3>
+                            <div class="border-bottom flex-grow-1 ml-3"></div>
+                        </div>
+
+                        <!-- Container for the list of dossiers -->
+                        <div class="row">
+                            {% for dossier in Dossier_list %}
+                            <div class="col-md-3 mb-4"> <!-- Adjust to fit 4 per row on medium screens -->
+                                <div class="card shadow">
+                                    <div class="card-body text-center">
+                                        <div class="avatar avatar-lg mt-4">
+                                            <a href="{% url 'dossier_detail_Nigeria' dossier.pk %}">
+                                                <div class="circle circle-lg bg-secondary my-4">
+                                                    <span class="fe fe-folder fe-24 text-white"></span>
+                                                </div>
+                                            </a>
+                                        </div><br>
+                                        <div class="card-text my-2">
+                                            <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                            <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                            <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                            {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                            <strong>{% trans "Nombre d'ISO Tanks" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                            {% else %}
+                                            <strong>{% trans "Nombre de Conteneurs" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                            {% endif %}
+
+                                            {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                <p style="color: green;">{% trans "Ce dossier contient des ISO 20 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "10_pieds" %}
+                                                <p style="color: blue;">{% trans "Ce dossier contient des conteneurs de type 10 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "20_pieds" %}
+                                                <p style="color: orange;">{% trans "Ce dossier contient des conteneurs de type 20 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "40_pieds" %}
+                                                <p style="color: purple;">{% trans "Ce dossier contient des conteneurs de type 40 Pieds." %}</p>
+                                            {% else %}
+                                                <p style="color: red;">{% trans "Type de conteneur non spécifié." %}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row align-items-center justify-content-between">
+                                            <div class="col-auto">
+                                                <small>
+                                                    <span class="dot dot-lg
+                                                        {% if dossier.statut == "en_attente" %} bg-danger
+                                                        {% elif dossier.statut == "selection_en_cours" %} bg-warning
+                                                        {% elif dossier.statut == "Aconage_en_cours" %} bg-primary
+                                                        {% elif dossier.statut == "ACCONAGE_FAIT" %} bg-info
+                                                        {% elif dossier.statut == "dossier_termine" %} bg-success
+                                                        {% else %} bg-dark
+                                                        {% endif %} mr-1"></span>
+                                                    {{ dossier.get_statut_display }}
+                                                </small>
+                                            </div>
+
+                                            <div class="col-auto">
+                                                <div class="file-action">
+                                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        {% trans "Options" %}
+                                                    </button>
+                                                    <div class="dropdown-menu m-2">
+                                                        <a class="dropdown-item" href="{% url 'dossier_detail_liberia' dossier.pk %}">
+                                                            <i class="fe fe-eye fe-12 mr-4"></i>{% trans "Détail" %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'generate_dossier_pdf' dossier.pk %}">
+                                                            <i class="fe fe-file fe-12 mr-4"></i>{% trans "Rapport suivi sélection" %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'generate_dossier_aconage_pdf' dossier.pk %}">
+                                                            <i class="fe fe-file-plus fe-12 mr-4"></i>{% trans "Rapport d'habillage & empotage" %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'dossier_liberia_edit' pk=dossier.pk %}">
+                                                            <i class="fe fe-edit fe-12 mr-4"></i>{% trans "Modifier" %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'suivi_document' pk=dossier.pk %}">
+                                                            <i class="fe fe-edit fe-12 mr-4"></i>{% trans "Suivi documentaire" %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'dossier_liberia_delete' pk=dossier.pk %}">
+                                                            <i class="fe fe-trash-2 fe-12 mr-4"></i>{% trans "Supprimer" %}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> <!-- /.card-footer -->
+                                </div>
+                            </div> <!-- .col-md-3 -->
+                            {% endfor %}
+                        </div> <!-- .row -->
+                    {% empty %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <span class="fe fe-inbox fe-32 text-muted"></span>
+                            </div>
+                            <h3 class="h5 text-muted">{% trans "Aucun dossier trouvé pour l'année" %} {{ selected_year }}</h3>
+                            <p class="text-muted">{% trans "Essayez de sélectionner une autre année ou modifiez vos critères de recherche." %}</p>
+                        </div>
+                    {% endfor %}
+                </div> <!-- .card-body -->
+                <!-- Pagination section -->
+                <nav aria-label="Table Paging" class="my-3">
+                    <ul class="pagination justify-content-end mb-0">
+                        <li class="page-item"><a class="page-link" href="#">{% trans "Previous" %}</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">{% trans "Next" %}</a></li>
+                    </ul>
+                </nav>
+            </div> <!-- .card-body -->
+        </div> <!-- .card -->
+    </div> <!-- .col-md-12 -->
+</div>
+
+<!-- Modal structure -->
+<div class="modal fade" id="dossierDetailModal" tabindex="-1" role="dialog" aria-labelledby="dossierDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dossierDetailModalLabel">{% trans "Détails du Dossier" %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Le contenu sera chargé dynamiquement via AJAX -->
+                <div id="modal-body-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Fermer" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Function to debounce form submission
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Function to submit the form
+    function submitForm() {
+        document.getElementById('searchForm').submit();
+    }
+
+    // Apply debounce to form submission
+    const debouncedSubmit = debounce(() => submitForm(), 1000);
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('searchForm');
+        const inputs = form.querySelectorAll('input, select');
+
+        inputs.forEach(input => {
+            input.addEventListener('input', debouncedSubmit);
+            input.addEventListener('change', debouncedSubmit);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+
+<div class="row">
+    {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+    <a href="{% url 'Site_create' %}" class="btn btn-primary float-right ml-3">Ajouter +</a>
+    {% endif %}
+
+
+    <!-- Small table -->
+    <div class="col-md-12 my-4">
+      <h2 class="h4 mb-1">Liste Des Sites de selection</h2>
+
+      <div class="card shadow">
+        <div class="card-body">
+          <div class="toolbar">
+
+            <form class="form" method="GET" action="">
+              <div class="form-row">
+                <div class="form-group col-auto mr-auto">
+                  <label class="my-1 mr-2 sr-only" for="inlineFormCustomSelectPref1">Show</label>
+                  <select class="custom-select mr-sm-2" id="inlineFormCustomSelectPref1" name="paginate_by">
+                    <option value="">...</option>
+                    <option value="10" {% if request.GET.paginate_by == "10" %}selected{% endif %}>10</option>
+                    <option value="25" {% if request.GET.paginate_by == "25" %}selected{% endif %}>25</option>
+                    <option value="50" {% if request.GET.paginate_by == "50" %}selected{% endif %}>50</option>
+                    <option value="100" {% if request.GET.paginate_by == "100" %}selected{% endif %}>100</option>
+                  </select>
+                </div>
+                <div class="form-group col-auto">
+                  <label for="search" class="sr-only">Search</label>
+                  <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search }}" placeholder="Search">
+                </div>
+                <div class="form-group col-auto">
+                  <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <!-- table -->
+          <table class="table table-borderless table-hover">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nom du site</th>
+                <th>contact du site</th>
+                <th>lieu</th>
+                <th>Date</th>
+                {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+
+                <th>Action</th>
+                {% endif %}
+
+              </tr>
+            </thead>
+            <tbody>
+              {% for Site in Site_list %}
+              <tr>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ forloop.counter }}</strong></p>
+                </td>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ Site.nom_site }}</strong></p>
+                </td>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ Site.contact_site }}</strong></p>
+                </td>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ Site.lieu_site }}</strong></p>
+                </td>
+                <td class="text-muted">{{ Site.Date_ajout|date:"d/m/Y" }}</td>
+                {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+                <td>
+                  <button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="text-muted sr-only">Action</span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="{% url 'Site_edit' pk=Site.pk %}"><i class="fe fe-edit fe-12 mr-4"></i>Modifier</a>
+                    <a class="dropdown-item" href="{% url 'Site_delete' pk=Site.pk %}"><i class="fe fe-trash-2 fe-12 mr-4"></i>suprimer</a>
+                  </div>
+                </td>
+                {% endif %}
+
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4">Aucun enregistrement trouvé.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <nav aria-label="Table Paging" class="mb-0 text-muted">
+            <ul class="pagination justify-content-center mb-0">
+              {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Premier</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Précédent</a></li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+              <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+              </li>
+              {% endfor %}
+              {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Suivant</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Dernier</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div> <!-- customized table -->
+  </div> <!-- end section -->
+{% endblock %}

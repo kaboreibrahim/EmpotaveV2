@@ -1,0 +1,47 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+{% load custom_filters %}
+
+<div class="d-flex align-items-center mb-4">
+  <h3 class="h4 mb-0">Dossier : <a href="{% url 'menu_sous_dossier' dossier.pk %}">{{ dossier.projet }}</a>/<a href="">Autre Dossier</a></h3>
+  <div class="border-bottom flex-grow-1 ml-3"></div>
+  <div class="col-auto">
+    <a href="{% url 'autre_dossier_create' dossier.id  %}" class="btn btn-success">
+        <span class="fe fe-plus fe-16 mr-2"></span> Ajouter
+    </a>
+  </div>
+</div>
+
+<div class="row my-4 pb-4">
+  {% for autre_document in autre_documents %}
+  <div class="col-md-3">
+    <div class="card shadow text-center mb-4">
+      <div class="card-body file">
+        <div class="file-action">
+          <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="text-muted sr-only">Action</span>
+          </button>
+          <div class="dropdown-menu m-2">
+            {% comment %} <a class="dropdown-item" href="#"><i class="fe fe-delete fe-12 mr-4"></i>Supprimer</a>  {% endcomment %}
+            <a class="dropdown-item" href="{{ autre_document.document.url }}"><i class="fe fe-eye fe-12 mr-4"></i>Voir</a>
+            <a class="dropdown-item" href="{{ autre_document.document.url }}" download><i class="fe fe-download fe-12 mr-4"></i>Télécharger</a>
+          </div>
+        </div>
+        <div class="circle circle-lg bg-light my-4">
+          <span class="fe fe-file fe-24 text-success"></span>
+        </div>
+        <div class="file-info">
+          <span class="badge badge-light text-muted mr-2">{{ autre_document.document.size|filesizeformat }}</span>
+         </div>
+      </div> <!-- .card-body -->
+      <div class="card-footer bg-transparent border-0 fname">
+        <strong>{{ autre_document.document.name|basename }}</strong>
+      </div> <!-- .card-footer -->
+    </div> <!-- .card -->
+  </div> <!-- .col -->  
+  {% empty %}
+       <p colspan="4">Aucune facture disponible.</p>
+  {% endfor %}
+</div> <!-- .row -->
+
+{% endblock %}

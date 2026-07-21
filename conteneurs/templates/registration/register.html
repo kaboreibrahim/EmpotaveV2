@@ -1,0 +1,152 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+{% load static i18n %}
+{% block content %}
+
+<div class="wrapper vh-100">
+    <div class="row align-items-center h-100">
+      <form class="col-lg-6 col-md-8 col-10 mx-auto" method="post" action="{% url 'register' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mx-auto text-center my-4">
+          <a class="navbar-brand mx-auto mt-2 flex-fill text-center">
+                <div class="w-100 mb-4">
+                    <div class="navbar-brand-wrapper d-flex align-items-center justify-content-center flex-column">
+                        <img src="{% static 'img/oil_of_africa.png' %}" alt="logo" class="img-fluid rounded-circle" style="max-width: 200px; height: auto;">
+                        <h2 class="h4 mb-1 mt-2">Suivi empotage</h2>
+                    </div>
+                </div> 
+            </a>
+          <h2 class="my-3">Register</h2>
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            <input type="email" name="email" id="id_email" class="form-control" placeholder="Email" value="{{ form.email.value|default_if_none:'' }}">
+                {% if form.email.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.email.errors %}
+                        <span style="font-size: 13px;">{{ error|escape }}</span>
+                    {% endfor %}
+                </div>   
+                {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_username">Nom d'utilisateur</label>
+            <input type="text" name="username" id="id_username" class="form-control" placeholder="Nom d'utilisateur" value="{{ form.username.value|default_if_none:'' }}">
+            {% if form.username.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.username.errors %}
+                        <span style="font-size: 13px;">{{ error|escape }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+            <label for="id_first_name">Prénom</label>
+            <input type="text" name="first_name" id="id_first_name" class="form-control" placeholder="Prénom" value="{{ form.first_name.value|default_if_none:'' }}">
+            {% if form.first_name.errors %}
+            <div class="alert alert-danger">
+                {% for error in form.first_name.errors %}
+                    <span style="font-size: 13px;">{{ error|escape }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            </div>
+            <div class="form-group col-md-6">
+            <label for="id_last_name">Nom</label>
+            <input type="text" name="last_name" id="id_last_name" class="form-control" placeholder="Nom" value="{{ form.last_name.value|default_if_none:'' }}">
+            {% if form.last_name.errors %}
+            <div class="alert alert-danger">
+                {% for error in form.last_name.errors %}
+                    <span style="font-size: 13px;">{{ error|escape }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+        </div>
+
+        <hr class="my-4">
+        <div class="form-row col-md-12">
+            <div class="form-group col-md-6">
+                <label for="id_Contact">Contact</label>
+                <input type="text" name="Contact" id="id_Contact" class="form-control" placeholder="Contact">
+                {% if form.Contact.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.Contact.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="id_Personnel_type">Fonction</label>
+                <select name="Personnel_type" id="id_Personnel_type" class="form-control">
+                    {% for value, label in USER_TYPE_CHOICES %}
+                        <option value="{{ value }}" {% if form.Personnel_type.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.Personnel_type.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.Personnel_type.errors %}
+                        <span style="font-size: 13px;">{{ error|escape }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            
+        </div>
+        <hr class="my-4">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="form-group">
+               <label for="id_password1">Mot de passe</label>
+                    <input type="password" name="password1" id="id_password1" class="form-control" placeholder="Mot de passe">
+                    {% if form.password1.errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.password1.errors %}
+                                <span style="font-size: 13px;">{{ error|escape }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Confirmez le mot de passe</label>
+                <input type="password" name="password2" id="id_password2" class="form-control" placeholder="Confirmez le mot de passe">
+                {% if form.password2.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.password2.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-2">Exigences relatives au mot de passe</p>
+            <p class="small text-muted mb-2"> Pour créer un nouveau mot de passe, vous devez répondre à toutes les exigences suivantes :</p>
+            <ul class="small text-muted pl-4 mb-0">
+              <li> Minimum 8 caractères </li>
+              <li>Au moins un caractère spécial</li>
+              <li>Au moins un numéro</li>
+              <li>Ne peut pas être identique à un mot de passe précédent</li>
+            </ul>
+          </div>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">S"inscrire</button>
+     
+        <div class="options centered-options text-center">
+            <i class="fas fa-arrow-center"></i>
+            <br><a href="{% url 'login' %}">Vous avez déjà un compte? Se connecter</a>
+        </div>
+        <p class="mt-5 mb-3 text-muted text-center">© 2020</p>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}
+

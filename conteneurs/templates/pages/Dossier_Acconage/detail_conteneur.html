@@ -1,0 +1,379 @@
+{% extends 'layouts/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Header with back button -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">{% trans "Détails du Conteneur" %} : {{ conteneur.reference }}</h1>
+    <a href="{% url 'view_conteneurs' dossier_id=conteneur.dossier.id %}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-2"></i>{% trans "Retour à la liste" %}
+    </a>
+  </div>
+
+  <!-- Status indicator -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="p-3 rounded-circle mr-4 {% if conteneur.statut == 'aconer' %}bg-success{% else %}bg-danger{% endif %} text-white">
+              <i class="fas fa-{% if conteneur.statut == 'aconer' %}check{% else %}times{% endif %} fa-2x"></i>
+            </div>
+            <div>
+              <h5 class="mb-0">{% trans "État" %}: {{ conteneur.etat }}</h5>
+              <p class="mb-0 text-muted">
+                {% if conteneur.statut == 'aconer' %}
+                  {% trans "Empoté" %}
+                {% else %}
+                  {% trans "Non empoté" %}
+                {% endif %}
+              </p>
+            </div>
+            <div class="ml-auto">
+              <h5 class="mb-0 text-muted">{% trans "Référence" %}</h5>
+              <p class="mb-0 font-weight-bold">{{ conteneur.reference }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main info cards -->
+  <div class="row">
+    <!-- Left column - Container info -->
+    <div class="col-lg-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">{% trans "Information Conteneur" %}</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="text-muted mb-1">{% trans "Poids Brut" %}</p>
+              <p class="font-weight-bold">{{ conteneur.poids_brute|default:"N/A" }} Kg</p>
+            </div>
+            <div class="col-md-6">
+              <p class="text-muted mb-1">{% trans "Poids Équipements" %}</p>
+              <p class="font-weight-bold">{{ conteneur.poids_equipements|default:"N/A" }} Kg</p>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="text-muted mb-1">{% trans "Poids Net" %}</p>
+              <p class="font-weight-bold">{{ conteneur.poids_net|default:"N/A" }} Kg</p>
+            </div>
+          </div>
+
+          <h6 class="mt-4 mb-3 border-bottom pb-2">{% trans "Photos du Conteneur" %}</h6>
+          
+          <div class="row">
+            {% if conteneur.photo_avant %}
+            <div class="col-6 col-md-4 mb-3">
+              <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_avant.url }}" data-title="{% trans "Photo Avant" %}">
+                <img src="{{ conteneur.photo_avant.url }}" alt="Photo Avant" class="img-thumbnail">
+                <div class="photo-label">{% trans "Avant" %}</div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_derriere %}
+            <div class="col-6 col-md-4 mb-3">
+              <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_derriere.url }}" data-title="{% trans "Photo Derrière" %}">
+                <img src="{{ conteneur.photo_derriere.url }}" alt="Photo Derrière" class="img-thumbnail">
+                <div class="photo-label">{% trans "Derrière" %}</div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_interieur %}
+            <div class="col-6 col-md-4 mb-3">
+              <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_interieur.url }}" data-title="{% trans "Photo Intérieur" %}">
+                <img src="{{ conteneur.photo_interieur.url }}" alt="Photo Intérieur" class="img-thumbnail">
+                <div class="photo-label">{% trans "Intérieur" %}</div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_lateral_gauche %}
+            <div class="col-6 col-md-4 mb-3">
+              <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_lateral_gauche.url }}" data-title="{% trans "Photo Latéral Gauche" %}">
+                <img src="{{ conteneur.photo_lateral_gauche.url }}" alt="Photo Latéral Gauche" class="img-thumbnail">
+                <div class="photo-label">{% trans "Latéral G" %}</div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_lateral_droit %}
+            <div class="col-6 col-md-4 mb-3">
+              <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_lateral_droit.url }}" data-title="{% trans "Photo Latéral Droit" %}">
+                <img src="{{ conteneur.photo_lateral_droit.url }}" alt="Photo Latéral Droit" class="img-thumbnail">
+                <div class="photo-label">{% trans "Latéral D" %}</div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right column - Equipment info -->
+    <div class="col-lg-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">{% trans "Équipements & Sécurité" %}</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="mb-3 border-bottom pb-2">{% trans "Flexitank" %}</h6>
+              <p class="text-muted mb-1">{% trans "Numéro" %}</p>
+              <p class="font-weight-bold mb-3">{{ conteneur.numero_flexitank|default:"N/A" }}</p>
+              
+              {% if conteneur.photo_flexitank %}
+              <div class="photo-thumbnail mb-4 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_flexitank.url }}" data-title="{% trans "Photo Flexitank" %}">
+                <img src="{{ conteneur.photo_flexitank.url }}" alt="Photo Flexitank" class="img-thumbnail">
+                <div class="photo-label">{% trans "Photo" %}</div>
+              </div>
+              {% endif %}
+              
+              <h6 class="mb-3 border-bottom pb-2">{% trans "Heating Pad" %}</h6>
+              <p class="text-muted mb-1">{% trans "Numéro" %}</p>
+              <p class="font-weight-bold mb-3">{{ conteneur.numero_heating_pad|default:"N/A" }}</p>
+              
+              {% if conteneur.photo_heating_pad %}
+              <div class="photo-thumbnail mb-4 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_heating_pad.url }}" data-title="{% trans "Photo Heating Pad" %}">
+                <img src="{{ conteneur.photo_heating_pad.url }}" alt="Photo Heating Pad" class="img-thumbnail">
+                <div class="photo-label">{% trans "Photo" %}</div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <h6 class="mb-3 border-bottom pb-2">{% trans "Plombs de Sécurité" %}</h6>
+              
+              <p class="text-muted mb-1">{% trans "Plomb 1" %}</p>
+              <p class="font-weight-bold mb-2">{{ conteneur.numero_plomb|default:"N/A" }}</p>
+              {% if conteneur.photo_plomb %}
+              <div class="photo-thumbnail mb-3 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_plomb.url }}" data-title="{% trans "Photo Plomb" %}">
+                <img src="{{ conteneur.photo_plomb.url }}" alt="Photo Plomb" class="img-thumbnail">
+                <div class="photo-label">{% trans "Photo" %}</div>
+              </div>
+              {% endif %}
+              
+              <p class="text-muted mb-1">{% trans "Plomb 2" %}</p>
+              <p class="font-weight-bold mb-2">{{ conteneur.numero_plomb2|default:"N/A" }}</p>
+              {% if conteneur.photo_plomb2 %}
+              <div class="photo-thumbnail mb-3 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_plomb2.url }}" data-title="{% trans "Photo Plomb 2" %}">
+                <img src="{{ conteneur.photo_plomb2.url }}" alt="Photo Plomb 2" class="img-thumbnail">
+                <div class="photo-label">{% trans "Photo" %}</div>
+              </div>
+              {% endif %}
+              
+              <p class="text-muted mb-1">{% trans "Plomb 3" %}</p>
+              <p class="font-weight-bold mb-2">{{ conteneur.numero_plomb3|default:"N/A" }}</p>
+              {% if conteneur.photo_plomb3 %}
+              <div class="photo-thumbnail mb-3 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_plomb3.url }}" data-title="{% trans "Photo Plomb 3" %}">
+                <img src="{{ conteneur.photo_plomb3.url }}" alt="Photo Plomb 3" class="img-thumbnail">
+                <div class="photo-label">{% trans "Photo" %}</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Additional photos section -->
+  {% if conteneur.photo_selection1 or conteneur.photo_selection2 or conteneur.photo_selection3 or conteneur.photo_plomb4 or conteneur.photo_plomb5 %}
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">{% trans "Phases d'Empotage" %}</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            {% if conteneur.photo_selection1 %}
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_selection1.url }}" data-title="{% trans "Photo avant empotage" %}">
+                  <img src="{{ conteneur.photo_selection1.url }}" alt="Photo avant empotage" class="card-img-top">
+                </div>
+                <div class="card-body text-center">
+                  <h6 class="card-title">{% trans "Avant Empotage" %}</h6>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_selection2 %}
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_selection2.url }}" data-title="{% trans "Photo pendant habillage" %}">
+                  <img src="{{ conteneur.photo_selection2.url }}" alt="Photo pendant habillage" class="card-img-top">
+                </div>
+                <div class="card-body text-center">
+                  <h6 class="card-title">{% trans "Pendant Habillage" %}</h6>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_selection3 %}
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <div class="photo-thumbnail image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_selection3.url }}" data-title="{% trans "Photo fin empotage" %}">
+                  <img src="{{ conteneur.photo_selection3.url }}" alt="Photo fin empotage" class="card-img-top">
+                </div>
+                <div class="card-body text-center">
+                  <h6 class="card-title">{% trans "Fin Empotage" %}</h6>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Oils plombs -->
+          {% if conteneur.photo_plomb4 or conteneur.photo_plomb5 %}
+          <div class="row mt-4">
+            <div class="col-12">
+              <h6 class="mb-3 border-bottom pb-2">{% trans "Plombs Oils" %}</h6>
+            </div>
+            
+            {% if conteneur.photo_plomb4 %}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="photo-thumbnail mr-3 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_plomb4.url }}" data-title="{% trans "Photo Plomb oils 1" %}">
+                  <img src="{{ conteneur.photo_plomb4.url }}" alt="Photo Plomb oils 1" class="img-thumbnail" style="max-width: 100px;">
+                </div>
+                <div>
+                  <p class="text-muted mb-1">{% trans "Plomb Oils 1" %}</p>
+                  <p class="font-weight-bold">{{ conteneur.numero_plomb4|default:"N/A" }}</p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if conteneur.photo_plomb5 %}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="photo-thumbnail mr-3 image-preview" data-bs-toggle="modal" data-bs-target="#photoModal" data-image="{{ conteneur.photo_plomb5.url }}" data-title="{% trans "Photo Plomb oils 2" %}">
+                  <img src="{{ conteneur.photo_plomb5.url }}" alt="Photo Plomb oils 2" class="img-thumbnail" style="max-width: 100px;">
+                </div>
+                <div>
+                  <p class="text-muted mb-1">{% trans "Plomb Oils 2" %}</p>
+                  <p class="font-weight-bold">{{ conteneur.numero_plomb5|default:"N/A" }}</p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Modal unique pour toutes les photos -->
+  <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="photoModalLabel">Photo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img src="" id="modalImage" class="img-fluid" alt="Image">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .photo-thumbnail {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    transition: transform 0.2s;
+  }
+  
+  .photo-thumbnail:hover {
+    transform: scale(1.02);
+  }
+  
+  .photo-thumbnail img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  
+  .photo-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  
+  .card {
+    transition: box-shadow 0.3s;
+  }
+  
+  .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Animation pour la modal */
+  .modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: scale(0.8);
+  }
+  
+  .modal.show .modal-dialog {
+    transform: scale(1);
+  }
+  
+  /* Style pour le zoom d'image */
+  #modalImage {
+    transition: transform 0.3s;
+    max-height: 70vh;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des clics sur les images pour la prévisualisation
+    document.querySelectorAll('.image-preview').forEach(function(element) {
+      element.addEventListener('click', function() {
+        const imageUrl = this.getAttribute('data-image');
+        const imageTitle = this.getAttribute('data-title');
+        
+        // Mettre à jour le contenu de la modal
+        document.getElementById('photoModalLabel').textContent = imageTitle;
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('modalImage').alt = imageTitle;
+        
+        // Ouvrir la modal (pour les versions de Bootstrap < 5)
+        if (typeof bootstrap === 'undefined') {
+          $('#photoModal').modal('show');
+        }
+        // Pour Bootstrap 5, la modal s'ouvre automatiquement grâce à data-bs-toggle et data-bs-target
+      });
+    });
+  });
+</script>
+{% endblock %}

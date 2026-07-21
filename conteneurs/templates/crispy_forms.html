@@ -1,0 +1,15 @@
+
+{% load crispy_forms_field %}
+
+<div class="form-group{% if field.errors %} has-error{% endif %}">
+    {{ field.label_tag }}
+    <div class="input-group">
+        {{ field|as_crispy_field }}
+        {% if field.field.widget.input_type == 'file' %}
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button">Choisir un fichier</button>
+            </span>
+        {% endif %}
+    </div>
+    {{ field.errors }}
+</div>

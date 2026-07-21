@@ -1,0 +1,75 @@
+{% extends 'layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">{% trans "Gérer les conteneurs du dossier" %} {{ dossier.TRD }}</h1>
+
+    <!-- Formulaire pour gérer les conteneurs -->
+    <form id="conteneur-formset" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ formset.management_form }}
+      <div id="formset-container">
+        {% for form in formset %}
+          <div class="card mb-3">
+            <div class="card-body">
+              {% crispy form %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Bouton pour ajouter un conteneur -->
+      <button type="button" class="btn btn-primary float-right ml-3" id="add-conteneur-btn">
+        <i class="bi bi-plus-lg"></i> {% trans "+ Ajouter un conteneur" %}
+      </button>
+
+    </form>
+
+    <!-- Afficher les erreurs de validation -->
+    {% if formset.errors %}
+      <div class="alert alert-danger mt-3">
+        <ul>
+          {% for form in formset %}
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Template pour le formulaire de conteneur -->
+  <script type="text/template" id="conteneur-form-template">
+    <div class="card mb-3">
+      <div class="card-body">
+        {{ formset.empty_form|crispy }}
+      </div>
+    </div>
+  </script>
+
+  <!-- JavaScript pour gérer l'ajout dynamique de formulaires -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const formsetContainer = document.getElementById('formset-container');
+      const addConteneurBtn = document.getElementById('add-conteneur-btn');
+      const formTemplate = document.getElementById('conteneur-form-template').innerHTML;
+      const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+
+      addConteneurBtn.addEventListener('click', function() {
+        const formCount = parseInt(totalFormsInput.value);
+        let newForm = formTemplate.replace(/__prefix__/g, formCount);
+
+        // Insérer le nouveau formulaire dans le container
+        formsetContainer.insertAdjacentHTML('beforeend', newForm);
+
+        // Mettre à jour le compteur total des formulaires
+        totalFormsInput.value = formCount + 1;
+      });
+    });
+  </script>
+{% endblock %}

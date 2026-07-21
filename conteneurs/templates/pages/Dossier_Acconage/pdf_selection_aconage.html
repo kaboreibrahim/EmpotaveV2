@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de sélection Dossier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #4a90e2;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .header img {
+            width: 170px;
+            height: auto;
+        }
+        .content {
+            margin-top: 20px;
+        }
+        .content h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #4a90e2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        tbody tr:hover {
+            background-color: #f1f9ff;
+            cursor: pointer;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Styles pour l'impression */
+        @media print {
+            @page {
+                size: landscape;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .header, .content {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .header img {
+                width: 325px;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2>Rapport D'habillahe  & empotage Du Dossier: {{ projet }}</h2>
+            <p>Client: {{ client }}</p>
+            <p>TRD: {{ TRD }}</p>
+            <p>Site de selection: {{ site }}</p>
+            <p>Site d'habillage & empotage: {{ Site_empotage }}</p>
+            <p>Nom de l'agent de selecion: {{ agent_selection }}</p>
+            <p>Nom de l'agent d'habillage et empotage: {{ agent_acconage }}</p>
+            <p>Compagnie maritime: {{ compagnie_maritime }}</p>
+            <p>POD: {{ port_de_dechargement }}</p>
+            <p>POL: {{ port_de_chargement }}</p>
+            <p>Commodité: {{ commodite }}</p>
+            <p>Date d'ajout: {{ Date_ajout }}</p>
+            <p>Date de selection: {{ Date_selection }}</p>
+            <p>Date de acconage: {{ Date_acconage }}</p>
+            <p>Date de fin : {{ Date_terminer }}</p>
+            <p>Nombre de conteneurs: {{ conteneurs.count }}</p>
+        </div>
+        <img src="{{ logo_url }}" alt="Logo">
+    </div>
+
+    <div class="content">
+        <h2>Liste des conteneurs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Référence</th>
+                    <th>Etat</th>
+                    <th>poids brute</th>
+                    <th>poids equipement </th>
+                    <th>poids net</th>
+                    <th>N° heating pad </th>
+                    <th>N° flexitank </th>
+                    <th>N° plomb </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conteneur in conteneurs %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ conteneur.reference|default:"N/A" }}</td>
+                    <td>{{ conteneur.etat|default:"N/A" }}</td>
+                    <td>{{ conteneur.poids_brute|default:"N/A" }} KG</td>
+                    <td>{{ conteneur.poids_equipements|default:"N/A" }} KG</td>
+                    <td>{{ conteneur.poids_net|default:"N/A" }} KG</td>
+                    <td>{{ conteneur.numero_heating_pad|default:"N/A" }}</td>
+                    <td>{{ conteneur.numero_flexitank|default:"N/A" }}</td>
+                    <td>{{ conteneur.numero_plomb|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

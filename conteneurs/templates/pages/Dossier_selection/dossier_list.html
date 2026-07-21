@@ -1,0 +1,193 @@
+{% extends 'layouts/base.html' %}
+{% load i18n %}
+{% block content %}
+
+<div class="row">
+
+    <!-- List of dossiers -->
+    <div class="col-md-12 my-4">
+        <h2 class="h4 mb-1">{% trans "Liste des dossiers" %}</h2>
+
+        <div class="card shadow">
+            <div class="card-body">
+
+                <!-- Dossiers en attente -->
+                <h3 class="h5 mb-3">{% trans "Dossiers en attente" %}</h3>
+                {% if dossiers_en_attente|length == 0 %}
+                    <p class="text-muted">{% trans "Aucun dossier en attente." %}</p>
+                {% else %}
+                    <div class="row">
+                        {% for dossier in dossiers_en_attente %}
+                            <div class="col-md-3 mb-4">
+                                <div class="card shadow">
+                                    <div class="card-body text-center">
+                                        <div class="avatar avatar-lg mt-4">
+                                            <a href="{% url 'view_conteneurs' dossier.id %}">
+                                                <div class="circle circle-lg bg-secondary my-4">
+                                                    <span class="fe fe-folder fe-24 text-white"></span>
+                                                </div>
+                                            </a>
+                                        </div><br>
+                                        <div class="card-text my-2">
+                                            <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                            <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                            <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                            {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                            <strong>{% trans "Nombre d'ISO Tanks" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                            {% else %}
+                                            <strong>{% trans "Nombre de Conteneurs" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                            {% endif %}
+
+                                            {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                <p style="color: green;">{% trans "Ce dossier contient des ISO 20 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "10_pieds" %}
+                                                <p style="color: blue;">{% trans "Ce dossier contient des conteneurs de type 10 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "20_pieds" %}
+                                                <p style="color: orange;">{% trans "Ce dossier contient des conteneurs de type 20 Pieds." %}</p>
+                                            {% elif dossier.type_conteneur == "40_pieds" %}
+                                                <p style="color: purple;">{% trans "Ce dossier contient des conteneurs de type 40 Pieds." %}</p>
+                                            {% else %}
+                                                <p style="color: red;">{% trans "Type de conteneur non spécifié." %}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row align-items-center justify-content-between">
+                                            <div class="col-auto">
+                                                <small>
+                                                    <span class="dot dot-lg bg-danger mr-1"></span>
+                                                    {{ dossier.get_statut_display }}
+                                                </small>
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="file-action">
+                                                    <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="text-muted sr-only">{% trans "Action" %}</span>
+                                                    </button>
+                                                    <div class="dropdown-menu m-2">
+                                                        <a class="dropdown-item" href="{% url 'view_conteneurs' dossier.id %}">
+                                                            <i class="fe fe-plus fe-12 mr-4"></i>
+                                                            {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                                {% trans "Ajouter ISO Tank" %}
+                                                            {% else %}
+                                                                {% trans "Ajouter Conteneur" %}
+                                                            {% endif %}
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'dossier_detail' dossier.pk %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail du dossier" %}</a>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> <!-- /.card-footer -->
+                                </div>
+                            </div> <!-- .col-md-3 -->
+                        {% endfor %}
+                    </div> <!-- .row -->
+                {% endif %}
+  <!-- Separator -->
+  <div class="col-md-12 my-4">
+    <hr class="my-4">
+</div>
+
+                <!-- Dossiers en cours de sélection -->
+                <h3 class="h5 mb-3">{% trans "Dossiers en cours de sélection" %}</h3>
+                {% if dossiers_en_cours|length == 0 %}
+                    <p class="text-muted">{% trans "Aucun dossier en cours de sélection." %}</p>
+                {% else %}
+                    <div class="row">
+                        {% for dossier in dossiers_en_cours %}
+                            <div class="col-md-3 mb-4">
+                                <div class="card shadow">
+                                    <div class="card-body text-center">
+                                        <div class="avatar avatar-lg mt-4">
+                                            <a href="{% url 'view_conteneurs' dossier.id %}">
+                                                <div class="circle circle-lg bg-secondary my-4">
+                                                    <span class="fe fe-folder fe-24 text-white"></span>
+                                                </div>
+                                            </a>
+                                        </div><br>
+                                        <div class="card-text my-2">
+                                            <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                              <div class="card-text my-2">
+                                                 <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                                <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                                {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                <strong>{% trans "Nombre d'ISO Tanks" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                                {% else %}
+                                                <strong>{% trans "Nombre de Conteneurs" %} :</strong> {{ dossier.conteneurs.count }}<br>
+                                                {% endif %}
+
+                                                {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                    <p style="color: green;">{% trans "Ce dossier contient des ISO 20 Pieds." %}</p>
+                                                {% elif dossier.type_conteneur == "10_pieds" %}
+                                                    <p style="color: blue;">{% trans "Ce dossier contient des conteneurs de type 10 Pieds." %}</p>
+                                                {% elif dossier.type_conteneur == "20_pieds" %}
+                                                    <p style="color: orange;">{% trans "Ce dossier contient des conteneurs de type 20 Pieds." %}</p>
+                                                {% elif dossier.type_conteneur == "40_pieds" %}
+                                                    <p style="color: purple;">{% trans "Ce dossier contient des conteneurs de type 40 Pieds." %}</p>
+                                                {% else %}
+                                                    <p style="color: red;">{% trans "Type de conteneur non spécifié." %}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row align-items-center justify-content-between">
+                                            <div class="col-auto">
+                                                <small>
+                                                    <span class="dot dot-lg bg-warning mr-1"></span>
+                                                    {{ dossier.get_statut_display }}
+                                                </small>
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="file-action">
+                                                    <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="text-muted sr-only">{% trans "Action" %}</span>
+                                                    </button>
+                                                    <div class="dropdown-menu m-2">
+                                                     <a class="dropdown-item" href="{% url 'dossier_detail' dossier.pk %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail du dossier" %}</a>
+
+                                                     <a class="dropdown-item" href="{% url 'view_conteneurs' dossier.id %}">
+                                                        <i class="fe fe-plus fe-12 mr-4"></i>
+                                                        {% if dossier.type_conteneur == "ISO_20_pieds" %}
+                                                            {% trans "Ajouter ISO Tank" %}
+                                                        {% else %}
+                                                            {% trans "Ajouter Conteneur" %}
+                                                        {% endif %}
+                                                    </a>
+
+                   
+                                                        {% if request.user.username == "selection.mauritanie" %}
+                                                        <a class="dropdown-item" href="{% url 'soumettre_dossier_Mauritanie' dossier.id %}"><i class="fe fe-mail fe-12 mr-4"></i>{% trans "Soumettre" %}</a>
+                                                        {%else%}
+                                                        <a class="dropdown-item" href="{% url 'soumettre_dossier' dossier.id %}"><i class="fe fe-mail fe-12 mr-4"></i>{% trans "Soumettre" %}</a>
+                                                        {%endif%}
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> <!-- /.card-footer -->
+                                </div>
+                            </div> <!-- .col-md-3 -->
+                        {% endfor %}
+                    </div> <!-- .row -->
+                {% endif %}
+
+                <!-- Pagination section -->
+                <nav aria-label="Table Paging" class="my-3">
+                    <ul class="pagination justify-content-end mb-0">
+                        <li class="page-item"><a class="page-link" href="#">{% trans "Previous" %}</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">{% trans "Next" %}</a></li>
+                    </ul>
+                </nav>
+            </div> <!-- .card-body -->
+        </div> <!-- .card -->
+    </div> <!-- .col-md-12 -->
+
+</div> <!-- .row -->
+{% endblock %}

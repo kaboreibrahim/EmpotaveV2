@@ -1,0 +1,106 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="modal-dialog modal-lg">
+    <div class="modal-content shadow-lg">
+        <div class="modal-header bg-primary text-white d-flex align-items-center">
+            <img src="{% static 'img/liberia.png' %}" alt="liberia" class="country-flag">
+            <h5 class="modal-title flex-grow-1">{% trans "Détails du Dossier" %}: {{ dossier.projet }}</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="modal-body bg-light">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Informations du Projet" %}</h6>
+                            <p class="card-text"><strong>{% trans "Projet" %} :</strong> {{ dossier.projet }}</p>
+                            <p class="card-text"><strong>{% trans "TRD" %} :</strong> {{ dossier.TRD }}</p>
+                            <p class="card-text"><strong>{% trans "Booking" %} :</strong> {{ dossier.booking }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Détails des Conteneurs" %}</h6>
+                            <p class="card-text"><strong>{% trans "Type de Conteneur" %} :</strong> {{ dossier.get_type_conteneur_display }}</p>
+                            <p class="card-text"><strong>{% trans "Commodité" %} :</strong> {{ dossier.commodite }}</p>
+                            <p class="card-text"><strong>{% trans "Nombre de Conteneurs" %} :</strong> {{ dossier.conteneurs.count }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Localisation" %}</h6>
+                            <p class="card-text"><strong>{% trans "Site de Sélection" %} :</strong> {{ dossier.site }}</p>
+                            <p class="card-text"><strong>{% trans "Site d'Empotage" %} :</strong> {{ dossier.Site_empotage }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Informations Maritimes" %}</h6>
+                            <p class="card-text"><strong>{% trans "Compagnie Maritime" %} :</strong> {{ dossier.compagnie_maritime }}</p>
+                            <p class="card-text"><strong>{% trans "Port de Chargement" %} :</strong> {{ dossier.port_de_chargement }}</p>
+                            <p class="card-text"><strong>{% trans "Port de Déchargement" %} :</strong> {{ dossier.port_de_dechargement }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Agents et Clients" %}</h6>
+                            <p class="card-text"><strong>{% trans "Client" %} :</strong> {{ dossier.client }}</p>
+                            <p class="card-text"><strong>{% trans "Agent de Sélection" %} :</strong> {{ dossier.agent_selection }}</p>
+                            <p class="card-text"><strong>{% trans "Agent d'Habillage & Empotage" %} :</strong> {{ dossier.agent_acconage }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{% trans "Dates Importantes" %}</h6>
+                            <p class="card-text"><strong>{% trans "Date de Sélection" %} :</strong> {{ dossier.Date_selection }}</p>
+                            <p class="card-text"><strong>{% trans "Date de Pose et d'Habillage" %} :</strong> {{ dossier.Date_acconage }}</p>
+                            <p class="card-text"><strong>{% trans "Date de Terminaison" %} :</strong> {{ dossier.Date_terminer }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer bg-primary text-white d-flex justify-content-between">
+            <a href="{% url 'view_conteneurs' dossier.id %}" class="btn btn-light">
+                <i class="fas fa-box-open mr-2"></i>{% trans "Voir les conteneurs" %}
+            </a>
+
+            {% if request.user.Personnel_type == 'agent_selection' %}
+                <a href="{% url 'dossier_list_selction' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left mr-2"></i>{% trans "Retour" %}
+                </a>
+            {% elif request.user.Personnel_type == 'agent_acconage' %}
+                <a href="{% url 'dossier_list_Accoange' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left mr-2"></i>{% trans "Retour" %}
+                </a>
+            {% else %}
+                <a href="{% url 'Dossier_list_nigeria' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left mr-2"></i>{% trans "Retour" %}
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

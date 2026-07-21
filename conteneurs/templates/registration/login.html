@@ -1,0 +1,55 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+{% load static i18n %}
+{% block content %}
+
+<div class="wrapper vh-100 d-flex align-items-center justify-content-center">
+    <div class="row justify-content-center w-100">
+        <form action="{% url 'login' %}" method="post" class="col-lg-3 col-md-4 col-10 text-center">
+            
+            <a class="navbar-brand mx-auto mt-2 flex-fill text-center">
+                <div class="w-100 mb-4">
+                    <div class="navbar-brand-wrapper d-flex align-items-center justify-content-center flex-column">
+                        <img src="{% static 'img/oil_of_africa.png' %}" alt="logo" class="img-fluid rounded-circle" style="max-width: 200px; height: auto;">
+                        <h2 class="h4 mb-1 mt-2">Suivi empotage</h2>
+                    </div>
+                </div> 
+            </a>
+            <hr>
+
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <span style="font-size: 13px;">
+                            {{ error|escape }}
+                        </span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" class="form-control form-control-lg" placeholder="Nom d'utilisateur ou e-mail">
+            </div>
+
+            <div class="mb-3">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" class="form-control form-control-lg" placeholder="Mot de passe">
+            </div>
+
+            <div class="mb-3 d-grid">
+                <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+            </div>
+
+            <hr>
+
+            <div class="options text-center">
+                <a href="{% url 'password_reset' %}">Mot de passe oublié ?</a><br>
+                <a href="">Créer un compte !</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

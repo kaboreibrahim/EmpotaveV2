@@ -1,0 +1,154 @@
+{% extends 'layouts/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Dossiers en Attente d'Aconage -->
+    <div class="col-md-12 my-4">
+        <h2 class="h4 mb-1">{% trans "Dossiers en Attente d'empotage et habillage" %}</h2>
+
+        <div class="card shadow">
+            <div class="card-body">
+
+                <!-- Container for the list of dossiers in 'En attente d'acconage' -->
+                <div class="row">
+                    {% for dossier in dossier_en_attente_acconage %}
+                    <div class="col-md-3 mb-4"> <!-- Adjust to fit 4 per row on medium screens -->
+                        <div class="card shadow">
+                            <div class="card-body text-center">
+                                <div class="avatar avatar-lg mt-4">
+                                    <a href="{% url 'view_conteneurs' dossier.id %}">
+                                        <div class="circle circle-lg bg-secondary my-4">
+                                            <span class="fe fe-folder fe-24 text-white"></span>
+                                        </div>
+                                    </a>
+                                </div><br>
+                                <div class="card-text my-2">
+                                    <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                    <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                    <strong>{% trans "Nombre de Conteneurs" %}:</strong> {{ dossier.conteneurs.count }}<br>
+                                    <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                </div>
+                            </div> <!-- ./card-text -->
+                            <div class="card-footer">
+                                <div class="row align-items-center justify-content-between">
+                                    <div class="col-auto">
+                                        <small>
+                                            <span class="dot dot-lg
+                                                {% if dossier.statut == "en_attente" %} bg-danger
+                                                {% elif dossier.statut == "selection_en_cours" %} bg-warning
+                                                {% elif dossier.statut == "Aconage_en_cours" %} bg-primary
+                                                {% elif dossier.statut == "termine" %} bg-success
+                                                {% elif dossier.statut == "ACCONAGE_FAIT" %} bg-info
+                                                {% else %} bg-dark
+                                                {% endif %} mr-1"></span>
+                                            {{ dossier.get_statut_display }}
+                                        </small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="file-action">
+                                            <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <span class="text-muted sr-only">{% trans "Action" %}</span>
+                                            </button>
+                                            <div class="dropdown-menu m-2">
+                                                <a class="dropdown-item" href="{% url 'dossier_detail' dossier.pk %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail du dossier" %}</a>
+                                                <a class="dropdown-item" href="{% url 'retrograder_dossier' dossier.id %}">
+                                                    <i class="fe fe-mail fe-12 mr-4"></i> {% trans "Rétrograder en sélection" %}
+                                                </a>
+                                                 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- /.card-footer -->
+                        </div>
+                    </div> <!-- .col-md-3 -->
+                    {% empty %}
+                    <p>{% trans "Aucun dossier en attente d'empotage." %}</p>
+                    {% endfor %}
+                </div> <!-- .row -->
+
+            </div> <!-- .card-body -->
+        </div> <!-- .card -->
+    </div> <!-- .col-md-12 -->
+    <div class="col-md-12 my-4">
+        <hr class="my-4">
+    </div>
+    <div class="col-md-12 my-4">
+        <h2 class="h4 mb-1">{% trans "Dossiers empotage en Cours" %}</h2>
+
+        <div class="card shadow">
+            <div class="card-body">
+
+                <!-- Container for the list of dossiers in 'Aconage en cours' -->
+                <div class="row">
+                    {% for dossier in dossier_acconage_en_cours %}
+                    <div class="col-md-3 mb-4"> <!-- Adjust to fit 4 per row on medium screens -->
+                        <div class="card shadow">
+                            <div class="card-body text-center">
+                                <div class="avatar avatar-lg mt-4">
+                                    <a href="{% url 'view_conteneurs' dossier.id %}">
+                                        <div class="circle circle-lg bg-secondary my-4">
+                                            <span class="fe fe-folder fe-24 text-white"></span>
+                                        </div>
+                                    </a>
+                                </div><br>
+                                <div class="card-text my-2">
+                                    <strong class="card-title my-0">{{ dossier.projet }}</strong>
+                                    <p class="small text-muted mb-0">{{ dossier.TRD }}</p><br>
+                                    <strong>{% trans "Nombre de Conteneurs" %}:</strong> {{ dossier.conteneurs.count }}<br>
+                                    <h5 class="small"><span class="badge badge-light text-muted">{{ dossier.client }}</span></h5>
+                                </div>
+                            </div> <!-- ./card-text -->
+                            <div class="card-footer">
+                                <div class="row align-items-center justify-content-between">
+                                    <div class="col-auto">
+                                        <small>
+                                            <span class="dot dot-lg
+                                                {% if dossier.statut == "en_attente" %} bg-danger
+                                                {% elif dossier.statut == "selection_en_cours" %} bg-warning
+                                                {% elif dossier.statut == "Aconage_en_cours" %} bg-primary
+                                                {% elif dossier.statut == "termine" %} bg-success
+                                                {% elif dossier.statut == "ACCONAGE_FAIT" %} bg-info
+                                                {% else %} bg-dark
+                                                {% endif %} mr-1"></span>
+                                            {{ dossier.get_statut_display }}
+                                        </small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="file-action">
+                                            <button type="button" class="btn btn-link dropdown-toggle more-vertical p-0 text-muted mx-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <span class="text-muted sr-only">{% trans "Action" %}</span>
+                                            </button>
+                                            <div class="dropdown-menu m-2">
+                                                <a class="dropdown-item" href="{% url 'dossier_detail' dossier.pk %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail du dossier" %}</a>
+                                                 {% if request.user.username == "empotage.mauritanie" %}
+                                                <a class="dropdown-item" href="{% url 'soumettre_dossier_acconage_mauritanie' dossier.id %}">
+                                                    <i class="fe fe-mail fe-12 mr-4"></i> {% trans "soumettre Rapport" %}
+                                                </a>
+                                                {%else%}
+                                                 <a class="dropdown-item" href="{% url 'soumettre_dossier_acconage' dossier.id %}">
+                                                    <i class="fe fe-mail fe-12 mr-4"></i> {% trans "soumettre Rapport" %}
+                                                </a>
+                                                {%endif%}
+                                                <a class="dropdown-item" href="{% url 'retrograder_dossier' dossier.id %}">
+                                                    <i class="fe fe-mail fe-12 mr-4"></i> {% trans "Rétrograder en sélection" %}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> <!-- /.card-footer -->
+                        </div>
+                    </div> <!-- .col-md-3 -->
+                    {% empty %}
+                    <p>{% trans "Aucun dossier à empoter en cours." %}</p>
+                    {% endfor %}
+                </div> <!-- .row -->
+
+            </div> <!-- .card-body -->
+        </div> <!-- .card -->
+    </div> <!-- .col-md-12 -->
+</div> <!-- .row -->
+{% endblock %}

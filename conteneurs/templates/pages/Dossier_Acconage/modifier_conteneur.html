@@ -1,0 +1,28 @@
+{% extends 'layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <h1>{% trans "Modifier le Conteneur" %} Ref : {{ conteneur.reference }}</h1>
+
+    <!-- Afficher les messages de succès ou d'erreur -->
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Formulaire de modification du conteneur -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+    </form>
+
+    <!-- Lien pour retourner à la liste des conteneurs -->
+    <a href="{% url 'view_conteneurs' dossier_id=conteneur.dossier.id %}" class="btn btn-secondary mt-3">{% trans "Retour à la liste des conteneurs" %}</a>
+</div>
+{% endblock %}

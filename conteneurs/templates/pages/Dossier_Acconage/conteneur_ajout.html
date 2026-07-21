@@ -1,0 +1,89 @@
+{% extends 'layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+{% load i18n %}
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 8px 8px 0 0;
+        padding: 1rem;
+    }
+    
+    .form-control {
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        padding: 0.75rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    .img-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        padding: 4px;
+    }
+    
+    .btn-primary {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-group label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.875rem;
+        color: #dc3545;
+        margin-top: 0.25rem;
+    }
+</style>
+
+
+<div class="container">
+    <h3>{% trans "Habillage et empotage" %} {% trans "Référence" %} : {{ conteneur.reference }}</h3>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Utiliser crispy pour le rendu du formulaire -->
+        {{ form|crispy }}
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">{% trans "Enregistrer" %}</button>
+        </div>
+    </form>
+</div>
+
+<script >
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            const previewId = 'preview_' + input.id;
+            const preview = document.getElementById(previewId);
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+
+
+{% endblock %}
+
+

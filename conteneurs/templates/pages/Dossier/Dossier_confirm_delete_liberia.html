@@ -1,0 +1,16 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+{% load i18n %}
+
+<div class="container mt-5">
+  <h2 class="h4 mb-4">{% trans "Confirmer la Suppression" %}</h2>
+  <p>{% trans "Êtes-vous sûr de vouloir supprimer le conteneur" %} "{{ object }}" ?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">{% trans "Supprimer" %}</button>
+      <a href="{% url 'Dossier_list_liberia' %}" class="btn btn-secondary">{% trans "Annuler" %}</a>
+    </form>
+  </div>
+
+
+{% endblock %}

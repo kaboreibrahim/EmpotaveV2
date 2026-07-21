@@ -1,0 +1,46 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+{% load static i18n %}
+{% block content %}
+
+<div class="wrapper vh-100">
+    <div class="row align-items-center h-100">
+      <form method="post" class="col-lg-3 col-md-4 col-10 mx-auto text-center">
+        <div class="mx-auto text-center my-4">
+          <a class="navbar-brand mx-auto mt-2 flex-fill text-center">
+                <div class="w-100 mb-4">
+                    <div class="navbar-brand-wrapper d-flex align-items-center justify-content-center flex-column">
+                        <img src="{% static 'img/oil_of_africa.png' %}" alt="logo" class="img-fluid rounded-circle" style="max-width: 200px; height: auto;">
+                        <h2 class="h4 mb-1 mt-2">Suivi empotage</h2>
+                    </div>
+                </div> 
+            </a>
+          <h4 class="my-3">code de verification </h4>
+        </div>
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <input type="text" name="code" id="id_code" class="form-control" placeholder="Enter code 🔒" maxlength="6" pattern="\d{6}" title="Please enter a 6-digit code" required>
+                {% if form.code.errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.code.errors %}
+                            <span style="font-size: 13px;">{{ error|escape }} ❌</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+            </div>
+
+            <div class="mb-3 d-grid text-center">
+                <button class="btn btn-primary" type="submit">Verify ✅</button>
+            </div>
+
+        
+        <p class="mt-5 mb-3 text-muted">© 2020</p>
+      </form>
+    </div>
+  </div>
+
+
+  {% endblock %}
+

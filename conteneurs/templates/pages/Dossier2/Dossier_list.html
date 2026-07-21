@@ -1,0 +1,140 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-between align-items-center mb-4">
+        <div class="col">
+            <h2 class="h3 page-title">Liste Des Dossiers</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'Dossier_create2' %}" class="btn btn-success">
+                <span class="fe fe-plus fe-16 mr-2"></span>Nouveau Dossier
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <!-- Filtres -->
+                <div class="card-body border-bottom">
+                    <form class="form" method="GET" action="">
+                        <div class="row align-items-center">
+                            <!-- Sélection de l'année -->
+                            <div class="col-md-2">
+                                <label class="small text-muted mb-1">Année</label>
+                                <select class="custom-select" name="year" onchange="this.form.submit()">
+                                    {% for year in available_years %}
+                                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                                            {{ year }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Statut -->
+                            
+                            
+                            <!-- Recherche -->
+                            <div class="col-md-7">
+                                <label class="small text-muted mb-1">Recherche</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="search" 
+                                           value="{{ request.GET.search }}" 
+                                           placeholder="Rechercher un projet, TRD">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-success">
+                                            <span class="fe fe-search fe-16"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Liste des dossiers groupés par mois -->
+                <div class="card-body">
+                    {% for month, dossiers in dossiers_by_month.items %}
+                    <div class="mb-6">
+                        <div class="d-flex align-items-center mb-4">
+                            <h3 class="h4 mb-0">{{ month }}</h3>
+                            <div class="border-bottom flex-grow-1 ml-3"></div>
+                        </div>
+
+                        <div class="row">
+                            {% for dossier in dossiers %}
+                            <div class="col-md-3 mb-4">
+                                <div class="card h-100 shadow-sm">
+                                    <!-- En-tête de la carte -->
+                                    <div class="card-body text-center pt-4">
+                                        <a href="{% url 'menu_sous_dossier' dossier.pk %}" class="text-decoration-none">
+                                            <div class="circle circle-lg bg-success-soft mb-3 mx-auto">
+                                                <span class="fe fe-folder fe-24 text-success"></span>
+                                            </div>
+                                            <h5 class="card-title mb-2">{{ dossier.projet }}</h5>
+                                            <p class="card-text text-muted small mb-2">{{ dossier.TRD }}</p>
+                                            <span class="badge badge-light-soft text-muted">{{ dossier.client }}</span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Pied de la carte -->
+                                    <div class="card-footer bg-light border-top-0">
+                                        <div class="row align-items-center">
+                                            <div class="col">
+                                                <small class="text-muted">
+                                                    {{ dossier.date_creation|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-link text-muted p-0" type="button" data-toggle="dropdown">
+                                                        <span class="fe fe-more-vertical fe-16"></span>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item d-flex align-items-center" 
+                                                           href="{% url 'dossier_detail' dossier.pk %}">
+                                                            <span class="fe fe-eye fe-16 mr-2"></span>
+                                                            Détail
+                                                        </a>
+                                                        <a class="dropdown-item d-flex align-items-center" 
+                                                           href="{% url 'Dossier_edit' pk=dossier.pk %}">
+                                                            <span class="fe fe-edit-2 fe-16 mr-2"></span>
+                                                            Modifier
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item d-flex align-items-center text-danger" 
+                                                           href="{% url 'Dossier_delete' pk=dossier.pk %}">
+                                                            <span class="fe fe-trash-2 fe-16 mr-2"></span>
+                                                            Supprimer
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <span class="fe fe-inbox fe-32 text-muted"></span>
+                        </div>
+                        <h3 class="h5 text-muted">Aucun dossier trouvé pour l'année {{ selected_year }}</h3>
+                        <p class="text-muted">Essayez de sélectionner une autre année ou modifiez vos critères de recherche.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de détails (inchangé) -->
+<div class="modal fade" id="dossierDetailModal" tabindex="-1" role="dialog">
+    <!-- ... le reste du modal inchangé ... -->
+</div>
+{% endblock %}

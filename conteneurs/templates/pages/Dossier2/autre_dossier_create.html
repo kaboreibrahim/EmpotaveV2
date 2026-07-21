@@ -1,0 +1,97 @@
+{% extends "layouts/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <h3 class="h4 mb-0">
+        Dossier : 
+        <a href="{% url 'menu_sous_dossier' dossier.pk %}">{{ dossier.projet }}</a>/
+        <a href="{% url 'autre_dossier_list' dossier.pk %}">Autre Dossier</a>/
+        <a href="">Ajouter</a>
+    </h3>
+    <div class="border-bottom flex-grow-1 ml-3"></div>
+</div> 
+
+<div class="container mt-5">
+    <form method="post" enctype="multipart/form-data" class="needs-validation">
+        {% csrf_token %}
+        
+        <!-- Enhanced File Upload Section -->
+        <div class="file-upload-container bg-light p-4 rounded border border-success">
+            <div class="custom-file mb-3">
+                <input type="file" class="custom-file-input" id="id_document" name="document" required>
+                
+                <label class="custom-file-label text-muted" for="id_document">
+                    <i class="fas fa-cloud-upload-alt text-success mr-2"></i>
+                    <span class="file-upload-text">
+                        Glissez et déposez votre fichier ici ou cliquez pour sélectionner
+                    </span>
+                </label>
+            
+                {% if form.document.errors %}
+                <div class="alert alert-danger mt-2">
+                    {% for error in form.document.errors %}
+                        <span style="font-size: 13px;">{{ error|escape }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <!-- File Preview Area -->
+            <div id="file-preview" class="mt-3 text-center d-none">
+                <div class="alert alert-success d-flex align-items-center" role="alert">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span id="file-name"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rest of the form fields -->
+        <!-- Buttons with Green Theme -->
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success mr-2">
+                <i class="fas fa-save mr-1"></i>Enregistrer
+            </button>
+            <a href="{% url 'autre_dossier_list' dossier.pk %}" class="btn btn-outline-success">
+                <i class="fas fa-arrow-left mr-1"></i>Retour
+            </a>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('id_document');
+        const fileUploadText = document.querySelector('.file-upload-text');
+    
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Update label with file name
+                fileUploadText.textContent = file.name;
+                fileUploadText.classList.remove('text-muted');
+                fileUploadText.classList.add('text-success', 'font-weight-bold');
+            } else {
+                // Reset to default text if no file selected
+                fileUploadText.textContent = 'Glissez et déposez votre fichier ici ou cliquez pour sélectionner';
+                fileUploadText.classList.add('text-muted');
+                fileUploadText.classList.remove('text-success', 'font-weight-bold');
+            }
+        });
+    });
+    </script>
+    
+    <style>
+    .custom-file-input:lang(en)::after {
+        content: none !important;
+    }
+    .custom-file-input:lang(en)::before {
+        content: none !important;
+    }
+    .custom-file-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    </style>
+{% endblock %}

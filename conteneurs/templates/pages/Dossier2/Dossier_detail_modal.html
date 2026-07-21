@@ -1,0 +1,54 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<!-- dossier_detail_modal.html -->
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Détails du Dossier: {{ dossier.projet }}</h5>
+        </div>
+        <div class="modal-body bg-light">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p><strong>Projet :</strong> {{ dossier.projet }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>TRD :</strong> {{ dossier.TRD }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Booking :</strong> {{ dossier.booking }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Type de Conteneur :</strong> {{ dossier.get_type_conteneur_display }}</p>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <p><strong>Compagnie Maritime :</strong> {{ dossier.site}}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Port de Chargement :</strong> {{ dossier.Site_empotage}}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Compagnie Maritime :</strong> {{ dossier.compagnie_maritime }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Port de Chargement :</strong> {{ dossier.port_de_chargement }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Port de Déchargement :</strong> {{ dossier.port_de_dechargement }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p><strong>Client :</strong> {{ dossier.client }}</p>
+                </div>
+               
+               
+            </div>
+        </div>
+        <div class="modal-footer bg-primary text-white d-flex justify-content-between">
+            <a href="" class="btn btn-light">voir les conteneurs</a>
+            <a href="{% url 'Dossier_list' %}" class="btn btn-light">Retour</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

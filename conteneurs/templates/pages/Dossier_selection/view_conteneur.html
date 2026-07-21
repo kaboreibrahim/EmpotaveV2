@@ -1,0 +1,236 @@
+{% extends 'layouts/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+    {% if request.user.Personnel_type == "agent_selection" %}
+    <a href="{% url 'manage_conteneurs' dossier.id %}" class="btn btn-primary float-right ml-3">
+      {% if dossier.type_conteneur == "ISO_20_pieds" %}
+          {% trans "Ajouter un ISO Tank" %}
+      {% else %}
+          {% trans "Ajouter un Conteneur" %}
+      {% endif %}
+    </a>
+    {% endif %}
+    {% if request.user.Personnel_type == "agent_acconage" %}
+    <a href="{% url 'dossier_list_Accoange' %}" class="btn btn-primary float-right ml-3">{% trans "retour au dossier" %}</a>
+    {% endif %}
+    {% if request.user.Personnel_type == "secretaire" or request.user.Personnel_type == "chef" %}
+    <a href="{% url 'dossier_detail' dossier.pk %}" class="btn btn-primary float-right ml-3">{% trans "retour au dossier" %}</a>
+    {% endif %}
+    {% if request.user.Personnel_type == "agent_selection" %}
+    <a href="{% url 'dossier_list_selction' %}" class="btn btn-primary float-right ml-3">{% trans "retour au dossier" %}</a>
+    {% endif %}
+
+    <!-- Small table -->
+    <div class="col-md-12 my-4">
+      <h2 class="h4 mb-1">{% trans "Dossier" %} {{ dossier.projet }}</h2>
+
+      <div class="card shadow">
+
+          <!-- table -->
+          <table class="table table-borderless table-hover">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th scope="col">{% trans "Réf Conteneur" %}</th>
+                <th scope="col">{% trans "Etat" %}</th>
+                <th scope="col">{% trans "Photo Avant" %}</th>
+                <th scope="col">{% trans "Photo Derrière" %}</th>
+                <th scope="col">{% trans "Photo Intérieure" %}</th>
+                <th scope="col">{% trans "Photo lateral droit" %}</th>
+                <th scope="col">{% trans "Photo lateral gauche" %}</th>
+                {% if request.user.Personnel_type == "agent_acconage" or request.user.Personnel_type == "chef" %}
+                <th scope="col">{% trans "statut" %}</th>
+                {% endif %}
+                <th scope="col">{% trans "Action" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for conteneur in dossier.conteneurs.all %}
+              <tr>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ forloop.counter }}</strong></p>
+                </td>
+                <td>
+                  <p class="mb-0 text-muted"><strong>{{ conteneur.reference }}</strong></p>
+                </td>
+                <td>
+                    <p class="mb-0 text-muted"><strong>{{ conteneur.etat }}</strong></p>
+                  </td>
+                <td>
+                  {% if conteneur.photo_devant %}
+                    <a href="#" data-toggle="modal" data-target="#photoAvantModal{{ conteneur.id }}">{% trans "Photo Avant" %}</a>
+                    <div class="modal fade" id="photoAvantModal{{ conteneur.id }}" tabindex="-1" role="dialog" aria-labelledby="photoAvantModalLabel{{ conteneur.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="photoAvantModalLabel{{ conteneur.id }}">{% trans "Photo Avant" %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <img src="{{ conteneur.photo_devant.url }}" alt="Photo Avant" class="img-fluid">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <p class="mb-0 text-muted">{% trans "Pas d'image associée" %}</p>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if conteneur.photo_derriere %}
+                    <a href="#" data-toggle="modal" data-target="#photoDerriereModal{{ conteneur.id }}">{% trans "Photo Derrière" %}</a>
+                    <div class="modal fade" id="photoDerriereModal{{ conteneur.id }}" tabindex="-1" role="dialog" aria-labelledby="photoDerriereModalLabel{{ conteneur.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="photoDerriereModalLabel{{ conteneur.id }}">{% trans "Photo Derrière" %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <img src="{{ conteneur.photo_derriere.url }}" alt="Photo Derrière" class="img-fluid">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <p class="mb-0 text-muted">{% trans "Pas d'image associée" %}</p>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if conteneur.photo_interieur %}
+                    <a href="#" data-toggle="modal" data-target="#photoInterieurModal{{ conteneur.id }}">{% trans "Photo Intérieure" %}</a>
+                    <div class="modal fade" id="photoInterieurModal{{ conteneur.id }}" tabindex="-1" role="dialog" aria-labelledby="photoInterieurModalLabel{{ conteneur.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="photoInterieurModalLabel{{ conteneur.id }}">{% trans "Photo Intérieure" %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <img src="{{ conteneur.photo_interieur.url }}" alt="Photo Intérieure" class="img-fluid">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <p class="mb-0 text-muted">{% trans "Pas d'image associée" %}</p>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if conteneur.photo_lateral_droit %}
+                    <a href="#" data-toggle="modal" data-target="#photo_lateral_droitModal{{ conteneur.id }}">{% trans "Photo lateral droit" %}</a>
+                    <div class="modal fade" id="photo_lateral_droitModal{{ conteneur.id }}" tabindex="-1" role="dialog" aria-labelledby="photoInterieurModalLabel{{ conteneur.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="photo_lateral_droitModal{{ conteneur.id }}">{% trans "Photo lateral droit" %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <img src="{{ conteneur.photo_lateral_droit.url }}" alt="Photo lateral droit" class="img-fluid">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <p class="mb-0 text-muted">{% trans "Pas d'image associée" %}</p>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if conteneur.photo_lateral_gauche %}
+                    <a href="#" data-toggle="modal" data-target="#photo_lateral_gaucheModal{{ conteneur.id }}">{% trans "Photo lateral gauche" %}</a>
+                    <div class="modal fade" id="photo_lateral_gaucheModal{{ conteneur.id }}" tabindex="-1" role="dialog" aria-labelledby="photoInterieurModalLabel{{ conteneur.id }}" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="photo_lateral_gaucheModalLabel{{ conteneur.id }}">{% trans "Photo lateral gauche" %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <img src="{{ conteneur.photo_lateral_gauche.url }}" alt="Photo Intérieure" class="img-fluid">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <p class="mb-0 text-muted">{% trans "Pas d'image associée" %}</p>
+                  {% endif %}
+                </td>
+                {% if request.user.Personnel_type == "agent_acconage" or request.user.Personnel_type == "chef" %}
+                <td>
+                    <p class="mb-0 text-muted">
+                      {% if conteneur.statut == 'aconer' %}
+                        <strong>{% trans "empoter" %} <span class="dot dot-lg bg-success mr-1"></span></strong>
+                      {% else %}
+                        <strong>{% trans "Non empoter" %} <span class="dot dot-lg bg-danger mr-1"></span></strong>
+                      {% endif %}
+                    </p>
+                </td>
+                {% endif %}
+                <td>
+                  <button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="text-muted sr-only">{% trans "Action" %}</span>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right">
+                    {% if request.user.Personnel_type == "agent_acconage" or request.user.Personnel_type == "chef" %}
+                    {% if conteneur.statut != 'aconer' %}
+                    <a class="dropdown-item" href="{% url 'manage_conteneurs_acconage' dossier_id=conteneur.dossier.id conteneur_id=conteneur.id %}">
+                      <i class="fe fe-edit-3 fe-12 mr-4"></i>{% trans "habiller & empoter" %}
+                     </a>
+                    {% endif %}
+                    {% if conteneur.statut != 'Non_aconer' %}
+                    <a class="dropdown-item" href="{% url 'modifier_conteneur_aconer' dossier_id=conteneur.dossier.id conteneur_id=conteneur.id %}"><i class="fe fe-edit fe-12 mr-4"></i>{% trans "Modifier empotage" %}</a>
+                    {% endif %}
+                    <a class="dropdown-item" href="{% url 'detail_conteneur' conteneur.id %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail" %}</a>
+                    {% endif %}
+                    {% if request.user.Personnel_type == "agent_selection" or request.user.Personnel_type == "chef" %}
+                    <a class="dropdown-item" href="{% url 'modifier_conteneur' conteneur.id %}"><i class="fe fe-edit fe-12 mr-4"></i>{% trans "Modifier selection" %}</a>
+                    <a class="dropdown-item" href="{% url 'supprimer_conteneur' conteneur.id %}"><i class="fe fe-delete fe-12 mr-4"></i>{% trans "Supprimer" %}</a>
+                    {% endif %}
+                    {% if request.user.Personnel_type == "secretaire" %}
+                    <a class="dropdown-item" href="{% url 'detail_conteneur' conteneur.id %}"><i class="fe fe-eye fe-12 mr-4"></i>{% trans "detail" %}</a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5">{% trans "Aucun conteneur trouvé." %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <nav aria-label="Table Paging" class="mb-0 text-muted">
+            <ul class="pagination justify-content-center mb-0">
+              {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{% trans "Premier" %}</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{% trans "Précédent" %}</a></li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+              <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+              </li>
+              {% endfor %}
+              {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{% trans "Suivant" %}</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{% trans "Dernier" %}</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div> <!-- customized table -->
+  </div> <!-- end section -->
+{% endblock %}

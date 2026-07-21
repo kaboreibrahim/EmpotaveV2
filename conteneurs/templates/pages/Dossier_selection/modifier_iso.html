@@ -1,0 +1,13 @@
+{% extends 'layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <h2 class="h4 mb-4">{% trans "Modifier l'IsoTank" %}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% crispy form %}
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,354 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+
+{% load static %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Suivi des Documents pour le Dossier {{ dossier.TRD }}</h1>
+        </div>
+        <div class="progress-section">
+            <div class="progress-header">
+                <div class="progress-title">État d'avancement du dossier</div>
+                <div class="progress-stats">
+                    {{ completed_docs }}/{{ total_docs }} documents ({{ completion_percentage|floatformat:0 }}%)
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ completion_percentage|floatformat:0 }}%"></div>
+            </div>
+            <div class="progress-legend">
+                <div class="legend-item">
+                    <div class="legend-dot dot-complete"></div>
+                    <span>Complétés ({{ status_counts.complete }})</span>
+                </div>
+                 
+                <div class="legend-item">
+                    <div class="legend-dot dot-missing"></div>
+                    <span>Manquants ({{ status_counts.missing }})</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom du Document</th>
+                            <th>Date d'Ajout</th>
+                            <th>Date de Modification</th>
+                            <th>Voir</th>
+                            <th>Télécharger</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nom, document in documents.items %}
+                        <tr>
+                            <td>{{ nom }}</td>
+                            <td>
+                                {% if document %}
+                                    {{ document.date_ajout|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="badge badge-danger">Non disponible</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if document %}
+                                    {{ document.date_modification|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="badge badge-danger">Non disponible</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if document and document.fichier %}
+                                    <a href="{{ document.fichier.url }}" target="_blank" class="btn btn-info">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                {% else %}
+                                    <span class="badge badge-danger">Non disponible</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if document and document.fichier %}
+                                    <a href="{{ document.fichier.url }}" download class="btn btn-success">
+                                        <i class="fas fa-download"></i> Télécharger
+                                    </a>
+                                {% else %}
+                                    <span class="badge badge-danger">Non disponible</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if document %}
+                                    <a href="{% url 'ajouter_document' pk=dossier.pk type_document=nom|slugify %}" class="btn btn-primary">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'ajouter_document' pk=dossier.pk type_document=nom|slugify %}" class="btn btn-success">
+                                        <i class="fas fa-plus"></i> Ajouter
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --danger-color: #dc2626;
+        --success-color: #16a34a;
+        --info-color: #0891b2;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-800: #1f2937;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    /* Styles de la section de progression */
+    /* Styles de la section de progression */
+    .progress-section {
+        padding: 2rem;  /* Plus grand padding */
+        border-bottom: 1px solid var(--gray-200);
+        background-color: white;
+        margin: 1rem 0;  /* Ajoute de l'espace autour */
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;  /* Plus d'espace avant la barre */
+    }
+    
+    .progress-title {
+        font-size: 1.25rem;  /* Titre plus grand */
+        color: var(--gray-800);
+        font-weight: 600;
+    }
+    
+    .progress-stats {
+        font-size: 1.1rem;  /* Statistiques plus grandes */
+        color: var(--gray-800);
+        font-weight: 500;
+    }
+    
+    .progress-container {
+        background: var(--gray-200);
+        border-radius: 1rem;  /* Bords plus arrondis */
+        height: 1.5rem;  /* Hauteur augmentée */
+        overflow: hidden;
+        position: relative;
+        margin: 1rem 0;  /* Espace autour de la barre */
+    }
+    
+    .progress-bar {
+        position: absolute;
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+        border-radius: 1rem;
+        transition: width 0.6s ease;
+    }
+    /* Ajouter un effet de brillance */
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.2) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        animation: shine 2s infinite;
+    }
+    
+    @keyframes shine {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .progress-legend {
+        display: flex;
+        justify-content: flex-start;
+        gap: 3rem;  /* Plus d'espace entre les éléments */
+        margin-top: 1.5rem;  /* Plus d'espace au-dessus de la légende */
+        flex-wrap: wrap;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;  /* Plus d'espace entre le point et le texte */
+        font-size: 1rem;  /* Texte de légende plus grand */
+        color: var(--gray-800);
+    }
+    
+    .legend-dot {
+        width: 1rem;  /* Points de légende plus grands */
+        height: 1rem;
+        border-radius: 50%;
+    }
+
+    .dot-complete {
+        background-color: var(--success-color);
+    }
+
+    .dot-pending {
+        background-color: var(--primary-color);
+    }
+
+    .dot-missing {
+        background-color: var(--danger-color);
+    }
+
+    /* Styles du tableau */
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        margin: 0 -1.5rem;
+        padding: 0 1.5rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+
+    th {
+        background: var(--gray-100);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+        vertical-align: middle;
+    }
+
+    tr:hover {
+        background: var(--gray-100);
+    }
+
+    /* Styles des badges et boutons */
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: white;
+    }
+
+    .badge-danger {
+        background: var(--danger-color);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+    }
+
+    .btn-success {
+        background: var(--success-color);
+    }
+
+    .btn-info {
+        background: var(--info-color);
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    /* Styles responsifs */
+    @media (max-width: 768px) {
+        .card-header,
+        .progress-section,
+        .card-body {
+            padding: 1rem;
+        }
+
+        .table-container {
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+
+        td, th {
+            padding: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.375rem 0.75rem;
+        }
+
+        .progress-legend {
+            gap: 1rem;
+        }
+
+        .legend-item {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}  
