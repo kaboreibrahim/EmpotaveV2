@@ -1,0 +1,27 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Supprimer le site d'empotage{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto w-full">
+  <section class="form-section-card p-8 rounded-xl shadow-sm relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+    <div class="flex items-start gap-4 mb-8">
+      <div class="p-3 bg-error/10 rounded-lg text-error"><span class="material-symbols-outlined">warning</span></div>
+      <div>
+        <h3 class="text-headline-lg font-headline-lg text-on-surface mb-2">Supprimer {{ object.nom }}</h3>
+        <p class="text-body-md text-on-surface-variant">Confirmez la suppression de ce site d'empotage.</p>
+      </div>
+    </div>
+    <div class="rounded-xl border border-outline-variant bg-surface-container-low p-5">
+      <p class="font-bold text-on-surface">{{ object.nom }}</p>
+      <p class="text-body-sm text-on-surface-variant">{{ object.lieu }} - {{ object.Id_Pays.nom }}</p>
+    </div>
+    <form method="post" class="mt-8 flex items-center justify-between gap-4 border-t border-outline-variant pt-8">
+      {% csrf_token %}
+      <a class="px-8 py-3 rounded-lg border border-outline text-label-md font-label-md font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors" href="{% url 'DashboardPersonnel:site-empotage-liste' %}">Annuler</a>
+      <button class="px-8 py-3 rounded-lg bg-error text-on-error text-label-md font-label-md font-bold shadow-lg active:scale-95 transition-all" type="submit">Supprimer</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Ajouter un POL{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto w-full">
+  <nav class="flex mb-6 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:pol-liste' %}">Referentiels</a>
+    <span class="mx-2">/</span>
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:pol-liste' %}">POL</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">Ajouter</span>
+  </nav>
+
+  <div class="flex justify-between items-end mb-10">
+    <div>
+      <h3 class="text-headline-lg font-headline-lg text-on-surface mb-2">Nouveau POL</h3>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Enregistrez un port de chargement.</p>
+    </div>
+    <div class="hidden lg:block w-24 h-24 bg-surface-container rounded-lg flex items-center justify-center border border-outline-variant">
+      <span class="material-symbols-outlined text-primary text-5xl">upload</span>
+    </div>
+  </div>
+
+  <form class="space-y-8" method="post">
+    {% csrf_token %}
+    {% include "DashboardPersonnel/pages/pol/form_fields.html" %}
+    <div class="flex items-center justify-between pt-8 border-t border-outline-variant">
+      <a class="px-8 py-3 rounded-lg border border-outline text-label-md font-label-md font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors" href="{% url 'DashboardPersonnel:pol-liste' %}">Annuler</a>
+      <button class="px-8 py-3 rounded-lg bg-primary text-on-primary text-label-md font-label-md font-bold shadow-lg active:scale-95 transition-all" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

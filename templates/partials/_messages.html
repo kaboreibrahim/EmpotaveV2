@@ -1,0 +1,44 @@
+{% if messages %}
+  <div id="messages-container" class="px-4 sm:px-5 lg:px-margin-desktop pt-4 space-y-2 max-w-[1280px] w-full mx-auto">
+    {% for message in messages %}
+      <div
+        role="alert"
+        class="js-message flex items-start gap-3 px-4 py-3 rounded-lg border text-body-sm animate-entrance
+          {% if 'alert-danger' in message.tags %}bg-error/10 border-error text-error
+          {% elif 'alert-success' in message.tags %}bg-primary/10 border-primary text-primary
+          {% elif 'alert-warning' in message.tags %}bg-secondary/10 border-secondary text-secondary
+          {% else %}bg-surface-variant border-outline-variant text-on-surface-variant{% endif %}"
+      >
+        <span class="material-symbols-outlined text-lg">
+          {% if 'alert-danger' in message.tags %}error{% elif 'alert-success' in message.tags %}check_circle{% elif 'alert-warning' in message.tags %}warning{% else %}info{% endif %}
+        </span>
+        <p class="flex-1">{{ message }}</p>
+        <button type="button" class="js-dismiss-message hover:opacity-70 transition-opacity" aria-label="Fermer">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    (function () {
+      function dismiss(alertEl) {
+        alertEl.style.transition = 'opacity 0.3s ease';
+        alertEl.style.opacity = '0';
+        setTimeout(function () {
+          alertEl.remove();
+        }, 300);
+      }
+
+      document.querySelectorAll('.js-message').forEach(function (alertEl) {
+        var closeBtn = alertEl.querySelector('.js-dismiss-message');
+        closeBtn.addEventListener('click', function () {
+          dismiss(alertEl);
+        });
+        setTimeout(function () {
+          dismiss(alertEl);
+        }, 8000);
+      });
+    })();
+  </script>
+{% endif %}

@@ -1,0 +1,110 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Recherche conteneur{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-24 space-y-6">
+  <nav class="flex items-center mb-2 text-label-md font-label-md text-outline">
+    <span class="text-on-surface font-bold">Recherche conteneur</span>
+  </nav>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+    <h2 class="font-headline-lg text-headline-lg text-primary">Recherche conteneur</h2>
+    <p class="text-on-surface-variant">
+      Recherchez un ISO Tank ou un Flexitank par référence, numéro de plomb, numéro de Flexitank ou numéro de heating pad.
+    </p>
+    <form method="get" class="flex flex-wrap gap-3">
+      <div class="relative flex-1 min-w-[260px]">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-on-surface-variant">
+          <span class="material-symbols-outlined">search</span>
+        </span>
+        <input
+          type="text"
+          name="q"
+          value="{{ q }}"
+          placeholder="Référence, numéro de plomb, de Flexitank, de heating pad..."
+          class="block w-full pl-10 pr-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-body-sm"
+          autofocus
+        />
+      </div>
+      <button type="submit" class="px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg hover:opacity-90 transition-opacity">
+        Rechercher
+      </button>
+    </form>
+  </div>
+
+  {% if q %}
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Résultats pour « {{ q }} »</h3>
+      <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded">{{ resultats|length }} conteneur{{ resultats|length|pluralize }}</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant">
+          <tr>
+            <th class="px-gutter py-3 text-label-md text-on-surface-variant uppercase">Référence</th>
+            <th class="px-gutter py-3 text-label-md text-on-surface-variant uppercase">Nature</th>
+            <th class="px-gutter py-3 text-label-md text-on-surface-variant uppercase">Dossier</th>
+            <th class="px-gutter py-3 text-label-md text-on-surface-variant uppercase">Correspondance</th>
+            <th class="px-gutter py-3 text-label-md text-on-surface-variant uppercase text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for ligne in resultats %}
+          {% with conteneur=ligne.objet %}
+          <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardPersonnel:conteneur-detail' conteneur.pk %}'">
+            <td class="px-gutter py-3">
+              <span class="font-mono-data text-body-md text-primary font-bold">{{ conteneur.reference }}</span>
+            </td>
+            <td class="px-gutter py-3">
+              {% if ligne.est_iso %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary">
+                <span class="material-symbols-outlined text-[14px]">propane_tank</span>ISO Tank
+              </span>
+              {% else %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary">
+                <span class="material-symbols-outlined text-[14px]">water_drop</span>Flexitank
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-gutter py-3 text-body-sm">
+              {{ conteneur.dossier.TRD }}
+              <div class="text-label-sm text-on-surface-variant">{{ conteneur.dossier.projet }}</div>
+            </td>
+            <td class="px-gutter py-3 text-body-sm text-on-surface-variant">
+              {% if ligne.est_iso %}
+                {% if conteneur.plombAmateur1 %}Plomb amateur 1 : {{ conteneur.plombAmateur1 }}{% endif %}
+                {% if conteneur.plombAmateur2 %}<br>Plomb amateur 2 : {{ conteneur.plombAmateur2 }}{% endif %}
+                {% if conteneur.plombAmateur3 %}<br>Plomb amateur 3 : {{ conteneur.plombAmateur3 }}{% endif %}
+                {% if conteneur.Plombs_oils1 %}<br>Plombs oils 1 : {{ conteneur.Plombs_oils1 }}{% endif %}
+                {% if conteneur.Plombs_oils2 %}<br>Plombs oils 2 : {{ conteneur.Plombs_oils2 }}{% endif %}
+              {% else %}
+                {% if conteneur.numeroFlextank %}N° Flexitank : {{ conteneur.numeroFlextank }}{% endif %}
+                {% if conteneur.Numeroheatingpad %}<br>N° heating pad : {{ conteneur.Numeroheatingpad }}{% endif %}
+                {% if conteneur.plombs_amateur %}<br>Plombs amateur : {{ conteneur.plombs_amateur }}{% endif %}
+                {% if conteneur.Plombs_oils %}<br>Plombs oils : {{ conteneur.Plombs_oils }}{% endif %}
+              {% endif %}
+            </td>
+            <td class="px-gutter py-3 text-right" onclick="event.stopPropagation()">
+              <a href="{% url 'DashboardPersonnel:conteneur-detail' conteneur.pk %}" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail">
+                <span class="material-symbols-outlined text-xl">visibility</span>
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-gutter py-12 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">search_off</span>
+              Aucun conteneur ne correspond à « {{ q }} ».
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Modifier le type de document{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto w-full">
+
+  <nav class="flex mb-6 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:type-document-liste' %}">Référentiels</a>
+    <span class="mx-2">/</span>
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:type-document-liste' %}">Types de documents</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">Modifier</span>
+  </nav>
+
+  <div class="flex justify-between items-end mb-10">
+    <div>
+      <h3 class="text-headline-lg font-headline-lg text-on-surface mb-2">Modifier {{ form.instance.type_document }}</h3>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-2xl">
+        Mettez à jour le nom de ce type de document.
+      </p>
+    </div>
+    <div class="hidden lg:block">
+      <div class="w-24 h-24 bg-surface-container rounded-lg flex items-center justify-center border border-outline-variant">
+        <span class="material-symbols-outlined text-primary text-5xl">description</span>
+      </div>
+    </div>
+  </div>
+
+  <form class="space-y-8" method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-error/10 border border-error text-error text-body-sm">
+      <span class="material-symbols-outlined">error</span>
+      <span>{{ form.non_field_errors.0 }}</span>
+    </div>
+    {% endif %}
+
+    <section class="form-section-card p-8 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+      <div class="flex items-start gap-4 mb-8">
+        <div class="p-2 bg-primary/5 rounded-lg text-primary">
+          <span class="material-symbols-outlined">edit_square</span>
+        </div>
+        <div>
+          <h4 class="text-headline-md font-headline-md text-primary">Informations générales</h4>
+          <p class="text-body-sm font-body-sm text-on-surface-variant">Nom du type de document.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_type_document">Nom du type de document</label>
+        {{ form.type_document }}
+        {% if form.type_document.errors %}
+        <p class="text-body-sm text-error mt-1">{{ form.type_document.errors.0 }}</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="flex items-center justify-between pt-8 border-t border-outline-variant">
+      <div class="flex items-center gap-2 text-on-surface-variant">
+        <span class="material-symbols-outlined text-secondary">info</span>
+        <p class="text-body-sm font-body-sm">Le nom doit être unique dans le référentiel.</p>
+      </div>
+      <div class="flex gap-4">
+        <a
+          class="px-8 py-3 rounded-lg border border-outline text-label-md font-label-md font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200"
+          href="{% url 'DashboardPersonnel:type-document-liste' %}"
+        >
+          Annuler
+        </a>
+        <button class="px-8 py-3 rounded-lg bg-primary text-on-primary text-label-md font-label-md font-bold shadow-lg hover:shadow-primary/20 active:scale-95 transition-all duration-200" type="submit">
+          Mettre à jour
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

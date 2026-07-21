@@ -1,0 +1,145 @@
+{% extends 'DashboardClient/base_client.html' %}
+
+{% block title %}Mes documents{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="space-y-2">
+    <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+      <span class="text-primary font-bold">Documents</span>
+    </nav>
+    <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Mes documents</h1>
+    <p class="text-body-md text-on-surface-variant max-w-2xl">Consultez et téléchargez les documents rattachés à vos dossiers.</p>
+  </div>
+
+  <!-- Filtres -->
+  <form method="get" class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-wrap items-end gap-5 shadow-sm">
+    <div class="flex flex-col gap-1.5 flex-1 min-w-[260px]">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Recherche</label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+        {{ filtre_form.q }}
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Type de document</label>
+      {{ filtre_form.filtre_type_document }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Statut</label>
+      {{ filtre_form.filtre_statut }}
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+        <span class="material-symbols-outlined text-sm">filter_alt</span>
+        Filtrer
+      </button>
+      {% if request.GET.q or request.GET.filtre_type_document or request.GET.filtre_statut %}
+      <a href="{% url 'DashboardClient:document-liste' %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+        <span class="material-symbols-outlined text-sm">close</span>
+        Réinitialiser
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Tableau -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Dossier</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Type de document</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Statut</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Ajouté le</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for document in document_list %}
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-6 py-4">
+              <a href="{% url 'DashboardClient:dossier-detail' document.dossier.pk %}" class="font-mono-data text-primary font-bold hover:underline">{{ document.dossier.TRD }}</a>
+              <p class="text-[11px] text-on-surface-variant">{{ document.dossier.projet }}</p>
+            </td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">{{ document.type_document.type_document }}</td>
+            <td class="px-6 py-4">
+              {% if document.statut == 'valide' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight">{{ document.get_statut_display }}</span>
+              {% elif document.statut == 'rejete' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">{{ document.get_statut_display }}</span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight">{{ document.get_statut_display }}</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ document.date_created|date:"d M Y H:i" }}</td>
+            <td class="px-6 py-4 text-right">
+              {% if document.fichier %}
+              <a href="{{ document.fichier.url }}" target="_blank" rel="noopener" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Voir">
+                <span class="material-symbols-outlined text-[20px]">visibility</span>
+              </a>
+              <a href="{{ document.fichier.url }}" download class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Télécharger">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-10 text-center text-on-surface-variant">Aucun document ne correspond à votre recherche.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest/30 flex items-center justify-between flex-wrap gap-4">
+      <span class="text-label-md font-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} document{{ paginator.count|pluralize }}
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_left</span></a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_right</span></a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">description</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Total documents</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_documents }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-secondary/10 text-secondary flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">hourglass_empty</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">En attente</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ documents_en_attente }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">check_circle</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Validés</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ documents_termines }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

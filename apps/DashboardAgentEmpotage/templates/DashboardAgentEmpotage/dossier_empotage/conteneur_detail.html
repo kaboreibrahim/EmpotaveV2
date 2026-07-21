@@ -1,0 +1,121 @@
+{% extends 'DashboardAgentEmpotage/base_agent_empotage.html' %}
+
+{% block title %}Conteneur {{ conteneur.reference }}{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-24 space-y-6">
+  <nav class="flex items-center mb-2 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-liste' %}">Dossiers</a>
+    <span class="mx-2">/</span>
+    <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-detail' conteneur.dossier.pk %}">{{ conteneur.dossier.TRD }}</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold font-mono-data">{{ conteneur.reference }}</span>
+  </nav>
+
+  <!-- En-tete -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-wrap items-center gap-8 shadow-sm">
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Référence</span>
+      <span class="font-mono-data text-mono-data font-bold text-primary text-lg">{{ conteneur.reference }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Nature</span>
+      {% if est_iso %}
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">
+        <span class="material-symbols-outlined text-[14px]">propane_tank</span>ISO Tank
+      </span>
+      {% else %}
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight w-fit">
+        <span class="material-symbols-outlined text-[14px]">water_drop</span>Flexitank
+      </span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">État</span>
+      {% if conteneur.etat == 'excellent' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% elif conteneur.etat == 'moyen' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-tertiary/10 text-tertiary uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% else %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Statut</span>
+      {% if conteneur.statut == 'empote' %}
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>{{ conteneur.get_statut_display }}
+      </span>
+      {% else %}
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight w-fit">
+        <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ conteneur.get_statut_display }}
+      </span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Poids net</span>
+      <span class="font-mono-data text-mono-data text-on-surface">{{ conteneur.poids_net|default:"—" }} kg</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Température</span>
+      <span class="font-mono-data text-mono-data text-on-surface">{{ conteneur.Temerature|default:"—" }} °C</span>
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      {% if conteneur.dossier.statut == 'empotage_en_cours' %}
+      <a href="{% url 'DashboardAgentEmpotage:conteneur-empoter' conteneur.id %}" class="flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary hover:opacity-90 transition-opacity rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">edit</span>
+        Empoter
+      </a>
+      {% endif %}
+      <a href="{% url 'DashboardAgentEmpotage:dossier-detail' conteneur.dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        Retour au dossier
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Colonne principale -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Dossier lie -->
+      <a href="{% url 'DashboardAgentEmpotage:dossier-detail' conteneur.dossier.pk %}" class="block bg-primary-container text-on-primary-container p-gutter rounded-xl hover:opacity-90 transition-opacity">
+        <div class="flex justify-between items-start mb-2">
+          <h3 class="text-label-md font-label-md uppercase tracking-wider">Dossier associé</h3>
+          <span class="material-symbols-outlined">link</span>
+        </div>
+        <p class="text-headline-sm font-headline-sm font-mono-data mb-1">{{ conteneur.dossier.TRD }}</p>
+        <p class="text-body-sm opacity-80">{{ conteneur.dossier.projet }}</p>
+      </a>
+
+      <!-- Galerie photos : empotage -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
+          <span class="material-symbols-outlined text-lg text-primary">inventory_2</span>Photos d'empotage
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {% for label, photo in photos_empotage %}
+          <div class="space-y-1">
+            {% include 'DashboardAgentSelection/dossier/_photo_tile.html' %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Galerie photos : sélection -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
+          <span class="material-symbols-outlined text-lg text-primary">fact_check</span>Photos de sélection
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {% for label, photo in photos_selection %}
+          <div class="space-y-1">
+            {% include 'DashboardAgentSelection/dossier/_photo_tile.html' %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

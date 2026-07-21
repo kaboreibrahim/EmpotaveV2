@@ -1,0 +1,231 @@
+{% extends 'DashboardAgentEmpotage/base_agent_empotage.html' %}
+{% load static %}
+{% block title %}Empoter — {{ conteneur.reference }}{% endblock %}
+
+{% block content %}
+
+<style>
+  .form-focus-ring:focus { outline: none; border-color: rgb(var(--color-primary)); box-shadow: 0 0 0 2px rgb(var(--color-primary-container) / 0.3); }
+</style>
+
+  <!-- Header -->
+  <div class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+        <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-liste' %}">Dossiers</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}">{{ dossier.TRD }}</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-on-surface font-bold">Empoter {{ conteneur.reference }}</span>
+      </nav>
+      <h2 class="font-headline-lg text-headline-lg text-primary">Renseigner l'empotage — {{ conteneur.reference }}</h2>
+      <p class="text-on-surface-variant mt-1">
+        Dossier {{ dossier.projet }} —
+        {% if est_iso %}
+          <span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm font-bold uppercase">ISO Tank</span>
+        {% else %}
+          <span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed text-label-sm font-bold uppercase">Flexitank</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl border border-error">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-24">
+    {% csrf_token %}
+
+    <!-- Poids & Température -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-6 text-primary">
+        <span class="material-symbols-outlined">scale</span>
+        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">1. Poids &amp; température</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Poids net (kg) <span class="text-error">*</span></label>
+          {{ form.poids_net }}
+          {% if form.poids_net.errors %}<p class="text-label-sm text-error mt-1">{{ form.poids_net.errors.0 }}</p>{% endif %}
+        </div>
+        {% if est_iso %}
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Poids brute (kg)</label>
+          <input type="text" class="{{ form.poids_net.field.widget.attrs.class }} bg-surface-container-high cursor-not-allowed" id="poids_brute_iso" readonly tabindex="-1" value="{{ form.poids_net.value|default_if_none:'' }}">
+          <p class="text-label-sm text-on-surface-variant mt-1">Égal au poids net (pas de poids équipements sur un ISO Tank).</p>
+        </div>
+        {% else %}
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Poids équipements (kg)</label>
+          {{ form.poids_equipements }}
+          {% if form.poids_equipements.errors %}<p class="text-label-sm text-error mt-1">{{ form.poids_equipements.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Poids brute (kg)</label>
+          {{ form.poids_brute }}
+          {% if form.poids_brute.errors %}<p class="text-label-sm text-error mt-1">{{ form.poids_brute.errors.0 }}</p>{% endif %}
+          <p class="text-label-sm text-on-surface-variant mt-1">Calculé automatiquement : poids net + poids équipements.</p>
+        </div>
+        {% endif %}
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Température (°C)</label>
+          {{ form.Temerature }}
+          {% if form.Temerature.errors %}<p class="text-label-sm text-error mt-1">{{ form.Temerature.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Photos d'empotage -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-2 text-primary">
+        <span class="material-symbols-outlined">photo_camera</span>
+        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">2. Photos d'empotage</h3>
+      </div>
+      <p class="text-body-sm text-on-surface-variant mb-6">
+        Photos du chargement, prises au début, pendant et à la fin de l'empotage.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_debut current=conteneur.photo_debut label="Photo début" %}
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_pendant current=conteneur.photo_pendant label="Photo pendant" %}
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_fin current=conteneur.photo_fin label="Photo fin" %}
+      </div>
+    </section>
+
+    <!-- Plombs -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-6 text-primary">
+        <span class="material-symbols-outlined">lock</span>
+        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">3. Plombs {% if not est_iso %}&amp; équipements{% endif %}</h3>
+      </div>
+
+      {% if est_iso %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plomb amateur 1</label>
+          {{ form.plombAmateur1 }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photoPlombAmateur1 current=conteneur.photoPlombAmateur1 label="Photo plomb amateur 1" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plomb amateur 2</label>
+          {{ form.plombAmateur2 }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photoPlombAmateur2 current=conteneur.photoPlombAmateur2 label="Photo plomb amateur 2" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plomb amateur 3</label>
+          {{ form.plombAmateur3 }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photoPlombAmateur3 current=conteneur.photoPlombAmateur3 label="Photo plomb amateur 3" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plombs Oils 1</label>
+          {{ form.Plombs_oils1 }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_plombs_oils1 current=conteneur.photo_plombs_oils1 label="Photo plombs Oils 1" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plombs Oils 2</label>
+          {{ form.Plombs_oils2 }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_plombs_oils2 current=conteneur.photo_plombs_oils2 label="Photo plombs Oils 2" %}
+      </div>
+      {% else %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Numéro Flexitank</label>
+          {{ form.numeroFlextank }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photoFlextank current=conteneur.photoFlextank label="Photo Flexitank" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Numéro heating pad</label>
+          {{ form.Numeroheatingpad }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.Photoheatingpad current=conteneur.Photoheatingpad label="Photo heating pad" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plombs amateur</label>
+          {{ form.plombs_amateur }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.plombs_amateur_photo current=conteneur.plombs_amateur_photo label="Photo plombs amateur" %}
+        <div></div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Plombs Oils</label>
+          {{ form.Plombs_oils }}
+        </div>
+        {% include 'DashboardAgentEmpotage/dossier_empotage/_photo_field.html' with field=form.photo_plombs_oils current=conteneur.photo_plombs_oils label="Photo plombs Oils" %}
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Actions -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center justify-between gap-4">
+      <p class="text-body-sm text-on-surface-variant flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-primary">info</span>
+        Une fois le poids net renseigné, le conteneur passe au statut « Empoté ».
+      </p>
+      <div class="flex gap-3">
+        <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="px-6 py-2 rounded-lg border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors">
+          Annuler
+        </a>
+        <button type="submit" class="flex items-center gap-2 px-6 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity shadow-sm">
+          <span class="material-symbols-outlined">save</span> Enregistrer l'empotage
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    // Poids brute calcule automatiquement : ISO = poids net seul ; Flexitank = poids net + poids equipements.
+    (function () {
+      const poidsNet = document.getElementById('id_poids_net');
+      if (!poidsNet) return;
+
+      function toNombre(input) {
+        const valeur = parseFloat(input && input.value);
+        return isNaN(valeur) ? 0 : valeur;
+      }
+
+      {% if est_iso %}
+        const poidsBruteIso = document.getElementById('poids_brute_iso');
+        function recalculer() {
+          poidsBruteIso.value = poidsNet.value || '';
+        }
+        poidsNet.addEventListener('input', recalculer);
+      {% else %}
+        const poidsEquipements = document.getElementById('id_poids_equipements');
+        const poidsBrute = document.getElementById('id_poids_brute');
+        function recalculer() {
+          poidsBrute.value = (toNombre(poidsNet) + toNombre(poidsEquipements)).toFixed(2);
+        }
+        poidsNet.addEventListener('input', recalculer);
+        poidsEquipements.addEventListener('input', recalculer);
+        recalculer();
+      {% endif %}
+    })();
+
+    // Apercu en direct des photos : des qu'un fichier est choisi, affiche sa
+    // miniature (remplace celle deja enregistree, le cas echeant).
+    (function () {
+      document.querySelectorAll('input[type="file"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+          const fichier = input.files && input.files[0];
+          if (!fichier) return;
+          const apercu = document.getElementById('preview-' + input.id);
+          if (!apercu) return;
+          const lecteur = new FileReader();
+          lecteur.onload = function (event) {
+            apercu.src = event.target.result;
+            apercu.classList.remove('hidden');
+          };
+          lecteur.readAsDataURL(fichier);
+        });
+      });
+    })();
+  </script>
+
+{% endblock content %}

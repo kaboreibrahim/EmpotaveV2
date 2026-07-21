@@ -1,0 +1,201 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Referentiel Commodites{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span>Referentiels</span>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-primary font-bold">Commodites</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Referentiel Commodites</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Gerez les commodites utilisees dans les dossiers et operations d'empotage.</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:commodites-create' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add</span>
+      <span class="font-label-md text-label-md uppercase">Ajouter une commodite</span>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <span class="material-symbols-outlined text-[120px]">inventory_2</span>
+      </div>
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Total commodites</span>
+      <span class="text-headline-lg font-headline-lg text-primary">{{ total_commodites }}</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Resultats affiches</span>
+      <span class="text-headline-lg font-headline-lg text-secondary">{{ paginator.count }}</span>
+      <span class="text-body-sm text-on-surface-variant">Apres recherche et filtre</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Pays avec commodites</span>
+      <span class="text-headline-lg font-headline-lg text-primary-container">{{ pays_avec_commodites }}</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Derniere mise a jour</span>
+      <span class="text-headline-lg font-headline-lg text-on-surface">{{ derniere_maj|date:"d/m/Y"|default:"-" }}</span>
+      {% if derniere_maj %}<span class="text-body-sm text-on-surface-variant">{{ derniere_maj|date:"H:i" }}</span>{% endif %}
+    </div>
+  </div>
+
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <form method="get" class="p-6 border-b border-outline-variant flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+      <input type="hidden" name="view" value="{{ view_mode }}" />
+      <div class="relative w-full lg:max-w-xl">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        {{ filtre_pays_form.q }}
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <select name="{{ filtre_pays_form.filtre_pays.name }}" class="bg-surface-container-low border border-outline-variant text-on-surface rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary">
+          {% for value, label in filtre_pays_form.filtre_pays.field.choices %}
+          <option value="{{ value }}"{% if filtre_pays_form.filtre_pays.value|stringformat:"s" == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+          <span class="material-symbols-outlined text-sm">filter_alt</span>
+          Filtrer
+        </button>
+        {% if request.GET.q or request.GET.filtre_pays %}
+        <a href="{% url 'DashboardPersonnel:commodites-liste' %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+          <span class="material-symbols-outlined text-sm">close</span>
+          Reinitialiser
+        </a>
+        {% endif %}
+        <div class="flex border border-outline-variant rounded-lg overflow-hidden">
+          <a href="?{{ table_querystring }}" class="p-2 {% if view_mode == 'table' %}bg-primary text-on-primary{% else %}bg-surface text-on-surface-variant hover:bg-surface-container-low{% endif %}" aria-label="Affichage tableau">
+            <span class="material-symbols-outlined text-sm">list</span>
+          </a>
+          <a href="?{{ cards_querystring }}" class="p-2 {% if view_mode == 'cards' %}bg-primary text-on-primary{% else %}bg-surface text-on-surface-variant hover:bg-surface-container-low{% endif %}" aria-label="Affichage cartes">
+            <span class="material-symbols-outlined text-sm">grid_view</span>
+          </a>
+        </div>
+      </div>
+    </form>
+
+    {% if view_mode == 'cards' %}
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {% for commodite in commodites_list %}
+        <article class="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-12 h-12 shrink-0 rounded-lg bg-surface-container-high border border-outline-variant overflow-hidden flex items-center justify-center text-primary">
+                {% if commodite.icon %}
+                <img src="{{ commodite.icon.url }}" alt="" class="w-full h-full object-cover" />
+                {% else %}
+                <span class="material-symbols-outlined">inventory_2</span>
+                {% endif %}
+              </div>
+              <div class="min-w-0">
+                <h3 class="font-headline-md text-headline-sm text-on-surface truncate">{{ commodite.nom }}</h3>
+                <p class="text-body-sm text-on-surface-variant">{{ commodite.Id_Pays.nom }}</p>
+              </div>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-fixed text-on-secondary-fixed">
+              {{ commodite.sig|default:"-" }}
+            </span>
+          </div>
+          <div class="mt-5 pt-4 border-t border-outline-variant flex items-center justify-between gap-3">
+            <span class="text-body-sm text-on-surface-variant">Ajoute le {{ commodite.date_created|date:"d/m/Y" }}</span>
+            <div class="flex items-center gap-1">
+              <a href="{% url 'DashboardPersonnel:commodites-update' commodite.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" aria-label="Modifier {{ commodite.nom }}">
+                <span class="material-symbols-outlined">edit_square</span>
+              </a>
+              <a href="{% url 'DashboardPersonnel:commodites-delete' commodite.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-error transition-colors" aria-label="Supprimer {{ commodite.nom }}">
+                <span class="material-symbols-outlined">delete</span>
+              </a>
+            </div>
+          </div>
+        </article>
+        {% empty %}
+        <div class="md:col-span-2 xl:col-span-3 px-6 py-8 text-body-sm text-on-surface-variant text-center">
+          Aucune commodite trouvee.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Commodite</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Sigle</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Pays</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Ajoute le</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for commodite in commodites_list %}
+          <tr class="hover:bg-primary/5 transition-colors group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-surface-container-high border border-outline-variant overflow-hidden flex items-center justify-center text-primary">
+                  {% if commodite.icon %}
+                  <img src="{{ commodite.icon.url }}" alt="" class="w-full h-full object-cover" />
+                  {% else %}
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  {% endif %}
+                </div>
+                <span class="font-bold text-on-surface">{{ commodite.nom }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-fixed text-on-secondary-fixed">
+                {{ commodite.sig|default:"-" }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ commodite.Id_Pays.nom }}</td>
+            <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ commodite.date_created|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'DashboardPersonnel:commodites-update' commodite.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" aria-label="Modifier {{ commodite.nom }}">
+                <span class="material-symbols-outlined">edit_square</span>
+              </a>
+              <a href="{% url 'DashboardPersonnel:commodites-delete' commodite.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-error transition-colors" aria-label="Supprimer {{ commodite.nom }}">
+                <span class="material-symbols-outlined">delete</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-body-sm text-on-surface-variant text-center">Aucune commodite trouvee.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if is_paginated %}
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest/30 flex items-center justify-between flex-wrap gap-4">
+      <span class="text-label-md font-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ paginator.num_pages }} - {{ paginator.count }} commodites au total
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        {% endif %}
+        {% for num in paginator.page_range %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant transition-colors {% if num == page_obj.number %}text-primary font-bold bg-primary/5{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}">{{ num }}</a>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

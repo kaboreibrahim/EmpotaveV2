@@ -1,0 +1,315 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Gestion des Dossiers{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ vue: (localStorage.getItem('dossier_vue') || 'table') }" x-init="$watch('vue', value => localStorage.setItem('dossier_vue', value))">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span class="text-primary font-bold">Dossiers</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Gestion des dossiers</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Suivez les dossiers d'exportation, de la sélection à l'empotage.</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:dossier-create' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span class="font-label-md text-label-md uppercase">Nouveau dossier</span>
+    </a>
+  </div>
+
+  <!-- Filtres -->
+  <form method="get" class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-wrap items-end gap-5 shadow-sm">
+    <div class="flex flex-col gap-1.5 flex-1 min-w-[260px]">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Recherche</label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+        {{ filtre_form.q }}
+      </div>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Pays</label>
+      {{ filtre_form.filtre_pays }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Client</label>
+      {{ filtre_form.filtre_client }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Statut</label>
+      {{ filtre_form.filtre_statut }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Type de conditionnement</label>
+      {{ filtre_form.filtre_type_conteneur }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Créés du</label>
+      {{ filtre_form.date_debut }}
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Au</label>
+      {{ filtre_form.date_fin }}
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+        <span class="material-symbols-outlined text-sm">filter_alt</span>
+        Filtrer
+      </button>
+      {% if request.GET.q or request.GET.filtre_pays or request.GET.filtre_client or request.GET.filtre_statut or request.GET.filtre_type_conteneur or request.GET.date_debut or request.GET.date_fin %}
+      <a href="{% url 'DashboardPersonnel:dossier-liste' %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+        <span class="material-symbols-outlined text-sm">close</span>
+        Réinitialiser
+      </a>
+      {% endif %}
+
+      <!-- Toggle vue table / cartes -->
+      <div class="inline-flex items-center rounded-lg border border-outline-variant overflow-hidden shrink-0">
+        <button type="button"
+                @click="vue = 'table'"
+                :class="vue === 'table' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'"
+                class="p-2.5 transition-colors"
+                aria-label="Vue tableau">
+          <span class="material-symbols-outlined text-[20px]">table_rows</span>
+        </button>
+        <button type="button"
+                @click="vue = 'cartes'"
+                :class="vue === 'cartes' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'"
+                class="p-2.5 transition-colors border-l border-outline-variant"
+                aria-label="Vue cartes">
+          <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    // Le pays selectionne restreint la liste des clients proposes (client lie a ce pays uniquement).
+    // Un changement de pays reinitialise le client choisi puis soumet le formulaire pour recharger la liste filtree.
+    (function () {
+      const paysSelect = document.getElementById('id_filtre_pays');
+      const clientSelect = document.getElementById('id_filtre_client');
+      if (!paysSelect || !clientSelect) return;
+      paysSelect.addEventListener('change', function () {
+        clientSelect.value = '';
+        paysSelect.form.submit();
+      });
+    })();
+  </script>
+
+  <!-- Tableau + Cartes -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+
+    <!-- VUE TABLE -->
+    <div x-show="vue === 'table'" class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Réf dossier</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Client</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">POL</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">POD</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Conteneurs</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Statut</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Date création</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for dossier in dossier_list %}
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-6 py-4 font-mono-data text-primary font-bold">{{ dossier.TRD }}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">
+              {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col">
+                <span class="text-body-sm font-bold text-on-surface">{{ dossier.Id_POL.nom }}</span>
+                <span class="text-[11px] text-on-surface-variant">{{ dossier.Id_POL.lieu }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col">
+                <span class="text-body-sm font-bold text-on-surface">{{ dossier.Id_POD.nom }}</span>
+                <span class="text-[11px] text-on-surface-variant">{{ dossier.Id_POD.lieu }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-1.5">
+                {% if dossier.nb_iso %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary" title="ISO Tanks">
+                  <span class="material-symbols-outlined text-[14px]">propane_tank</span>{{ dossier.nb_iso }}
+                </span>
+                {% endif %}
+                {% if dossier.nb_flexi %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary" title="Flexitanks">
+                  <span class="material-symbols-outlined text-[14px]">water_drop</span>{{ dossier.nb_flexi }}
+                </span>
+                {% endif %}
+                {% if not dossier.nb_iso and not dossier.nb_flexi %}
+                <span class="text-on-surface-variant">—</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              {% if dossier.statut == 'en_attente' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+              {% elif dossier.statut == 'selection_en_cours' or dossier.statut == 'empotage_en_cours' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+              {% elif dossier.statut == 'dossier_termine' %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ dossier.date_created|date:"d M Y" }}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Détails">
+                <span class="material-symbols-outlined text-[20px]">visibility</span>
+              </a>
+              <a href="{% url 'DashboardPersonnel:dossier-update' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-secondary transition-colors" title="Modifier">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Aucun dossier ne correspond à votre recherche.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VUE CARTES -->
+    <div x-show="vue === 'cartes'" x-cloak class="p-6">
+      {% if dossier_list %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for dossier in dossier_list %}
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 flex flex-col gap-3 hover:shadow-md hover:border-primary/40 transition-all">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary bg-primary/10 rounded-lg p-2">folder</span>
+              <div>
+                <p class="font-mono-data font-bold text-primary leading-tight">{{ dossier.TRD }}</p>
+                <p class="text-body-sm text-on-surface-variant">
+                  {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-body-sm">
+            <div class="flex flex-col">
+              <span class="text-[11px] text-on-surface-variant uppercase tracking-wider">POL</span>
+              <span class="font-bold text-on-surface">{{ dossier.Id_POL.nom }}</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-[11px] text-on-surface-variant uppercase tracking-wider">POD</span>
+              <span class="font-bold text-on-surface">{{ dossier.Id_POD.nom }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            {% if dossier.nb_iso %}
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary" title="ISO Tanks">
+              <span class="material-symbols-outlined text-[14px]">propane_tank</span>{{ dossier.nb_iso }} ISO
+            </span>
+            {% endif %}
+            {% if dossier.nb_flexi %}
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary" title="Flexitanks">
+              <span class="material-symbols-outlined text-[14px]">water_drop</span>{{ dossier.nb_flexi }} Flexi
+            </span>
+            {% endif %}
+            {% if not dossier.nb_iso and not dossier.nb_flexi %}
+            <span class="text-body-sm text-on-surface-variant">Aucun conteneur</span>
+            {% endif %}
+          </div>
+
+          <div class="text-body-sm text-on-surface-variant flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+            <span>{{ dossier.date_created|date:"d M Y" }}</span>
+          </div>
+           {% if dossier.statut == 'en_attente' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+            {% elif dossier.statut == 'selection_en_cours' or dossier.statut == 'empotage_en_cours' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+            {% elif dossier.statut == 'dossier_termine' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+            {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+            {% endif %}
+          <div class="flex items-center justify-end gap-1 pt-2 border-t border-outline-variant/50 mt-auto">
+            <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Détails">
+              <span class="material-symbols-outlined text-[20px]">visibility</span>
+            </a>
+            <a href="{% url 'DashboardPersonnel:dossier-update' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-secondary transition-colors" title="Modifier">
+              <span class="material-symbols-outlined text-[20px]">edit</span>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-body-sm text-on-surface-variant text-center py-8">Aucun dossier ne correspond à votre recherche.</p>
+      {% endif %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest/30 flex items-center justify-between flex-wrap gap-4">
+      <span class="text-label-md font-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} dossier{{ paginator.count|pluralize }}
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_left</span></a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_right</span></a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-on-surface-variant/10 text-on-surface-variant flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">pending_actions</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">En attente</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ dossiers_en_attente }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-secondary/10 text-secondary flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">directions_boat</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">En cours</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ dossiers_en_cours }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">check_circle</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Terminés</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ dossiers_termines }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+      <div class="w-14 h-14 bg-error/10 text-error flex items-center justify-center rounded-xl">
+        <span class="material-symbols-outlined text-[28px]">cancel</span>
+      </div>
+      <div>
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Annulés</p>
+        <p class="text-headline-md font-headline-md font-bold text-error">{{ dossiers_annules }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

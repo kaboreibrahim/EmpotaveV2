@@ -1,0 +1,255 @@
+{% extends 'DashboardAgentEmpotage/base_agent_empotage.html' %}
+{% load static %}
+{% block title %}Empotage — {{ dossier.projet }}{% endblock %}
+
+{% block content %}
+
+  <!-- Header & Actions -->
+  <section class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+        <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-liste' %}">Dossiers</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-on-surface font-bold">{{ dossier.TRD }}</span>
+      </nav>
+      <h2 class="font-headline-lg text-headline-lg text-primary">Empotage — {{ dossier.projet }}</h2>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="flex items-center gap-1 text-on-surface-variant text-body-sm">
+          <span class="material-symbols-outlined text-[16px]">location_on</span>{{ dossier.Id_Pays.nom }}
+        </span>
+        {% if dossier.statut == 'empotage_en_cours' %}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-bold uppercase bg-secondary/10 text-secondary">
+            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>{{ dossier.get_statut_display }}
+          </span>
+        {% elif dossier.statut == 'dossier_termine' %}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-bold uppercase bg-primary/10 text-primary">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>{{ dossier.get_statut_display }}
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-bold uppercase bg-surface-container-high text-on-surface-variant">
+            <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ dossier.get_statut_display }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.id %}"
+         class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors"
+         title="Télécharger le rapport PDF">
+        <span class="material-symbols-outlined">picture_as_pdf</span> Exporter PDF
+      </a>
+      {% if dossier.statut == 'empotage_en_cours' %}
+        <button type="button" id="cloture-open" class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined">check_circle</span> Clôturer le dossier
+        </button>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- KPI Cards & Répartition par statut -->
+  <section class="grid grid-cols-12 gap-gutter">
+    <div class="col-span-12 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter">
+      <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
+        </div>
+        <p class="text-label-md font-label-md text-on-surface-variant uppercase">Conteneurs</p>
+        <h3 class="text-headline-md font-headline-md text-primary mt-1">{{ nombre_conteneurs }}</h3>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">scale</span>
+        </div>
+        <p class="text-label-md font-label-md text-on-surface-variant uppercase">Poids total net</p>
+        <h3 class="text-headline-md font-headline-md text-primary mt-1">{{ poids_total_net|floatformat:2 }} <span class="text-body-sm font-normal text-on-surface-variant">kg</span></h3>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">balance</span>
+        </div>
+        <p class="text-label-md font-label-md text-on-surface-variant uppercase">Poids moyen</p>
+        <h3 class="text-headline-md font-headline-md text-primary mt-1">{{ poids_moyen_net|floatformat:2 }} <span class="text-body-sm font-normal text-on-surface-variant">kg</span></h3>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">verified</span>
+        </div>
+        <p class="text-label-md font-label-md text-on-surface-variant uppercase">Taux empoté</p>
+        <h3 class="text-headline-md font-headline-md text-primary mt-1">{{ taux_empotage|floatformat:1 }}%</h3>
+      </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant">
+      <h4 class="text-label-md font-label-md text-primary uppercase font-bold mb-4">Répartition par statut</h4>
+      <div class="space-y-4">
+        {% for ligne in repartition_statut %}
+        <div>
+          <div class="flex justify-between text-body-sm mb-1">
+            <span class="text-on-surface-variant">{{ ligne.label }}</span>
+            <span class="font-bold {% if ligne.valeur == 'empote' %}text-primary{% else %}text-on-surface-variant{% endif %}">{{ ligne.nombre }}</span>
+          </div>
+          <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+            <div class="h-full transition-all duration-500 {% if ligne.valeur == 'empote' %}bg-primary{% else %}bg-outline{% endif %}" style="width: {% widthratio ligne.nombre nombre_conteneurs 100 %}%"></div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-body-sm text-on-surface-variant">Aucune donnée disponible.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters & Table -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <form method="get" class="p-gutter border-b border-outline-variant flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label class="text-label-sm font-bold text-on-surface-variant uppercase">Nature :</label>
+          <select name="nature" onchange="this.form.submit()" class="text-body-sm border border-outline-variant rounded-lg px-3 py-1.5 focus:border-primary focus:ring-0 bg-surface">
+            <option value="">Toutes</option>
+            <option value="iso" {% if nature_filtre == 'iso' %}selected{% endif %}>ISO Tank</option>
+            <option value="flexitank" {% if nature_filtre == 'flexitank' %}selected{% endif %}>Flexitank</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-label-sm font-bold text-on-surface-variant uppercase">Statut :</label>
+          <select name="statut" onchange="this.form.submit()" class="text-body-sm border border-outline-variant rounded-lg px-3 py-1.5 focus:border-primary focus:ring-0 bg-surface">
+            <option value="">Tous</option>
+            {% for valeur, label in statut_choices %}
+              <option value="{{ valeur }}" {% if statut_filtre == valeur %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if nature_filtre or statut_filtre %}
+          <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="flex items-center gap-1 text-body-sm text-primary hover:underline">
+            <span class="material-symbols-outlined text-[16px]">close</span>Réinitialiser
+          </a>
+        {% endif %}
+      </div>
+      <div class="text-label-sm text-on-surface-variant">
+        <span class="font-bold text-primary">{{ nombre_affiches }}</span> conteneur{{ nombre_affiches|pluralize }} affiché{{ nombre_affiches|pluralize }} sur <span class="font-bold">{{ nombre_conteneurs }}</span>
+      </div>
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant">
+          <tr>
+            <th class="px-gutter py-3 text-label-md text-primary uppercase font-bold">Référence</th>
+            <th class="px-gutter py-3 text-label-md text-primary uppercase font-bold">Nature</th>
+            <th class="px-gutter py-3 text-label-md text-primary uppercase font-bold">Poids net</th>
+            <th class="px-gutter py-3 text-label-md text-primary uppercase font-bold">Statut</th>
+            <th class="px-gutter py-3 text-label-md text-primary uppercase font-bold text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for ligne in conteneurs %}
+          <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardAgentEmpotage:conteneur-detail' ligne.objet.id %}'">
+            <td class="px-gutter py-3">
+              <span class="font-mono-data text-body-md text-primary font-bold">{{ ligne.objet.reference }}</span>
+            </td>
+            <td class="px-gutter py-3">
+              {% if ligne.nature == 'ISO Tank' %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-label-sm font-bold uppercase bg-primary/10 text-primary">
+                  <span class="material-symbols-outlined text-[14px]">propane_tank</span>{{ ligne.nature }}
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-label-sm font-bold uppercase bg-secondary/10 text-secondary">
+                  <span class="material-symbols-outlined text-[14px]">water_drop</span>{{ ligne.nature }}
+                </span>
+              {% endif %}
+            </td>
+            <td class="px-gutter py-3 font-mono-data text-body-sm">{{ ligne.objet.poids_net|default:"—" }}</td>
+            <td class="px-gutter py-3">
+              {% if ligne.objet.statut == 'empote' %}
+                <span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed text-label-sm font-bold uppercase">{{ ligne.objet.get_statut_display }}</span>
+              {% else %}
+                <span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-label-sm font-bold uppercase">{{ ligne.objet.get_statut_display }}</span>
+              {% endif %}
+            </td>
+            <td class="px-gutter py-3 text-right" onclick="event.stopPropagation()">
+              <div class="flex justify-end gap-2">
+                {% if dossier.statut == 'empotage_en_cours' %}
+                  <a href="{% url 'DashboardAgentEmpotage:conteneur-empoter' ligne.objet.id %}"
+                     class="px-3 py-1 bg-secondary text-on-secondary text-body-sm rounded-lg hover:opacity-90 transition-opacity"
+                     title="Renseigner l'empotage">
+                    Empoter
+                  </a>
+                {% endif %}
+                <a href="{% url 'DashboardAgentEmpotage:conteneur-detail' ligne.objet.id %}"
+                   class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors"
+                   title="Voir le détail">
+                  <span class="material-symbols-outlined text-xl">visibility</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-gutter py-12 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">inventory_2</span>
+              Aucun conteneur ne correspond à ces critères.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% if dossier.statut == 'empotage_en_cours' %}
+    <!-- Popup de clôture : confirmation de la date d'empotage avant soumission du rapport -->
+    <div id="cloture-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div id="cloture-overlay" class="absolute inset-0 bg-black/50"></div>
+      <div class="relative bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 class="text-headline-md font-headline-md text-primary mb-1">Clôturer le dossier</h3>
+        <p class="text-body-sm text-on-surface-variant mb-4">
+          Confirmez la date d'empotage avant de soumettre le rapport et de notifier l'équipe.
+        </p>
+        <form method="post" action="{% url 'DashboardAgentEmpotage:dossier-soumettre' dossier.id %}">
+          {% csrf_token %}
+          <label for="id_date_de_empotage" class="block text-label-sm font-bold text-on-surface-variant uppercase mb-1">
+            Date d'empotage
+          </label>
+          <input
+            type="datetime-local"
+            id="id_date_de_empotage"
+            name="date_de_empotage"
+            required
+            value="{{ dossier.date_de_empotage|date:'Y-m-d\TH:i'|default:'' }}"
+            class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+          />
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" id="cloture-cancel" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+              Annuler
+            </button>
+            <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+              <span class="material-symbols-outlined">check_circle</span> Confirmer et clôturer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const openBtn = document.getElementById('cloture-open');
+        const modal = document.getElementById('cloture-modal');
+        const cancelBtn = document.getElementById('cloture-cancel');
+        const overlay = document.getElementById('cloture-overlay');
+        if (!openBtn || !modal) return;
+
+        function open() { modal.classList.remove('hidden'); }
+        function close() { modal.classList.add('hidden'); }
+
+        openBtn.addEventListener('click', open);
+        cancelBtn.addEventListener('click', close);
+        overlay.addEventListener('click', close);
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') close();
+        });
+      })();
+    </script>
+  {% endif %}
+
+{% endblock content %}

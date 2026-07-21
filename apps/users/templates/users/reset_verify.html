@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Oils of Africa | Vérification du code</title>
+<script>
+    // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+</script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Light theme (default) */
+        :root {
+            --color-inverse-primary: 145 215 138;
+            --color-on-secondary-container: 94 44 0;
+            --color-primary-fixed-dim: 145 215 138;
+            --color-inverse-on-surface: 239 241 244;
+            --color-secondary: 150 73 0;
+            --color-on-secondary: 255 255 255;
+            --color-primary-fixed: 172 244 164;
+            --color-secondary-fixed-dim: 255 183 134;
+            --color-surface-container-lowest: 255 255 255;
+            --color-surface-container: 236 238 241;
+            --color-primary-container: 27 94 32;
+            --color-on-tertiary-fixed: 15 32 0;
+            --color-on-tertiary-container: 157 214 91;
+            --color-on-tertiary: 255 255 255;
+            --color-on-surface: 25 28 30;
+            --color-tertiary-fixed-dim: 158 215 91;
+            --color-surface-variant: 224 227 230;
+            --color-surface-container-highest: 224 227 230;
+            --color-outline: 113 122 109;
+            --color-error-container: 255 218 214;
+            --color-on-primary-fixed-variant: 12 82 22;
+            --color-error: 186 26 26;
+            --color-outline-variant: 192 201 187;
+            --color-tertiary-fixed: 185 244 116;
+            --color-on-primary: 255 255 255;
+            --color-on-tertiary-fixed-variant: 46 79 0;
+            --color-surface: 247 249 252;
+            --color-secondary-container: 252 130 12;
+            --color-on-background: 25 28 30;
+            --color-surface-tint: 42 107 44;
+            --color-on-secondary-fixed: 49 19 0;
+            --color-on-primary-fixed: 0 34 3;
+            --color-surface-container-low: 242 244 247;
+            --color-secondary-fixed: 255 220 198;
+            --color-primary: 0 69 13;
+            --color-on-error-container: 147 0 10;
+            --color-on-primary-container: 144 214 137;
+            --color-surface-bright: 247 249 252;
+            --color-background: 247 249 252;
+            --color-tertiary-container: 54 92 0;
+            --color-surface-dim: 216 218 221;
+            --color-on-surface-variant: 65 73 62;
+            --color-tertiary: 38 67 0;
+            --color-on-error: 255 255 255;
+            --color-surface-container-high: 230 232 235;
+            --color-on-secondary-fixed-variant: 114 54 0;
+            --color-inverse-surface: 45 49 51;
+        }
+
+        /* Dark theme overrides, toggled via the .dark class on <html> */
+        html.dark {
+            --color-inverse-primary: 0 69 13;
+            --color-on-secondary-container: 255 220 198;
+            --color-primary-fixed-dim: 145 215 138;
+            --color-inverse-on-surface: 34 38 35;
+            --color-secondary: 255 183 134;
+            --color-on-secondary: 74 33 0;
+            --color-primary-fixed: 172 244 164;
+            --color-secondary-fixed-dim: 255 183 134;
+            --color-surface-container-lowest: 10 14 12;
+            --color-surface-container: 30 34 31;
+            --color-primary-container: 12 82 22;
+            --color-on-tertiary-fixed: 15 32 0;
+            --color-on-tertiary-container: 185 244 116;
+            --color-on-tertiary: 26 46 0;
+            --color-on-surface: 226 229 226;
+            --color-tertiary-fixed-dim: 158 215 91;
+            --color-surface-variant: 65 73 62;
+            --color-surface-container-highest: 53 57 54;
+            --color-outline: 139 148 133;
+            --color-error-container: 147 0 10;
+            --color-on-primary-fixed-variant: 12 82 22;
+            --color-error: 255 180 171;
+            --color-outline-variant: 65 73 62;
+            --color-tertiary-fixed: 185 244 116;
+            --color-on-primary: 6 58 13;
+            --color-on-tertiary-fixed-variant: 46 79 0;
+            --color-surface: 16 20 18;
+            --color-secondary-container: 114 54 0;
+            --color-on-background: 226 229 226;
+            --color-surface-tint: 145 215 138;
+            --color-on-secondary-fixed: 49 19 0;
+            --color-on-primary-fixed: 0 34 3;
+            --color-surface-container-low: 25 29 27;
+            --color-secondary-fixed: 255 220 198;
+            --color-primary: 145 215 138;
+            --color-on-error-container: 255 218 214;
+            --color-on-primary-container: 172 244 164;
+            --color-surface-bright: 58 62 59;
+            --color-background: 16 20 18;
+            --color-tertiary-container: 46 79 0;
+            --color-surface-dim: 16 20 18;
+            --color-on-surface-variant: 192 201 187;
+            --color-tertiary: 158 215 91;
+            --color-on-error: 105 0 5;
+            --color-surface-container-high: 41 45 42;
+            --color-on-secondary-fixed-variant: 114 54 0;
+            --color-inverse-surface: 226 229 226;
+        }
+
+        body {
+            background-color: rgb(var(--color-background));
+            background-image: radial-gradient(rgb(var(--color-outline-variant)) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgb(var(--color-surface-container-lowest) / 0.95);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "rgb(var(--color-surface-tint) / <alpha-value>)",
+                    "outline": "rgb(var(--color-outline) / <alpha-value>)",
+                    "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+                    "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+                    "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+                    "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+                    "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+                    "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+                    "tertiary-fixed-dim": "rgb(var(--color-tertiary-fixed-dim) / <alpha-value>)",
+                    "error": "rgb(var(--color-error) / <alpha-value>)",
+                    "on-tertiary-container": "rgb(var(--color-on-tertiary-container) / <alpha-value>)",
+                    "on-primary-fixed-variant": "rgb(var(--color-on-primary-fixed-variant) / <alpha-value>)",
+                    "on-primary-fixed": "rgb(var(--color-on-primary-fixed) / <alpha-value>)",
+                    "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+                    "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+                    "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+                    "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+                    "secondary-fixed-dim": "rgb(var(--color-secondary-fixed-dim) / <alpha-value>)",
+                    "inverse-primary": "rgb(var(--color-inverse-primary) / <alpha-value>)",
+                    "tertiary-fixed": "rgb(var(--color-tertiary-fixed) / <alpha-value>)",
+                    "on-secondary-container": "rgb(var(--color-on-secondary-container) / <alpha-value>)",
+                    "error-container": "rgb(var(--color-error-container) / <alpha-value>)",
+                    "on-error": "rgb(var(--color-on-error) / <alpha-value>)",
+                    "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+                    "primary-fixed-dim": "rgb(var(--color-primary-fixed-dim) / <alpha-value>)",
+                    "on-error-container": "rgb(var(--color-on-error-container) / <alpha-value>)",
+                    "background": "rgb(var(--color-background) / <alpha-value>)",
+                    "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+                    "on-tertiary-fixed": "rgb(var(--color-on-tertiary-fixed) / <alpha-value>)",
+                    "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+                    "primary-fixed": "rgb(var(--color-primary-fixed) / <alpha-value>)",
+                    "surface": "rgb(var(--color-surface) / <alpha-value>)",
+                    "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+                    "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+                    "on-tertiary-fixed-variant": "rgb(var(--color-on-tertiary-fixed-variant) / <alpha-value>)",
+                    "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+                    "inverse-surface": "rgb(var(--color-inverse-surface) / <alpha-value>)",
+                    "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+                    "on-secondary-fixed": "rgb(var(--color-on-secondary-fixed) / <alpha-value>)",
+                    "primary": "rgb(var(--color-primary) / <alpha-value>)",
+                    "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+                    "secondary-fixed": "rgb(var(--color-secondary-fixed) / <alpha-value>)",
+                    "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+                    "inverse-on-surface": "rgb(var(--color-inverse-on-surface) / <alpha-value>)",
+                    "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+                    "on-secondary-fixed-variant": "rgb(var(--color-on-secondary-fixed-variant) / <alpha-value>)",
+                    "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "base": "8px",
+                    "container-max": "1440px",
+                    "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "label-md": ["JetBrains Mono"],
+                    "headline-lg": ["Manrope"],
+                    "headline-md": ["Manrope"],
+                    "headline-lg-mobile": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "headline-xl": ["Manrope"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="flex items-center justify-center min-h-screen p-margin-mobile md:p-margin-desktop font-body-md text-on-background">
+<!-- Theme Toggle -->
+<button
+    aria-label="Basculer le thème sombre"
+    class="fixed top-4 right-4 z-20 p-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-primary shadow-sm transition-colors"
+    id="theme-toggle"
+    type="button"
+>
+<span class="material-symbols-outlined" data-icon="dark_mode" id="theme-toggle-icon">dark_mode</span>
+</button>
+<!-- Background Illustration for Context -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden opacity-10">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A wide-angle, high-contrast photograph of a bustling maritime shipping port at dawn. Giant green cargo cranes stand as silhouettes against a soft amber and grey sky. The scene is clean, organized, and vast, reflecting an industrial yet sustainable atmosphere with a professional corporate finish." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDXFlbwY_VDfWmDODekJ8CPfKhciE1247JBco1T7cFKOJHgOu7OlXF2rQvk-tPa9PFOwq4a1kWJxxQ32bZ2UESISQLkJYBu_q6s1FC1H1QB9L8nISQ8VcI2q6BSpxfMPuTpCATTKyG_DKmn7O2NVKJLnRGctUvnG44LsY6jYlZ9KULlw8YFHudh1TapwK14HCX1XH10RzJnIXXtXoVmsgC2S7D0anrg4glkxfDtLxnPt776NM51Tvrl')"></div>
+</div>
+<!-- Main Card Container -->
+<main class="relative z-10 w-full max-w-[480px]">
+<div class="glass-panel border border-outline-variant shadow-xl rounded-lg overflow-hidden flex flex-col">
+<!-- Brand Header -->
+<header class="pt-10 pb-6 px-8 flex flex-col items-center text-center">
+<div class="w-16 h-16 bg-surface-container-lowest flex items-center justify-center rounded-xl mb-4 shadow-sm overflow-hidden">
+<img alt="Logo" class="w-full h-full object-contain p-1" src="{% static 'img/logo.png' %}"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight mb-2">Oils of Africa</h1>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Vérification du code</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-[320px]">
+                    Saisissez le code à 6 chiffres envoyé à <span class="font-semibold text-primary">{{ email }}</span>.
+                </p>
+</header>
+{% if messages %}
+<div class="px-8 space-y-2 mb-2">
+{% for message in messages %}
+<div class="flex items-center gap-2 px-4 py-3 rounded-lg text-body-sm font-body-sm {% if 'alert-danger' in message.tags %}bg-error-container text-on-error-container{% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+<span class="material-symbols-outlined !text-[20px]">{% if 'alert-danger' in message.tags %}error{% else %}check_circle{% endif %}</span>
+<span>{{ message }}</span>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+<!-- Verify Code Form -->
+<form class="px-8 pb-10 flex flex-col gap-6" id="verifyForm" method="post" action="{% url 'users:reset_verify' %}">
+{% csrf_token %}
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" for="code">Code de vérification (6 chiffres)</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">password</span>
+<input autocomplete="one-time-code" class="w-full pl-10 pr-4 py-3 bg-surface-container-low border border-outline-variant rounded focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-body-md tracking-[0.4em]" id="code" inputmode="numeric" maxlength="6" name="code" pattern="\d{6}" placeholder="------" required="" type="text"/>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary font-headline-md text-body-lg py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary transition-all active:scale-[0.98] shadow-md" id="submitBtn" type="submit">
+<span id="btnText">Vérifier le code</span>
+<span class="material-symbols-outlined" id="btnIcon">arrow_forward</span>
+</button>
+<div class="flex justify-center mt-2">
+<a class="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline group" href="{% url 'users:forgot_password' %}">
+<span class="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">arrow_back</span>
+                        Renvoyer le code
+                    </a>
+</div>
+</form>
+</div>
+<!-- Support Footer -->
+<footer class="mt-8 text-center">
+<p class="font-label-md text-label-md text-on-surface-variant/60">
+                © 2026 Gestion Operation.
+                <br/>
+                Besoin d'aide ? <a class="text-secondary font-semibold hover:underline" href="#">Contacter le support technique</a>
+</p>
+</footer>
+</main>
+<script>
+        const codeInput = document.getElementById('code');
+        codeInput.addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+        });
+
+        const form = document.getElementById('verifyForm');
+        form.addEventListener('submit', function () {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btnText.innerText = 'Vérification en cours...';
+            btnIcon.innerText = 'sync';
+            btnIcon.classList.add('animate-spin');
+        });
+
+        // Dark / light theme toggle, persisted in localStorage
+        (function () {
+            const root = document.documentElement;
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-toggle-icon');
+
+            function applyIcon() {
+                const isDark = root.classList.contains('dark');
+                icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+                toggleBtn.setAttribute('aria-label', isDark ? 'Passer au thème clair' : 'Passer au thème sombre');
+            }
+
+            applyIcon();
+
+            toggleBtn.addEventListener('click', function () {
+                const isDark = root.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                applyIcon();
+            });
+        })();
+    </script>
+</body></html>

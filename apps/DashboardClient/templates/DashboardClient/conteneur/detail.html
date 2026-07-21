@@ -1,0 +1,151 @@
+{% extends 'DashboardClient/base_client.html' %}
+
+{% block title %}Conteneur {{ conteneur.reference }}{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-24 space-y-6">
+  <nav class="flex items-center mb-2 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardClient:dossier-liste' %}">Dossiers</a>
+    <span class="mx-2">/</span>
+    <a class="hover:text-primary" href="{% url 'DashboardClient:dossier-detail' conteneur.dossier.pk %}">{{ conteneur.dossier.TRD }}</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold font-mono-data">{{ conteneur.reference }}</span>
+  </nav>
+
+  <!-- En-tete -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-wrap items-center gap-8 shadow-sm">
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Référence</span>
+      <span class="font-mono-data text-mono-data font-bold text-primary text-lg">{{ conteneur.reference }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Nature</span>
+      {% if est_iso %}
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">
+        <span class="material-symbols-outlined text-[14px]">propane_tank</span>ISO Tank
+      </span>
+      {% else %}
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight w-fit">
+        <span class="material-symbols-outlined text-[14px]">water_drop</span>Flexitank
+      </span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">État</span>
+      {% if conteneur.etat == 'excellent' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% elif conteneur.etat == 'moyen' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-tertiary/10 text-tertiary uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% else %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight w-fit">{{ conteneur.get_etat_display }}</span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Statut</span>
+      {% if conteneur.statut == 'empote' %}
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>{{ conteneur.get_statut_display }}
+      </span>
+      {% else %}
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight w-fit">
+        <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ conteneur.get_statut_display }}
+      </span>
+      {% endif %}
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Poids net</span>
+      <span class="font-mono-data text-mono-data text-on-surface">{{ conteneur.poids_net|default:"—" }} kg</span>
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      <a href="{% url 'DashboardClient:dossier-detail' conteneur.dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        Retour au dossier
+      </a>
+    </div>
+  </div>
+
+  <div class="space-y-6">
+    <!-- Specifications techniques -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+      <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
+        <span class="material-symbols-outlined text-lg text-primary">settings</span>Spécifications techniques
+      </h3>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Type de conteneur</dt><dd class="font-bold text-right">{{ conteneur.dossier.get_type_conteneur_display }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">État</dt><dd class="font-bold text-right capitalize">{{ conteneur.get_etat_display }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Température</dt><dd class="font-bold text-right">{% if conteneur.Temerature is not None %}{{ conteneur.Temerature }} °C{% else %}—{% endif %}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Poids net</dt><dd class="font-bold text-right">{{ conteneur.poids_net|default:"—" }} kg</dd></div>
+      </dl>
+
+      {% if est_iso %}
+      <div class="mt-6 pt-4 border-t border-outline-variant">
+        <h4 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Détails ISO Tank</h4>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-body-md text-on-surface">
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plomb amateur 1</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.plombAmateur1|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plomb amateur 2</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.plombAmateur2|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plomb amateur 3</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.plombAmateur3|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plombs oils 1</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.Plombs_oils1|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plombs oils 2</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.Plombs_oils2|default:"—" }}</dd></div>
+        </dl>
+      </div>
+      {% else %}
+      <div class="mt-6 pt-4 border-t border-outline-variant">
+        <h4 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Détails Flexitank</h4>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-body-md text-on-surface">
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Numéro Flexitank</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.numeroFlextank|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Poids brut</dt><dd class="font-bold text-right">{{ conteneur.poids_brute|default:"—" }} kg</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Poids équipements</dt><dd class="font-bold text-right">{{ conteneur.poids_equipements|default:"—" }} kg</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Numéro heating pad</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.Numeroheatingpad|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plombs amateur</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.plombs_amateur|default:"—" }}</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Plombs oils</dt><dd class="font-bold text-right font-mono-data">{{ conteneur.Plombs_oils|default:"—" }}</dd></div>
+        </dl>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Dossier lie -->
+    <a href="{% url 'DashboardClient:dossier-detail' conteneur.dossier.pk %}" class="block bg-primary-container text-on-primary-container p-gutter rounded-xl hover:opacity-90 transition-opacity">
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="text-label-md font-label-md uppercase tracking-wider">Dossier associé</h3>
+        <span class="material-symbols-outlined">link</span>
+      </div>
+      <p class="text-headline-sm font-headline-sm font-mono-data mb-1">{{ conteneur.dossier.TRD }}</p>
+      <p class="text-body-sm opacity-80">{{ conteneur.dossier.projet }}</p>
+      <div class="mt-4 pt-4 border-t border-on-primary-container/20 flex flex-wrap justify-between gap-2 text-label-sm">
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">anchor</span>
+          {{ conteneur.dossier.Id_POL.nom }} <span class="material-symbols-outlined text-sm">arrow_forward</span> {{ conteneur.dossier.Id_POD.nom }}
+        </span>
+      </div>
+    </a>
+
+    <!-- Galerie photos : sélection -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+      <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
+        <span class="material-symbols-outlined text-lg text-primary">fact_check</span>Photos de sélection
+      </h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {% for label, photo in photos_selection %}
+        <div class="space-y-1">
+          {% include 'DashboardClient/conteneur/_photo_tile.html' %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Galerie photos : empotage -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+      <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
+        <span class="material-symbols-outlined text-lg text-primary">inventory_2</span>Photos d'empotage
+      </h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {% for label, photo in photos_empotage %}
+        <div class="space-y-1">
+          {% include 'DashboardClient/conteneur/_photo_tile.html' %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

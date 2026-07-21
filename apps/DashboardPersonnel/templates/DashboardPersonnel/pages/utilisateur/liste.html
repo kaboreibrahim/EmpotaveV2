@@ -1,0 +1,362 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="p-gutter max-w-container-max mx-auto">
+
+    <!-- En-tête -->
+    <div class="flex items-center justify-between mb-gutter">
+        <div>
+            <h1 class="font-headline-md text-headline-md text-primary">Users Management</h1>
+            <p class="text-body-sm text-on-surface-variant">Gérez les comptes et les accès de la plateforme.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- Bascule Tableau / Cartes -->
+            <div class="flex items-center bg-surface-container-low border border-outline-variant rounded-xl p-1">
+                <button type="button" id="btn-view-table" onclick="switchView('table')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-body-sm font-semibold transition-all bg-primary text-on-primary">
+                    <span class="material-symbols-outlined text-lg">table_rows</span>
+                    Tableau
+                </button>
+                <button type="button" id="btn-view-cards" onclick="switchView('cards')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-body-sm font-semibold transition-all text-on-surface-variant hover:bg-surface-container-high">
+                    <span class="material-symbols-outlined text-lg">grid_view</span>
+                    Cartes
+                </button>
+            </div>
+            <a href="{% url 'DashboardPersonnel:user-create' %}"
+               class="flex items-center gap-2 bg-primary hover:bg-primary-container text-on-primary px-6 py-2 rounded-xl transition-all font-semibold shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined">add</span>
+                <span>Add User</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <form method="get" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 mb-gutter flex flex-wrap items-end gap-6 shadow-sm">
+
+        <div class="flex flex-col gap-1.5 min-w-[240px] flex-1">
+            <label class="text-label-md font-label-md text-on-surface-variant">Recherche</label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                <input type="text" name="q" value="{{ current_q }}"
+                       placeholder="Nom, email, matricule..."
+                       class="w-full bg-surface-container-low border border-outline-variant rounded-xl py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-md text-body-md">
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5 min-w-[180px]">
+            <label class="text-label-md font-label-md text-on-surface-variant">Type d'utilisateur</label>
+            <select name="user_type"
+                    class="bg-surface-container-low border border-outline-variant rounded-lg py-2 px-3 text-body-sm font-body-sm focus:ring-1 focus:ring-primary outline-none">
+                <option value="">Tous les types</option>
+                {% for value, label in user_type_choices %}
+                <option value="{{ value }}" {% if current_user_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5 min-w-[180px]">
+            <label class="text-label-md font-label-md text-on-surface-variant">Statut</label>
+            <select name="status"
+                    class="bg-surface-container-low border border-outline-variant rounded-lg py-2 px-3 text-body-sm font-body-sm focus:ring-1 focus:ring-primary outline-none">
+                <option value="">Tous les statuts</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Actif</option>
+                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactif</option>
+                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>En attente</option>
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button type="submit"
+                    class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg transition-colors font-semibold text-body-sm">
+                Filtrer
+            </button>
+            <a href="{% url 'DashboardPersonnel:user-list' %}"
+               class="text-on-surface-variant hover:bg-surface-container-high px-4 py-2 rounded-lg transition-colors font-semibold text-body-sm">
+                Réinitialiser
+            </a>
+        </div>
+    </form>
+
+    <!-- Vue Tableau -->
+    <div id="view-table" class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant">
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Utilisateur</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Contact</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Pays</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Dernière connexion</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider">Statut</th>
+                    <th class="px-6 py-4 font-semibold text-on-surface-variant text-body-sm uppercase tracking-wider text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                {% for user in users %}
+                <tr class="hover:bg-surface-container-low transition-colors group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            {% if user.photo %}
+                            <img class="w-10 h-10 rounded-full object-cover border border-outline-variant"
+                                 src="{{ user.photo.url }}" alt="{{ user.username }}">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">
+                                {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-on-surface">
+                                    {{ user.get_full_name|default:user.username }}
+                                </span>
+                                <span class="text-label-md font-label-md text-on-surface-variant">ID: {{ user.id }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-body-sm text-on-surface-variant">
+                        <div class="flex flex-col">
+                            <span>{{ user.email|default:"—" }}</span>
+                            {% if user.numero %}<span class="text-label-md">{{ user.numero }}</span>{% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full bg-secondary-container/10 text-secondary text-label-md font-label-md font-bold uppercase tracking-tight">
+                            {{ user.get_user_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-body-sm text-on-surface">{{ user.pays|default:"—" }}</td>
+                    <td class="px-6 py-4 text-body-sm text-on-surface-variant">
+                        {{ user.last_login|default:"Jamais connecté" }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            {% if not user.is_verified %}
+                                <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                                <span class="text-body-sm text-orange-700 font-medium">En attente</span>
+                            {% elif user.is_active %}
+                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                <span class="text-body-sm text-green-700 font-medium">Actif</span>
+                            {% else %}
+                                <span class="w-2 h-2 rounded-full bg-outline"></span>
+                                <span class="text-body-sm text-on-surface-variant font-medium">Inactif</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a href="{% url 'DashboardPersonnel:user-update' user.pk %}"
+                               class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-all" title="Modifier">
+                                <span class="material-symbols-outlined text-xl">edit_note</span>
+                            </a>
+                            <form action="{% url 'DashboardPersonnel:user-delete' user.pk %}" method="post"
+                                  onsubmit="return confirm('Supprimer {{ user.username }} ?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-2 hover:bg-error/10 text-error rounded-lg transition-all" title="Supprimer">
+                                    <span class="material-symbols-outlined text-xl">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-10 text-center text-on-surface-variant">
+                        Aucun utilisateur ne correspond à votre recherche.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="px-6 py-4 bg-surface-container-low flex items-center justify-between border-t border-outline-variant">
+            <div class="text-body-sm text-on-surface-variant">
+                Page <span class="font-semibold text-on-surface">{{ page_obj.number }}</span>
+                sur <span class="font-semibold text-on-surface">{{ page_obj.paginator.num_pages }}</span>
+                — <span class="font-semibold text-on-surface">{{ paginator.count }}</span> utilisateurs
+            </div>
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_user_type %}&user_type={{ current_user_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+                   class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container-high transition-all">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </a>
+                {% else %}
+                <span class="p-2 rounded-lg border border-outline-variant opacity-50">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <span class="w-10 h-10 rounded-lg bg-primary text-on-primary font-semibold flex items-center justify-center">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_user_type %}&user_type={{ current_user_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+                       class="w-10 h-10 rounded-lg hover:bg-surface-container-high text-on-surface font-semibold flex items-center justify-center transition-all">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_user_type %}&user_type={{ current_user_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+                   class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container-high transition-all">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </a>
+                {% else %}
+                <span class="p-2 rounded-lg border border-outline-variant opacity-50">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Vue Cartes -->
+    <div id="view-cards" class="hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for user in users %}
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                        {% if user.photo %}
+                        <img class="w-12 h-12 rounded-full object-cover border border-outline-variant"
+                             src="{{ user.photo.url }}" alt="{{ user.username }}">
+                        {% else %}
+                        <div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">
+                            {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-on-surface">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="text-label-md font-label-md text-on-surface-variant">ID: {{ user.id }}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        {% if not user.is_verified %}
+                            <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                        {% elif user.is_active %}
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        {% else %}
+                            <span class="w-2 h-2 rounded-full bg-outline"></span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <span class="self-start px-3 py-1 rounded-full bg-secondary-container/10 text-secondary text-label-md font-label-md font-bold uppercase tracking-tight">
+                    {{ user.get_user_type_display }}
+                </span>
+
+                <div class="flex flex-col gap-1 text-body-sm text-on-surface-variant">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">mail</span>
+                        <span class="truncate">{{ user.email|default:"—" }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">public</span>
+                        <span>{{ user.pays|default:"—" }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">schedule</span>
+                        <span>{{ user.last_login|default:"Jamais connecté" }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant">
+                    <a href="{% url 'DashboardPersonnel:user-update' user.pk %}"
+                       class="p-2 hover:bg-primary/10 text-primary rounded-lg transition-all" title="Modifier">
+                        <span class="material-symbols-outlined text-xl">edit_note</span>
+                    </a>
+                    <form action="{% url 'DashboardPersonnel:user-delete' user.pk %}" method="post"
+                          onsubmit="return confirm('Supprimer {{ user.username }} ?');" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="p-2 hover:bg-error/10 text-error rounded-lg transition-all" title="Supprimer">
+                            <span class="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-10 text-center text-on-surface-variant">
+                Aucun utilisateur ne correspond à votre recherche.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Cartes statistiques -->
+    <div class="mt-gutter grid grid-cols-1 md:grid-cols-3 gap-gutter">
+        <div class="md:col-span-2 bg-gradient-to-br from-primary to-primary-container rounded-xl p-8 text-on-primary shadow-xl flex flex-col justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <h3 class="font-headline-md text-headline-md mb-2">Platform Security Overview</h3>
+                <p class="font-body-md text-on-primary/80 max-w-lg mb-6">
+                    Vérifiez les accès des personnels du port et assurez-vous que l'authentification
+                    multi-facteurs est activée pour les comptes administrateurs.
+                </p>
+            </div>
+            <div class="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-1/4">
+                <span class="material-symbols-outlined text-[240px]" style="font-variation-settings: 'FILL' 1;">anchor</span>
+            </div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm flex flex-col justify-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-secondary">pending_actions</span>
+                </div>
+                <div>
+                    <span class="block text-headline-md font-headline-md text-on-surface">{{ pending_users }}</span>
+                    <span class="text-label-md font-label-md text-on-surface-variant uppercase">En attente</span>
+                </div>
+            </div>
+            <div class="h-px bg-outline-variant w-full"></div>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-green-600">how_to_reg</span>
+                </div>
+                <div>
+                    <span class="block text-headline-md font-headline-md text-on-surface">{{ verified_users }}</span>
+                    <span class="text-label-md font-label-md text-on-surface-variant uppercase">Vérifiés</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function switchView(view) {
+        const tableView = document.getElementById('view-table');
+        const cardsView = document.getElementById('view-cards');
+        const btnTable = document.getElementById('btn-view-table');
+        const btnCards = document.getElementById('btn-view-cards');
+
+        const activeClasses = ['bg-primary', 'text-on-primary'];
+        const inactiveClasses = ['text-on-surface-variant', 'hover:bg-surface-container-high'];
+
+        if (view === 'cards') {
+            tableView.classList.add('hidden');
+            cardsView.classList.remove('hidden');
+            btnCards.classList.add(...activeClasses);
+            btnCards.classList.remove(...inactiveClasses);
+            btnTable.classList.remove(...activeClasses);
+            btnTable.classList.add(...inactiveClasses);
+        } else {
+            cardsView.classList.add('hidden');
+            tableView.classList.remove('hidden');
+            btnTable.classList.add(...activeClasses);
+            btnTable.classList.remove(...inactiveClasses);
+            btnCards.classList.remove(...activeClasses);
+            btnCards.classList.add(...inactiveClasses);
+        }
+
+        localStorage.setItem('users-list-view', view);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedView = localStorage.getItem('users-list-view') || 'table';
+        switchView(savedView);
+    });
+</script>
+{% endblock %}

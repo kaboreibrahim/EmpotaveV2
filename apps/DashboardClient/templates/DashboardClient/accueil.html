@@ -1,0 +1,189 @@
+{% extends 'DashboardClient/base_client.html' %}
+{% block title %}Dashboard Client{% endblock %}
+{% block content %}
+<!-- Header Section -->
+<div class="mb-10">
+  <h2 class="font-headline-lg text-headline-lg text-primary mb-2">Bienvenue, {{ user.get_full_name|default:user.username }}</h2>
+  <p class="text-on-surface-variant font-body-md">Vue d'ensemble de vos dossiers et de leur avancement.</p>
+</div>
+
+<!-- Cartes statistiques -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+  <a href="{% url 'DashboardClient:dossier-liste' %}" class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm hover:border-primary/40 transition-all">
+    <div class="w-14 h-14 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+      <span class="material-symbols-outlined text-[28px]">folder</span>
+    </div>
+    <div>
+      <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Total dossiers</p>
+      <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_dossiers }}</p>
+    </div>
+  </a>
+  <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+    <div class="w-14 h-14 bg-on-surface-variant/10 text-on-surface-variant flex items-center justify-center rounded-xl">
+      <span class="material-symbols-outlined text-[28px]">pending_actions</span>
+    </div>
+    <div>
+      <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">En attente</p>
+      <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_en_attente }}</p>
+    </div>
+  </div>
+  <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+    <div class="w-14 h-14 bg-secondary/10 text-secondary flex items-center justify-center rounded-xl">
+      <span class="material-symbols-outlined text-[28px]">directions_boat</span>
+    </div>
+    <div>
+      <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">En cours</p>
+      <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_en_cours }}</p>
+    </div>
+  </div>
+  <div class="bg-surface-container-lowest p-5 border border-outline-variant rounded-xl flex items-center gap-4 shadow-sm">
+    <div class="w-14 h-14 bg-primary/10 text-primary flex items-center justify-center rounded-xl">
+      <span class="material-symbols-outlined text-[28px]">check_circle</span>
+    </div>
+    <div>
+      <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Terminés</p>
+      <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_termines }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Dossiers en cours -->
+  <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Dossiers en cours</h3>
+      <a href="{% url 'DashboardClient:dossier-liste' %}" class="text-label-sm text-primary hover:underline">Voir tous les dossiers</a>
+    </div>
+    <div class="space-y-3">
+      {% for dossier in en_cours %}
+      <a href="{% url 'DashboardClient:dossier-detail' dossier.pk %}" class="flex items-center justify-between gap-4 p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container-low transition-colors">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="material-symbols-outlined text-primary bg-primary/10 rounded-lg p-2 shrink-0">folder</span>
+          <div class="min-w-0">
+            <p class="font-mono-data font-bold text-primary truncate">{{ dossier.TRD }}</p>
+            <p class="text-body-sm text-on-surface-variant truncate">{{ dossier.projet }} — {{ dossier.Id_POL.nom }} <span class="material-symbols-outlined text-[14px] align-middle">arrow_forward</span> {{ dossier.Id_POD.nom }}</p>
+          </div>
+        </div>
+        {% if dossier.statut == 'en_attente' %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+        {% else %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight shrink-0">{{ dossier.get_statut_display }}</span>
+        {% endif %}
+      </a>
+      {% empty %}
+      <div class="text-center py-8">
+        <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">folder_off</span>
+        <p class="text-body-sm text-on-surface-variant">Aucun dossier en cours actuellement.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Conteneurs -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+    <h3 class="text-headline-sm font-headline-sm text-on-surface mb-4">Répartition des conteneurs</h3>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">ISO Tanks</span>
+        <span class="text-headline-md font-headline-md text-primary">{{ nb_iso }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">Flexitanks</span>
+        <span class="text-headline-md font-headline-md text-secondary">{{ nb_flexi }}</span>
+      </div>
+    </div>
+    <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden flex">
+      {% if total_conteneurs %}
+      <div class="h-full bg-primary" style="width: {% widthratio nb_iso total_conteneurs 100 %}%"></div>
+      <div class="h-full bg-secondary" style="width: {% widthratio nb_flexi total_conteneurs 100 %}%"></div>
+      {% endif %}
+    </div>
+    <p class="text-label-sm text-on-surface-variant mt-2">{{ total_conteneurs }} conteneur{{ total_conteneurs|pluralize }} au total</p>
+
+    <h4 class="text-body-md font-bold text-on-surface mt-6 mb-3">Dossiers récents</h4>
+    <div class="space-y-2">
+      {% for dossier in recents %}
+      <a href="{% url 'DashboardClient:dossier-detail' dossier.pk %}" class="flex items-center justify-between text-body-sm py-1.5 hover:text-primary transition-colors">
+        <span class="font-mono-data truncate">{{ dossier.TRD }}</span>
+        <span class="text-on-surface-variant">{{ dossier.date_created|date:"d M Y" }}</span>
+      </a>
+      {% empty %}
+      <p class="text-body-sm text-on-surface-variant">Aucun dossier récent.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Documents récents -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter mt-6">
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-2">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Documents récents</h3>
+      {% if total_documents_en_attente %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-tertiary/10 text-tertiary uppercase tracking-tight">{{ total_documents_en_attente }} en attente</span>
+      {% endif %}
+    </div>
+    <a href="{% url 'DashboardClient:document-liste' %}" class="text-label-sm text-primary hover:underline">Voir tous mes documents</a>
+  </div>
+  <div class="space-y-3">
+    {% for document in documents_recents %}
+    <a href="{% url 'DashboardClient:dossier-detail' document.dossier.pk %}" class="flex items-center justify-between gap-4 p-4 border border-outline-variant rounded-lg hover:border-primary hover:bg-surface-container-low transition-colors">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-secondary bg-secondary/10 rounded-lg p-2 shrink-0">description</span>
+        <div class="min-w-0">
+          <p class="font-bold text-on-surface truncate">{{ document.type_document.type_document }}</p>
+          <p class="text-body-sm text-on-surface-variant truncate">{{ document.dossier.TRD }} — {{ document.dossier.projet }}</p>
+        </div>
+      </div>
+      {% if document.statut == 'valide' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight shrink-0">{{ document.get_statut_display }}</span>
+      {% elif document.statut == 'rejete' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight shrink-0">{{ document.get_statut_display }}</span>
+      {% else %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight shrink-0">{{ document.get_statut_display }}</span>
+      {% endif %}
+    </a>
+    {% empty %}
+    <div class="text-center py-8">
+      <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">description</span>
+      <p class="text-body-sm text-on-surface-variant">Aucun document n'a encore été ajouté à vos dossiers.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Notification flottante : apparaît lors de l'arrivée sur le dashboard pour signaler
+     les événements non lus (étapes franchies, rapports disponibles, ...) -->
+{% if notifications_non_lues %}
+<div id="notif-toast" class="fixed bottom-6 right-6 z-[60] w-80 max-w-[90vw] bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+  <div class="flex items-center justify-between gap-2 p-4 bg-primary text-on-primary">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined">notifications_active</span>
+      <span class="font-bold text-body-sm">{{ notifications_non_lues }} nouvelle{{ notifications_non_lues|pluralize }} notification{{ notifications_non_lues|pluralize }}</span>
+    </div>
+    <button type="button" id="notif-toast-close" class="hover:opacity-80" aria-label="Fermer">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+  <div class="max-h-64 overflow-y-auto custom-scrollbar divide-y divide-outline-variant">
+    {% for notif in notifications_recentes %}
+    {% if not notif.is_read %}
+    <div class="p-3 text-body-sm text-on-surface">
+      {{ notif.message }}
+      <span class="block text-label-sm text-on-surface-variant mt-1">{{ notif.date_created|timesince }}</span>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+<script>
+  (function () {
+    const toast = document.getElementById('notif-toast');
+    const closeBtn = document.getElementById('notif-toast-close');
+    if (!toast || !closeBtn) return;
+    closeBtn.addEventListener('click', function () { toast.remove(); });
+    setTimeout(function () { if (toast.isConnected) toast.remove(); }, 12000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

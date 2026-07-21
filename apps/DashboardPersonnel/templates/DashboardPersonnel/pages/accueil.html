@@ -1,0 +1,625 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Dashboard Personnel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- En-tete -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Bonjour, {{ request.user.get_full_name|default:request.user.username }}</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Vue d'ensemble de l'activité export.</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:dossier-create' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span class="font-label-md text-label-md uppercase">Nouveau dossier</span>
+    </a>
+  </div>
+
+  <!-- KPI -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">folder_open</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate"> actifs</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_dossiers_actifs }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">pending_actions</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">En attente</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_en_attente }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">fact_check</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">En cours</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_en_cours }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">task_alt</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Terminés ce mois</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_termines_mois }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">description</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Complétion documents</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ taux_completion_documentaire }}%</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">inventory_2</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Conteneurs traités</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_conteneurs }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphiques -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Dossiers par client</h3>
+      <p class="text-label-sm text-on-surface-variant mb-4">Top {{ labels_clients|length }} clients par nombre de dossiers.</p>
+      {% if labels_clients %}
+      <div class="h-64"><canvas id="chart-clients-barres"></canvas></div>
+      {% else %}
+      <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun dossier rattaché à un client pour le moment.</p>
+      {% endif %}
+    </section>
+
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Client le plus actif</h3>
+      {% if client_principal %}
+      <p class="text-label-sm text-on-surface-variant mb-4"><span class="font-bold text-primary">{{ client_principal }}</span> — {{ client_principal_nb }} dossier{{ client_principal_nb|pluralize }} sur {{ total_dossiers_avec_client }}.</p>
+      <div class="h-64 relative"><canvas id="chart-clients-donut"></canvas></div>
+      {% else %}
+      <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun dossier rattaché à un client pour le moment.</p>
+      {% endif %}
+    </section>
+
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Dossiers par mois</h3>
+      <p class="text-label-sm text-on-surface-variant mb-4">
+        {% if mois_pic %}Pic d'activité en <span class="font-bold text-primary">{{ mois_pic }}</span> (toutes années confondues).{% else %}Aucun dossier enregistré.{% endif %}
+      </p>
+      <div class="h-64"><canvas id="chart-mois"></canvas></div>
+    </section>
+  </div>
+
+   <!-- Conteneurs utilisés par mois -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+    <h3 class="text-headline-lg font-headline-lg text-primary mb-4">Statistiques des conteneurs utilisés par mois</h3>
+    {% if valeurs_conteneurs_mois_chrono %}
+    <div class="h-80"><canvas id="chart-conteneurs-mois-chrono"></canvas></div>
+    {% else %}
+    <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun conteneur enregistré pour {{ annee_selectionnee }}.</p>
+    {% endif %}
+  </section>
+
+  <!-- Statistiques d'utilisation des commodités -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+    <h3 class="text-headline-lg font-headline-lg text-primary mb-4">Statistiques d'utilisation des commodités</h3>
+    {% if labels_commodites %}
+    <div class="h-80"><canvas id="chart-commodites"></canvas></div>
+    {% else %}
+    <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun dossier enregistré pour le moment.</p>
+    {% endif %}
+  </section>
+
+  <!-- Statistiques des conteneurs par client -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+    <div class="flex flex-wrap items-center justify-between gap-4 p-gutter border-b border-outline-variant">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Statistiques des conteneurs par client</h3>
+      <form method="get" class="flex items-center gap-2">
+        <label class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider" for="id_annee">Année :</label>
+        <select name="annee" id="id_annee" onchange="this.form.submit()" class="bg-surface-container-low border border-outline-variant text-on-surface rounded-lg px-3 py-1.5 text-body-sm focus:border-primary focus:ring-1 focus:ring-primary">
+          {% for annee in annees_disponibles %}
+          <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
+          {% empty %}
+          <option value="{{ annee_selectionnee }}" selected>{{ annee_selectionnee }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <div class="flex flex-wrap gap-3 px-gutter pt-gutter">
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-label-sm font-bold">
+        <span class="material-symbols-outlined text-[16px]">inventory_2</span>
+        Total Conteneurs : {{ total_general_conteneurs }}
+      </span>
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary text-on-secondary text-label-sm font-bold">
+        <span class="material-symbols-outlined text-[16px]">propane_tank</span>
+        Total ISO Tanks : {{ total_general_iso }}
+      </span>
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-tertiary text-on-tertiary text-label-sm font-bold">
+        <span class="material-symbols-outlined text-[16px]">functions</span>
+        Total Général : {{ total_general_grand }}
+      </span>
+    </div>
+
+    <div class="overflow-x-auto p-gutter">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider">Client</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right">10 Pieds</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right">20 Pieds</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right">40 Pieds</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right">ISO 20 Pieds</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right bg-primary/10 text-primary">Total Conteneurs</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right bg-secondary/10 text-secondary">Total ISO Tanks</th>
+            <th class="px-4 py-3 font-label-md text-label-md uppercase tracking-wider text-right bg-tertiary/10 text-tertiary">Total Général</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for ligne in stats_conteneurs_par_client %}
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-4 py-3">
+              <span class="font-bold text-on-surface">{{ ligne.client.user.get_full_name|default:ligne.client.user.username }}</span>
+              {% if ligne.client.user.pays %}<span class="text-body-sm text-on-surface-variant">({{ ligne.client.user.pays.nom }})</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right font-mono-data text-body-sm">{{ ligne.p10 }}</td>
+            <td class="px-4 py-3 text-right font-mono-data text-body-sm">{{ ligne.p20 }}</td>
+            <td class="px-4 py-3 text-right font-mono-data text-body-sm">{{ ligne.p40 }}</td>
+            <td class="px-4 py-3 text-right font-mono-data text-body-sm">{{ ligne.iso }}</td>
+            <td class="px-4 py-3 text-right font-mono-data font-bold bg-primary/10 text-primary">{{ ligne.total_conteneurs }}</td>
+            <td class="px-4 py-3 text-right font-mono-data font-bold bg-secondary/10 text-secondary">{{ ligne.total_iso }}</td>
+            <td class="px-4 py-3 text-right font-mono-data font-bold bg-tertiary/10 text-tertiary">{{ ligne.total_general }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="px-4 py-10 text-center text-on-surface-variant">Aucun client enregistré.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+ 
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Colonne laterale -->
+    <div class="space-y-6">
+
+      <!-- Repartition conteneurs -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter space-y-4 shadow-sm">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Répartition des conteneurs</h3>
+        {% if total_conteneurs %}
+        <div class="w-full h-3 rounded-full overflow-hidden flex bg-surface-container-low">
+          <div class="h-full bg-primary" style="width: {{ pct_iso }}%"></div>
+          <div class="h-full bg-secondary" style="width: {{ pct_flexi }}%"></div>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-primary"></span>ISO Tanks — <span class="font-bold">{{ nb_iso }}</span> ({{ pct_iso }}%)</span>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>Flexitanks — <span class="font-bold">{{ nb_flexi }}</span> ({{ pct_flexi }}%)</span>
+        </div>
+        {% else %}
+        <p class="text-body-sm text-on-surface-variant">Aucun conteneur enregistré pour le moment.</p>
+        {% endif %}
+      </section>
+
+      <!-- Repartition par statut -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter space-y-3 shadow-sm">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Dossiers par statut</h3>
+        {% for ligne in repartition_statut %}
+        <div class="flex justify-between text-body-sm">
+          <span class="text-on-surface-variant">{{ ligne.label }}</span>
+          <span class="font-bold text-on-surface">{{ ligne.nombre }}</span>
+        </div>
+        {% endfor %}
+      </section>
+
+      <!-- Charge par agent -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter space-y-4 shadow-sm">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Charge par agent</h3>
+        <div class="space-y-2">
+          <p class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Sélection</p>
+          {% for agent in charge_agents_selection %}
+          <div class="flex justify-between text-body-sm">
+            <span class="text-on-surface">{{ agent.user.get_full_name|default:agent.user.username }}</span>
+            <span class="font-bold text-primary">{{ agent.nb_dossiers }}</span>
+          </div>
+          {% empty %}
+          <p class="text-body-sm text-on-surface-variant">Aucun dossier actif attribué.</p>
+          {% endfor %}
+        </div>
+        <div class="space-y-2 pt-3 border-t border-outline-variant">
+          <p class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Empotage</p>
+          {% for agent in charge_agents_empotage %}
+          <div class="flex justify-between text-body-sm">
+            <span class="text-on-surface">{{ agent.user.get_full_name|default:agent.user.username }}</span>
+            <span class="font-bold text-secondary">{{ agent.nb_dossiers }}</span>
+          </div>
+          {% empty %}
+          <p class="text-body-sm text-on-surface-variant">Aucun dossier actif attribué.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- Activite recente -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-gutter border-b border-outline-variant">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Activité récente</h3>
+        </div>
+        <div class="p-gutter space-y-5 max-h-[420px] overflow-y-auto custom-scrollbar">
+          {% for entry in activite_recente %}
+          <div class="relative pl-8">
+            <div class="absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center z-10
+              {% if entry.action == 'create' %}bg-primary/20{% elif entry.action == 'delete' %}bg-error/20{% else %}bg-secondary/20{% endif %}">
+              <span class="material-symbols-outlined text-sm
+                {% if entry.action == 'create' %}text-primary{% elif entry.action == 'delete' %}text-error{% else %}text-secondary{% endif %}">
+                {% if entry.action == 'create' %}add{% elif entry.action == 'delete' %}delete{% else %}edit{% endif %}
+              </span>
+            </div>
+            <div>
+              <p class="text-body-sm font-bold text-on-surface">{{ entry.get_action_display }} — {{ entry.object_repr }}</p>
+              <p class="text-label-sm text-on-surface-variant">{{ entry.created_at|timesince }} — {{ entry.actor_username|default:"Système" }}</p>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-8">
+            <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">history</span>
+            <p class="text-body-sm text-on-surface-variant">Aucun événement enregistré.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Colonne principale -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Dossiers recents -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Dossiers récents</h3>
+          <a href="{% url 'DashboardPersonnel:dossier-liste' %}" class="text-label-md font-label-md text-primary hover:underline">Voir tous les dossiers</a>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider">Dossier</th>
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider">Client</th>
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider">Pays</th>
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider">Statut</th>
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider">Documents</th>
+                <th class="px-6 py-3 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/30">
+              {% for dossier in dossiers_recents %}
+              <tr class="hover:bg-primary/5 transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}'">
+                <td class="px-6 py-4">
+                  <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="font-mono-data text-primary font-bold hover:underline">{{ dossier.TRD }}</a>
+                  <div class="text-[11px] text-on-surface-variant">{{ dossier.projet }}</div>
+                </td>
+                <td class="px-6 py-4 text-body-sm text-on-surface">
+                  {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}
+                </td>
+                <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ dossier.Id_Pays.nom|default:"—" }}</td>
+                <td class="px-6 py-4">
+                  {% if dossier.statut == 'en_attente' %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+                  {% elif dossier.statut == 'selection_en_cours' or dossier.statut == 'empotage_en_cours' %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+                  {% elif dossier.statut == 'dossier_termine' %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+                  {% else %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 min-w-[140px]" onclick="event.stopPropagation()">
+                  <div class="flex items-center gap-2">
+                    <div class="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+                      <div class="h-full bg-primary rounded-full" style="width: {% widthratio dossier.nb_documents total_types_requis 100 %}%"></div>
+                    </div>
+                    <span class="text-[11px] text-on-surface-variant shrink-0">{{ dossier.nb_documents }}/{{ total_types_requis }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-right" onclick="event.stopPropagation()">
+                  <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail">
+                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-6 py-10 text-center text-on-surface-variant">Aucun dossier pour le moment.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Alertes -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="flex items-center gap-2 p-gutter border-b border-outline-variant">
+          <span class="material-symbols-outlined text-error">warning</span>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Alertes</h3>
+        </div>
+        <div class="divide-y divide-outline-variant/30">
+          {% for dossier in dossiers_documents_rejetes %}
+          <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="flex items-center justify-between gap-4 p-4 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-error">cancel</span>
+              <div class="min-w-0">
+                <p class="font-bold text-on-surface truncate">{{ dossier.projet }} — {{ dossier.TRD }}</p>
+                <p class="text-label-sm text-on-surface-variant">Au moins un document a été rejeté</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant shrink-0">chevron_right</span>
+          </a>
+          {% endfor %}
+          {% for dossier in dossiers_sans_agent %}
+          <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="flex items-center justify-between gap-4 p-4 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-tertiary">person_off</span>
+              <div class="min-w-0">
+                <p class="font-bold text-on-surface truncate">{{ dossier.projet }} — {{ dossier.TRD }}</p>
+                <p class="text-label-sm text-on-surface-variant">Aucun agent assigné pour l'étape en cours</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant shrink-0">chevron_right</span>
+          </a>
+          {% endfor %}
+          {% for dossier in dossiers_bloques %}
+          <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="flex items-center justify-between gap-4 p-4 hover:bg-surface-container-low transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-secondary">schedule</span>
+              <div class="min-w-0">
+                <p class="font-bold text-on-surface truncate">{{ dossier.projet }} — {{ dossier.TRD }}</p>
+                <p class="text-label-sm text-on-surface-variant">Sans progression depuis plus de {{ jours_dossier_bloque }} jours</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant shrink-0">chevron_right</span>
+          </a>
+          {% endfor %}
+          {% if not dossiers_documents_rejetes and not dossiers_sans_agent and not dossiers_bloques %}
+          <div class="p-8 text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">task_alt</span>
+            Aucune alerte, tout est sous contrôle.
+          </div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+{{ labels_clients|json_script:"data-labels-clients" }}
+{{ valeurs_clients|json_script:"data-valeurs-clients" }}
+{{ couleurs_clients|json_script:"data-couleurs-clients" }}
+{{ labels_mois|json_script:"data-labels-mois" }}
+{{ valeurs_mois|json_script:"data-valeurs-mois" }}
+{{ labels_mois_chrono|json_script:"data-labels-mois-chrono" }}
+{{ labels_mois_chrono_complet|json_script:"data-labels-mois-chrono-complet" }}
+{{ valeurs_conteneurs_mois_chrono|json_script:"data-valeurs-conteneurs-mois-chrono" }}
+{{ labels_commodites|json_script:"data-labels-commodites" }}
+{{ valeurs_commodites|json_script:"data-valeurs-commodites" }}
+{{ couleurs_commodites|json_script:"data-couleurs-commodites" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+  (function () {
+    if (typeof Chart === 'undefined') return;
+
+    const labelsClients = JSON.parse(document.getElementById('data-labels-clients').textContent);
+    const valeursClients = JSON.parse(document.getElementById('data-valeurs-clients').textContent);
+    const couleursClients = JSON.parse(document.getElementById('data-couleurs-clients').textContent);
+    const labelsMois = JSON.parse(document.getElementById('data-labels-mois').textContent);
+    const valeursMois = JSON.parse(document.getElementById('data-valeurs-mois').textContent);
+
+    Chart.defaults.font.family = 'Inter';
+    Chart.defaults.color = '#44474e';
+
+    const canvasBarresClients = document.getElementById('chart-clients-barres');
+    if (canvasBarresClients) {
+      new Chart(canvasBarresClients, {
+        type: 'bar',
+        data: {
+          labels: labelsClients,
+          datasets: [{
+            label: 'Dossiers',
+            data: valeursClients,
+            backgroundColor: couleursClients,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } },
+            y: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    const canvasDonutClients = document.getElementById('chart-clients-donut');
+    if (canvasDonutClients) {
+      new Chart(canvasDonutClients, {
+        type: 'doughnut',
+        data: {
+          labels: labelsClients,
+          datasets: [{
+            data: valeursClients,
+            backgroundColor: couleursClients,
+            borderColor: '#faf9fd',
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+        },
+      });
+    }
+
+    const canvasMois = document.getElementById('chart-mois');
+    if (canvasMois) {
+      const indexPic = valeursMois.indexOf(Math.max(...valeursMois));
+      new Chart(canvasMois, {
+        type: 'bar',
+        data: {
+          labels: labelsMois.map((m) => m.slice(0, 3)),
+          datasets: [{
+            label: 'Dossiers',
+            data: valeursMois,
+            backgroundColor: valeursMois.map((_, i) => (i === indexPic ? '#002046' : '#aec7f7')),
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    const canvasCommodites = document.getElementById('chart-commodites');
+    if (canvasCommodites) {
+      const labelsCommodites = JSON.parse(document.getElementById('data-labels-commodites').textContent);
+      const valeursCommodites = JSON.parse(document.getElementById('data-valeurs-commodites').textContent);
+      const couleursCommodites = JSON.parse(document.getElementById('data-couleurs-commodites').textContent);
+
+      new Chart(canvasCommodites, {
+        type: 'bar',
+        data: {
+          labels: labelsCommodites,
+          datasets: [{
+            label: 'Dossiers',
+            data: valeursCommodites,
+            backgroundColor: couleursCommodites,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (item) => item.parsed.y + ' dossier' + (item.parsed.y > 1 ? 's' : '') } },
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { grid: { display: false }, ticks: { maxRotation: 35, minRotation: 0 } },
+          },
+        },
+      });
+    }
+
+    const canvasConteneursMoisChrono = document.getElementById('chart-conteneurs-mois-chrono');
+    if (canvasConteneursMoisChrono) {
+      const labelsMoisChrono = JSON.parse(document.getElementById('data-labels-mois-chrono').textContent);
+      const labelsMoisChronoComplet = JSON.parse(document.getElementById('data-labels-mois-chrono-complet').textContent);
+      const valeursConteneursMoisChrono = JSON.parse(document.getElementById('data-valeurs-conteneurs-mois-chrono').textContent);
+      const dernierIndex = valeursConteneursMoisChrono.length - 1;
+
+      new Chart(canvasConteneursMoisChrono, {
+        type: 'line',
+        data: {
+          labels: labelsMoisChrono,
+          datasets: [{
+            label: 'Nombre de conteneurs',
+            data: valeursConteneursMoisChrono,
+            borderColor: '#002046',
+            backgroundColor: 'rgba(0, 32, 70, 0.08)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#002046',
+            pointRadius: valeursConteneursMoisChrono.map((_, i) => (i === dernierIndex ? 6 : 3)),
+            pointHoverRadius: 7,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => labelsMoisChronoComplet[items[0].dataIndex],
+                label: (item) => 'Nombre de conteneurs: ' + item.parsed.y,
+              },
+            },
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } },
+          },
+        },
+      });
+    }
+  })();
+</script>
+
+<!-- Notification flottante : apparaît lors de l'arrivée sur le dashboard pour signaler
+     les événements non lus (nouveaux dossiers, rapports soumis, ...) -->
+{% if notifications_non_lues %}
+<div id="notif-toast" class="fixed bottom-6 right-6 z-[60] w-80 max-w-[90vw] bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+  <div class="flex items-center justify-between gap-2 p-4 bg-primary text-on-primary">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined">notifications_active</span>
+      <span class="font-bold text-body-sm">{{ notifications_non_lues }} nouvelle{{ notifications_non_lues|pluralize }} notification{{ notifications_non_lues|pluralize }}</span>
+    </div>
+    <button type="button" id="notif-toast-close" class="hover:opacity-80" aria-label="Fermer">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+  <div class="max-h-64 overflow-y-auto custom-scrollbar divide-y divide-outline-variant">
+    {% for notif in notifications_recentes %}
+    {% if not notif.is_read %}
+    <div class="p-3 text-body-sm text-on-surface">
+      {{ notif.message }}
+      <span class="block text-label-sm text-on-surface-variant mt-1">{{ notif.date_created|timesince }}</span>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+<script>
+  (function () {
+    const toast = document.getElementById('notif-toast');
+    const closeBtn = document.getElementById('notif-toast-close');
+    if (!toast || !closeBtn) return;
+    closeBtn.addEventListener('click', function () { toast.remove(); });
+    setTimeout(function () { if (toast.isConnected) toast.remove(); }, 12000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

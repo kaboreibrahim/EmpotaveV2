@@ -1,0 +1,375 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}{% if object %}Modifier le dossier{% else %}Nouveau dossier{% endif %}{% endblock %}
+
+{% block content %}
+{{ pays_options|json_script:"pays-options" }}
+{{ pol_options|json_script:"pol-options" }}
+{{ pod_options|json_script:"pod-options" }}
+{{ commodite_options|json_script:"commodite-options" }}
+{{ compagnie_options|json_script:"compagnie-options" }}
+{{ site_selection_options|json_script:"site-selection-options" }}
+{{ site_empotage_options|json_script:"site-empotage-options" }}
+{{ client_options|json_script:"client-options" }}
+{{ agent_selection_options|json_script:"agent-selection-options" }}
+{{ agent_empotage_options|json_script:"agent-empotage-options" }}
+{{ agent_operationnel_options|json_script:"agent-operationnel-options" }}
+
+<div class="max-w-container-max mx-auto pb-24">
+  <nav class="flex mb-6 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:dossier-liste' %}">Dossiers</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">{% if object %}Modifier {{ object.TRD }}{% else %}Nouveau dossier{% endif %}</span>
+  </nav>
+
+  <div class="mb-10">
+    <h1 class="text-headline-lg font-headline-lg text-primary">{% if object %}Modifier le dossier{% else %}Créer un dossier{% endif %}</h1>
+    <p class="text-on-surface-variant mt-1">Renseignez les informations et les référentiels lies a ce dossier.</p>
+  </div>
+
+  {% if form.non_field_errors %}
+  <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-error/10 border border-error text-error text-body-sm mb-6">
+    <span class="material-symbols-outlined">error</span>
+    <span>{{ form.non_field_errors.0 }}</span>
+  </div>
+  {% endif %}
+
+  <form method="post" id="dossierForm" class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    {% csrf_token %}
+
+    <!-- Informations du dossier -->
+    <div class="lg:col-span-12 bg-surface-container-lowest border border-outline-variant p-8 rounded-xl shadow-sm">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary">
+          <span class="material-symbols-outlined">description</span>
+        </div>
+        <h3 class="font-headline-md text-on-surface">Informations du dossier</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_TRD">Numéro TRD</label>
+          <input class="custom-input px-4 py-3" id="id_TRD" name="TRD" required type="text" value="{{ form.TRD.value|default:'' }}">
+          {% if form.TRD.errors %}<p class="text-body-sm text-error mt-1">{{ form.TRD.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_projet">Projet</label>
+          <input class="custom-input px-4 py-3" id="id_projet" name="projet" required type="text" value="{{ form.projet.value|default:'' }}">
+          {% if form.projet.errors %}<p class="text-body-sm text-error mt-1">{{ form.projet.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_Booking">Booking</label>
+          <input class="custom-input px-4 py-3" id="id_Booking" name="Booking" required type="text" value="{{ form.Booking.value|default:'' }}">
+          {% if form.Booking.errors %}<p class="text-body-sm text-error mt-1">{{ form.Booking.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_type_conteneur">Type de conteneur</label>
+          <select class="custom-input px-4 py-3" id="id_type_conteneur" name="type_conteneur" required>
+            <option value="">Choisir un type</option>
+            {% for value, label in form.fields.type_conteneur.choices %}
+            {% if value %}
+            <option value="{{ value }}" {% if form.type_conteneur.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+          {% if form.type_conteneur.errors %}<p class="text-body-sm text-error mt-1">{{ form.type_conteneur.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Itineraire & referentiels -->
+    <div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant p-8 rounded-xl shadow-sm">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-secondary-container/20 rounded-lg flex items-center justify-center text-secondary">
+          <span class="material-symbols-outlined">anchor</span>
+        </div>
+        <h3 class="font-headline-md text-on-surface">Itinéraire & référentiels</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_Pays" label="Pays" placeholder="Rechercher un pays..." js_var="paysOptions" quick_add_type="pays" bound_field=form.Id_Pays %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_POL" label="Port de chargement (POL)" placeholder="Rechercher un POL..." js_var="polOptions" quick_add_type="pol" bound_field=form.Id_POL %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_POD" label="Port de déchargement (POD)" placeholder="Rechercher un POD..." js_var="podOptions" quick_add_type="pod" bound_field=form.Id_POD %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_Commodite" label="Commodité" placeholder="Rechercher une commodité..." js_var="commoditeOptions" quick_add_type="commodite" bound_field=form.Id_Commodite %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_CompagnieMaritime" label="Compagnie maritime" placeholder="Rechercher une compagnie..." js_var="compagnieOptions" quick_add_type="compagnie" bound_field=form.Id_CompagnieMaritime %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_SiteSelection" label="Site de sélection" placeholder="Rechercher un site..." js_var="siteSelectionOptions" quick_add_type="site_selection" bound_field=form.Id_SiteSelection %}
+        {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_SiteEmpotage" label="Site d'empotage" placeholder="Rechercher un site..." js_var="siteEmpotageOptions" quick_add_type="site_empotage" bound_field=form.Id_SiteEmpotage %}
+      </div>
+    </div>
+
+    <!-- Client & acteurs -->
+    <div class="lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-8 rounded-xl shadow-sm space-y-6">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 bg-tertiary-container/20 rounded-lg flex items-center justify-center text-tertiary">
+          <span class="material-symbols-outlined">groups</span>
+        </div>
+        <h3 class="font-headline-md text-on-surface">Client & acteurs</h3>
+      </div>
+      {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="id_client" label="Client" placeholder="Rechercher un client..." js_var="clientOptions" bound_field=form.id_client %}
+      {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_Agent_selection" label="Agent de sélection " placeholder="Rechercher un agent..." js_var="agentSelectionOptions" bound_field=form.Id_Agent_selection %}
+      {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_Agent_empotage" label="Agent d'empotage " placeholder="Rechercher un agent..." js_var="agentEmpotageOptions" bound_field=form.Id_Agent_empotage %}
+      {% include "DashboardPersonnel/pages/dossier/_combobox.html" with field_name="Id_Agent_operationel" label="Agent opérationnel " placeholder="Rechercher un agent opérationnel..." js_var="agentOperationnelOptions" bound_field=form.Id_Agent_operationel %}
+    </div>
+
+    <!-- Actions -->
+    <div class="lg:col-span-12 flex items-center justify-between pt-4">
+      <a class="px-8 py-3 rounded-lg border border-outline text-label-md font-label-md font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors" href="{% url 'DashboardPersonnel:dossier-liste' %}">Annuler</a>
+      <button class="px-10 py-3 rounded-lg bg-primary text-on-primary font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center gap-2" type="submit">
+        <span class="material-symbols-outlined">save</span>
+        {% if object %}Enregistrer les modifications{% else %}Créer le dossier{% endif %}
+      </button>
+    </div>
+  </form>
+
+  <!-- Modale d'ajout rapide d'une donnee de reference manquante -->
+  <div x-data="quickAddModal()" x-show="open" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40" @click="close()"></div>
+    <div class="relative bg-surface-container-lowest rounded-xl shadow-xl w-full max-w-md p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h4 class="font-headline-md text-headline-md text-primary" x-text="config ? config.title : ''"></h4>
+        <button type="button" @click="close()" class="p-1 text-on-surface-variant hover:text-error">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <p x-show="errors.__all__" x-text="errors.__all__ ? errors.__all__[0] : ''" class="text-body-sm text-error"></p>
+
+      <template x-for="field in (config ? config.fields : [])" :key="field.name">
+        <div class="space-y-1.5">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" x-text="field.label"></label>
+          <template x-if="field.type === 'select'">
+            <select class="custom-input px-4 py-2.5" x-model="values[field.name]">
+              <option value="">Choisir...</option>
+              <template x-for="opt in field.options" :key="opt.value">
+                <option :value="opt.value" x-text="opt.label"></option>
+              </template>
+            </select>
+          </template>
+          <template x-if="field.type !== 'select'">
+            <input type="text" class="custom-input px-4 py-2.5" x-model="values[field.name]">
+          </template>
+          <p x-show="errors[field.name]" x-text="errors[field.name] ? errors[field.name][0] : ''" class="text-body-sm text-error"></p>
+        </div>
+      </template>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" @click="close()" class="px-5 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors">Annuler</button>
+        <button type="button" @click="submit()" :disabled="saving" class="px-6 py-2 rounded-lg bg-primary text-on-primary font-bold hover:opacity-90 disabled:opacity-50 transition-all">
+          <span x-text="saving ? 'Enregistrement...' : 'Ajouter'"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const paysOptions = JSON.parse(document.getElementById('pays-options').textContent);
+  const polOptions = JSON.parse(document.getElementById('pol-options').textContent);
+  const podOptions = JSON.parse(document.getElementById('pod-options').textContent);
+  const commoditeOptions = JSON.parse(document.getElementById('commodite-options').textContent);
+  const compagnieOptions = JSON.parse(document.getElementById('compagnie-options').textContent);
+  const siteSelectionOptions = JSON.parse(document.getElementById('site-selection-options').textContent);
+  const siteEmpotageOptions = JSON.parse(document.getElementById('site-empotage-options').textContent);
+  const clientOptions = JSON.parse(document.getElementById('client-options').textContent);
+  const agentSelectionOptions = JSON.parse(document.getElementById('agent-selection-options').textContent);
+  const agentEmpotageOptions = JSON.parse(document.getElementById('agent-empotage-options').textContent);
+  const agentOperationnelOptions = JSON.parse(document.getElementById('agent-operationnel-options').textContent);
+
+  const QUICK_ADD_CONFIGS = {
+    pays: {
+      title: 'Nouveau pays',
+      createUrl: '{% url "DashboardPersonnel:pays-create" %}',
+      targetField: 'Id_Pays',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+      ],
+    },
+    pol: {
+      title: 'Nouveau port de chargement (POL)',
+      createUrl: '{% url "DashboardPersonnel:pol-create" %}',
+      targetField: 'Id_POL',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+    pod: {
+      title: 'Nouveau port de déchargement (POD)',
+      createUrl: '{% url "DashboardPersonnel:pod-create" %}',
+      targetField: 'Id_POD',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+    commodite: {
+      title: 'Nouvelle commodité',
+      createUrl: '{% url "DashboardPersonnel:commodites-create" %}',
+      targetField: 'Id_Commodite',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+    compagnie: {
+      title: 'Nouvelle compagnie maritime',
+      createUrl: '{% url "DashboardPersonnel:compagnie-create" %}',
+      targetField: 'Id_CompagnieMaritime',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+    site_selection: {
+      title: 'Nouveau site de sélection',
+      createUrl: '{% url "DashboardPersonnel:site-selection-create" %}',
+      targetField: 'Id_SiteSelection',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'contact', label: 'Contact', type: 'text' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+    site_empotage: {
+      title: "Nouveau site d'empotage",
+      createUrl: '{% url "DashboardPersonnel:site-empotage-create" %}',
+      targetField: 'Id_SiteEmpotage',
+      fields: [
+        { name: 'nom', label: 'Nom', type: 'text' },
+        { name: 'contact', label: 'Contact', type: 'text' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'Id_Pays', label: 'Pays', type: 'select', options: paysOptions },
+      ],
+    },
+  };
+
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('searchableSelect', (fieldName, initialOptions, initialSelected) => ({
+      fieldName,
+      allOptions: initialOptions,
+      options: initialOptions,
+      selected: initialSelected || '',
+      query: '',
+      open: false,
+      typing: false,
+
+      init() {
+        const current = this.options.find((o) => o.value === this.selected);
+        this.query = current ? current.label : '';
+
+        window.addEventListener('reference-added', (event) => {
+          if (event.detail.field !== this.fieldName) return;
+          this.allOptions.push(event.detail.option);
+          this.options.push(event.detail.option);
+          this.select(event.detail.option);
+        });
+
+        if (this.fieldName === 'Id_Pays') {
+          // Le pays pilote le filtrage des autres champs (donnees de reference + utilisateurs lies a ce pays).
+          if (this.selected) {
+            window.dispatchEvent(new CustomEvent('pays-changed', { detail: { paysId: this.selected } }));
+          }
+        } else {
+          window.addEventListener('pays-changed', (event) => {
+            this.applyPaysFilter(event.detail.paysId);
+          });
+        }
+      },
+
+      applyPaysFilter(paysId) {
+        if (!paysId) {
+          this.options = this.allOptions;
+        } else {
+          this.options = this.allOptions.filter((o) => o.pays === undefined || o.pays === paysId);
+        }
+        if (this.selected && !this.options.some((o) => o.value === this.selected)) {
+          this.clear();
+        }
+      },
+
+      get filteredOptions() {
+        if (!this.typing) return this.options;
+        const q = this.query.trim().toLowerCase();
+        if (!q) return this.options;
+        return this.options.filter((o) => o.label.toLowerCase().includes(q));
+      },
+
+      select(opt) {
+        this.selected = opt.value;
+        this.query = opt.label;
+        this.typing = false;
+        this.open = false;
+        if (this.fieldName === 'Id_Pays') {
+          window.dispatchEvent(new CustomEvent('pays-changed', { detail: { paysId: opt.value } }));
+        }
+      },
+
+      clear() {
+        this.selected = '';
+        this.query = '';
+        if (this.fieldName === 'Id_Pays') {
+          window.dispatchEvent(new CustomEvent('pays-changed', { detail: { paysId: '' } }));
+        }
+      },
+    }));
+
+    Alpine.data('quickAddModal', () => ({
+      open: false,
+      type: null,
+      config: null,
+      values: {},
+      errors: {},
+      saving: false,
+
+      init() {
+        window.addEventListener('open-quick-add', (event) => {
+          this.type = event.detail.type;
+          this.config = QUICK_ADD_CONFIGS[this.type];
+          this.values = {};
+          this.errors = {};
+          this.open = true;
+        });
+      },
+
+      close() {
+        this.open = false;
+      },
+
+      async submit() {
+        this.saving = true;
+        this.errors = {};
+        const body = new URLSearchParams();
+        this.config.fields.forEach((field) => {
+          body.append(field.name, this.values[field.name] || '');
+        });
+        try {
+          const response = await fetch(this.config.createUrl, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': document.querySelector('#dossierForm [name=csrfmiddlewaretoken]').value,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            this.errors = data.errors || {};
+            return;
+          }
+          window.dispatchEvent(new CustomEvent('reference-added', {
+            detail: { field: this.config.targetField, option: { value: data.id, label: data.label } },
+          }));
+          this.open = false;
+        } catch (error) {
+          this.errors = { __all__: ['Une erreur est survenue. Veuillez réessayer.'] };
+        } finally {
+          this.saving = false;
+        }
+      },
+    }));
+  });
+</script>
+{% endblock %}

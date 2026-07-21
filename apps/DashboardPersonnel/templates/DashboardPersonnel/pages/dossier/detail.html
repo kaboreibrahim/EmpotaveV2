@@ -1,0 +1,475 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Dossier {{ dossier.TRD }}{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-24 space-y-6">
+  <nav class="flex mb-2 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:dossier-liste' %}">Dossiers</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">{{ dossier.TRD }}</span>
+  </nav>
+
+  <!-- En-tete -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-wrap items-center gap-8 shadow-sm">
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Reference (TRD)</span>
+      <span class="font-mono-data text-mono-data font-bold text-primary">{{ dossier.TRD }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Client</span>
+      <span class="font-headline-sm text-headline-sm text-on-surface">
+        {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}
+      </span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Booking</span>
+      <span class="font-mono-data text-mono-data text-on-surface">{{ dossier.Booking }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Itineraire</span>
+      <span class="flex items-center gap-1 text-body-md text-on-surface">
+        <span class="material-symbols-outlined text-sm">anchor</span>
+        {{ dossier.Id_POL.nom }} <span class="material-symbols-outlined text-sm">arrow_forward</span> {{ dossier.Id_POD.nom }}
+      </span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Statut</span>
+      {% if dossier.statut == 'en_attente' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% elif dossier.statut == 'selection_en_cours' or dossier.statut == 'empotage_en_cours' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% elif dossier.statut == 'dossier_termine' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% else %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% endif %}
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      <a href="{% url 'DashboardAgentSelection:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport de sélection">
+        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+        Rapport sélection
+      </a>
+      <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport d'empotage">
+        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+        Rapport empotage
+      </a>
+      <a href="{% url 'DashboardPersonnel:document-create' %}?dossier={{ dossier.pk }}" class="flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary hover:opacity-90 transition-opacity rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">note_add</span>
+        Ajouter un document
+      </a>
+      <a href="{% url 'DashboardPersonnel:dossier-update' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">edit</span>
+        Modifier
+      </a>
+      {% if dossier.statut == 'dossier_termine' %}
+      <button type="button" id="retrogradation-open" class="flex items-center gap-2 px-4 py-2 bg-error text-on-error hover:opacity-90 transition-opacity rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">undo</span>
+        Rétrograder
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Timeline du dossier -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+    {% if dossier.statut == 'annulé' %}
+    <div class="flex items-center gap-3 text-error">
+      <span class="material-symbols-outlined text-2xl">cancel</span>
+      <span class="font-bold text-body-md">Dossier annulé</span>
+    </div>
+    {% else %}
+    <div class="grid grid-cols-5">
+      {% for etape in etapes_timeline %}
+      <div class="relative flex flex-col items-center text-center px-2">
+        {% if not forloop.last %}
+        <div class="absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
+        {% endif %}
+        <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2
+          {% if etape.atteinte %}bg-primary border-primary text-on-primary{% else %}bg-surface-container-lowest border-outline-variant text-on-surface-variant{% endif %}">
+          <span class="material-symbols-outlined text-lg">{{ etape.icone }}</span>
+        </div>
+        <p class="mt-2 text-label-sm font-label-md {% if etape.atteinte %}text-on-surface{% else %}text-on-surface-variant{% endif %}">{{ etape.label }}</p>
+        <p class="text-label-sm text-on-surface-variant">{{ etape.date|date:"d/m/Y"|default:"—" }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Informations du dossier -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">work</span>Informations du projet
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Pays</dt><dd class="font-bold text-right">{{ dossier.Id_Pays|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Projet</dt><dd class="font-bold text-right">{{ dossier.projet|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">inventory_2</span>Détails des conteneurs
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Type de conteneur</dt><dd class="font-bold text-right">{{ dossier.get_type_conteneur_display }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Commodité</dt><dd class="font-bold text-right">{{ dossier.Id_Commodite.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Nombre de conteneurs</dt><dd class="font-bold text-right">{{ nb_conteneurs }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">location_on</span>Localisation
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Site de sélection</dt><dd class="font-bold text-right">{{ dossier.Id_SiteSelection.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Site d'empotage</dt><dd class="font-bold text-right">{{ dossier.Id_SiteEmpotage.nom|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">directions_boat</span>Informations maritimes
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Compagnie maritime</dt><dd class="font-bold text-right">{{ dossier.Id_CompagnieMaritime.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Port de chargement</dt><dd class="font-bold text-right">{{ dossier.Id_POL.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Port de déchargement</dt><dd class="font-bold text-right">{{ dossier.Id_POD.nom|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">group</span>Agents et clients
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Client</dt><dd class="font-bold text-right">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Agent de sélection</dt><dd class="font-bold text-right">{{ dossier.Id_Agent_selection|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Agent d'habillage & empotage</dt><dd class="font-bold text-right">{{ dossier.Id_Agent_empotage|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Agent opérationnel</dt><dd class="font-bold text-right">{{ dossier.Id_Agent_operationel|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">event</span>Dates importantes
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Création du dossier</dt><dd class="font-bold text-right">{{ dossier.date_created|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Sélection</dt><dd class="font-bold text-right">{{ dossier.date_de_selection|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Pose et habillage</dt><dd class="font-bold text-right">{{ dossier.date_de_empotage|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Soumission du rapport</dt><dd class="font-bold text-right">{{ dossier.date_de_soumission_du_rapport|date:"d F Y H:i"|default:"—" }}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Colonne principale -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Resume de la cargaison -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-4">Résumé de la cargaison</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div class="flex flex-col">
+            <span class="text-label-sm text-on-surface-variant uppercase">Conteneurs</span>
+            <span class="text-headline-md font-headline-md text-on-surface">{{ nb_conteneurs }}</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-label-sm text-on-surface-variant uppercase">Poids total</span>
+            <span class="text-headline-md font-headline-md text-on-surface">{{ poids_total }} <span class="text-body-sm font-normal">kg</span></span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-label-sm text-on-surface-variant uppercase">ISO Tanks</span>
+            <span class="text-headline-md font-headline-md text-primary">{{ nb_iso }}</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-label-sm text-on-surface-variant uppercase">Flexitanks</span>
+            <span class="text-headline-md font-headline-md text-secondary">{{ nb_flexi }}</span>
+          </div>
+        </div>
+        <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500 {% if progression_pct == 100 %}bg-primary{% elif progression_pct >= 50 %}bg-tertiary{% else %}bg-secondary{% endif %}" style="width: {{ progression_pct }}%"></div>
+        </div>
+        <div class="flex justify-between text-label-sm mt-2">
+          <span class="text-on-surface-variant">Progression empotage</span>
+          <span class="font-bold text-on-surface">{{ progression_pct }}% ({{ nb_empotes }}/{{ nb_conteneurs }})</span>
+        </div>
+      </div>
+
+      <!-- Conteneurs ISO / Flexitank -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Conteneurs (ISO / Flexitank)</h3>
+          <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded">{{ nb_conteneurs }} au total</span>
+        </div>
+        <div class="overflow-x-auto max-h-[420px] overflow-y-auto rounded-lg border border-outline-variant">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-surface-container-low border-b border-outline-variant sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Référence</th>
+                <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Type</th>
+                <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">État</th>
+                <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Statut</th>
+                <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase text-right">Poids net</th>
+                <th class="px-4 py-compact-row"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+              {% for ligne in conteneurs %}
+              {% with conteneur=ligne.objet %}
+              <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardPersonnel:conteneur-detail' conteneur.pk %}'">
+                <td class="px-4 py-standard-row font-mono-data font-bold">{{ conteneur.reference }}</td>
+                <td class="px-4 py-standard-row">
+                  {% if ligne.est_iso %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary">
+                    <span class="material-symbols-outlined text-[14px]">propane_tank</span>ISO Tank
+                  </span>
+                  {% else %}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary">
+                    <span class="material-symbols-outlined text-[14px]">water_drop</span>Flexitank
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-standard-row text-body-sm capitalize">{{ conteneur.get_etat_display }}</td>
+                <td class="px-4 py-standard-row">
+                  {% if conteneur.statut == 'empote' %}
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded uppercase bg-primary/10 text-primary">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>{{ conteneur.get_statut_display }}
+                  </span>
+                  {% else %}
+                  <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded uppercase bg-surface-container-high text-on-surface-variant">
+                    <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ conteneur.get_statut_display }}
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-standard-row text-body-sm text-right font-mono-data">{{ conteneur.poids_net }} kg</td>
+                <td class="px-4 py-standard-row text-right">
+                  <a href="{% url 'DashboardPersonnel:conteneur-detail' conteneur.pk %}" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail" onclick="event.stopPropagation()">
+                    <span class="material-symbols-outlined text-xl">visibility</span>
+                  </a>
+                </td>
+              </tr>
+              {% endwith %}
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-4 py-12 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">inventory_2</span>
+                  Aucun conteneur enregistré pour ce dossier.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Documents</h3>
+          <span id="documents-progression-fraction" class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded font-bold">{{ documents_total_ajoutes }}/{{ documents_total_requis }}</span>
+        </div>
+        <!-- Barre de progression -->
+        <div class="mb-4">
+          <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+            <div id="documents-progression-bar" class="h-full rounded-full transition-all duration-500 {% if documents_progression_pct == 100 %}bg-primary{% elif documents_progression_pct >= 50 %}bg-tertiary{% else %}bg-secondary{% endif %}" style="width: {{ documents_progression_pct }}%"></div>
+          </div>
+          <div class="flex justify-between text-label-sm mt-2">
+            <span id="documents-progression-texte" class="text-on-surface-variant">{{ documents_total_ajoutes }} document{{ documents_total_ajoutes|pluralize }} sur {{ documents_total_requis }} {{ documents_total_ajoutes|pluralize:"a,ont" }} été ajouté{{ documents_total_ajoutes|pluralize }}.</span>
+            <span id="documents-progression-pct" class="font-bold text-on-surface">{{ documents_progression_pct }}%</span>
+          </div>
+        </div>
+
+        <div id="documents-liste" class="space-y-3">
+          {% for ligne in lignes_documents %}
+          {% include 'DashboardPersonnel/pages/document/_document_row.html' %}
+          {% empty %}
+          <div class="text-center py-8">
+            <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">description</span>
+            <p class="text-body-sm text-on-surface-variant">Aucun type de document n'est configuré dans le système.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Historique -->
+    <aside class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col h-fit">
+      <div class="p-gutter border-b border-outline-variant bg-surface-container-low">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Historique du dossier</h3>
+      </div>
+      <div class="p-gutter space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+        {% for entry in historique %}
+        <div class="relative pl-8">
+          <div class="absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center z-10
+            {% if entry.action == 'create' %}bg-primary/20{% elif entry.action == 'delete' %}bg-error/20{% else %}bg-secondary/20{% endif %}">
+            <span class="material-symbols-outlined text-sm
+              {% if entry.action == 'create' %}text-primary{% elif entry.action == 'delete' %}text-error{% else %}text-secondary{% endif %}">
+              {% if entry.action == 'create' %}add{% elif entry.action == 'delete' %}delete{% else %}edit{% endif %}
+            </span>
+          </div>
+          {% if not forloop.last %}<div class="absolute left-3 top-6 w-[1px] h-full bg-outline-variant"></div>{% endif %}
+          <div>
+            <p class="text-body-md font-bold text-on-surface">{{ entry.get_action_display }} — {{ entry.object_repr }}</p>
+            <p class="text-label-sm text-on-surface-variant">{{ entry.created_at|date:"d/m/Y H:i" }} — {{ entry.actor_username|default:"Système" }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-8">
+          <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">history</span>
+          <p class="text-body-sm text-on-surface-variant">Aucun événement enregistré.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+  // Actions "Documents" (ajouter / remplacer / supprimer / changer le statut) en
+  // AJAX : la ligne concernée et la barre de progression sont mises à jour sans
+  // recharger la page. Écouteurs posés sur le conteneur (délégation) pour rester
+  // valables après le remplacement d'une ligne (outerHTML) par la réponse serveur.
+  (function () {
+    const conteneur = document.getElementById('documents-liste');
+    if (!conteneur) return;
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function appliquerProgression(progression) {
+      const barre = document.getElementById('documents-progression-bar');
+      const pct = document.getElementById('documents-progression-pct');
+      const texte = document.getElementById('documents-progression-texte');
+      const fraction = document.getElementById('documents-progression-fraction');
+      if (barre) {
+        barre.style.width = progression.progression_pct + '%';
+        barre.classList.remove('bg-primary', 'bg-tertiary', 'bg-secondary');
+        barre.classList.add(
+          progression.progression_pct === 100 ? 'bg-primary' : (progression.progression_pct >= 50 ? 'bg-tertiary' : 'bg-secondary')
+        );
+      }
+      if (pct) pct.textContent = progression.progression_pct + '%';
+      if (texte) texte.textContent = progression.texte;
+      if (fraction) fraction.textContent = progression.total_ajoutes + '/' + progression.total_requis;
+    }
+
+    function remplacerLigne(typeDocumentId, rowHtml) {
+      const ligne = document.getElementById('document-row-' + typeDocumentId);
+      if (!ligne) return;
+      const template = document.createElement('template');
+      template.innerHTML = rowHtml.trim();
+      ligne.replaceWith(template.content.firstElementChild);
+    }
+
+    async function envoyerAction(url, formData) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+          body: formData,
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          alert(data.error || "Une erreur est survenue.");
+          return;
+        }
+        remplacerLigne(data.type_document_id, data.row_html);
+        appliquerProgression(data.progression);
+      } catch (error) {
+        alert("Une erreur est survenue. Veuillez réessayer.");
+      }
+    }
+
+    // Ajouter / remplacer un fichier : déclenché par la sélection d'un fichier.
+    conteneur.addEventListener('change', function (event) {
+      const input = event.target.closest('.document-ajouter-input, .document-remplacer-input');
+      if (!input || !input.files.length) return;
+      const formData = new FormData();
+      formData.append('fichier', input.files[0]);
+      envoyerAction(input.dataset.actionUrl, formData);
+      input.value = '';
+    });
+
+    // Changer le statut d'un document déjà déposé.
+    conteneur.addEventListener('change', function (event) {
+      const select = event.target.closest('.document-statut-select');
+      if (!select) return;
+      const formData = new FormData();
+      formData.append('statut', select.value);
+      envoyerAction(select.dataset.actionUrl, formData);
+    });
+
+    // Supprimer un document.
+    conteneur.addEventListener('click', function (event) {
+      const bouton = event.target.closest('.document-supprimer-btn');
+      if (!bouton) return;
+      if (!confirm('Supprimer ce document ?')) return;
+      envoyerAction(bouton.dataset.actionUrl, new FormData());
+    });
+  })();
+</script>
+
+{% if dossier.statut == 'dossier_termine' %}
+<!-- Popup de retrogradation : commentaire obligatoire, envoye a l'agent d'empotage -->
+<div id="retrogradation-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+  <div id="retrogradation-overlay" class="absolute inset-0 bg-black/50"></div>
+  <div class="relative bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl w-full max-w-md p-6">
+    <h3 class="text-headline-md font-headline-md text-error mb-1">Rétrograder le dossier</h3>
+    <p class="text-body-sm text-on-surface-variant mb-4">
+      Le dossier repassera au statut « Empotage en cours ». Expliquez la raison de la rétrogradation :
+      ce commentaire sera envoyé à l'agent d'empotage.
+    </p>
+    <form method="post" action="{% url 'DashboardPersonnel:dossier-retrograder' dossier.id %}">
+      {% csrf_token %}
+      <label for="id_commentaire" class="block text-label-sm font-bold text-on-surface-variant uppercase mb-1">
+        Commentaire <span class="text-error">*</span>
+      </label>
+      <textarea
+        id="id_commentaire"
+        name="commentaire"
+        rows="4"
+        required
+        placeholder="Ex. : le poids net du conteneur MSKU1234567 semble erroné, merci de vérifier."
+        class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+      ></textarea>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button" id="retrogradation-cancel" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+          Annuler
+        </button>
+        <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-error text-on-error font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined">undo</span> Confirmer la rétrogradation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const openBtn = document.getElementById('retrogradation-open');
+    const modal = document.getElementById('retrogradation-modal');
+    const cancelBtn = document.getElementById('retrogradation-cancel');
+    const overlay = document.getElementById('retrogradation-overlay');
+    if (!openBtn || !modal) return;
+
+    function open() { modal.classList.remove('hidden'); }
+    function close() { modal.classList.add('hidden'); }
+
+    openBtn.addEventListener('click', open);
+    cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

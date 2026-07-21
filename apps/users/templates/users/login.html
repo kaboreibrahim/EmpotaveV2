@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connexion - Gestion Logistique Maritime</title>
+<script>
+    // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+</script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Light theme (default) */
+        :root {
+            --color-inverse-primary: 145 215 138;
+            --color-on-secondary-container: 94 44 0;
+            --color-primary-fixed-dim: 145 215 138;
+            --color-inverse-on-surface: 239 241 244;
+            --color-secondary: 150 73 0;
+            --color-on-secondary: 255 255 255;
+            --color-primary-fixed: 172 244 164;
+            --color-secondary-fixed-dim: 255 183 134;
+            --color-surface-container-lowest: 255 255 255;
+            --color-surface-container: 236 238 241;
+            --color-primary-container: 27 94 32;
+            --color-on-tertiary-fixed: 15 32 0;
+            --color-on-tertiary-container: 157 214 91;
+            --color-on-tertiary: 255 255 255;
+            --color-on-surface: 25 28 30;
+            --color-tertiary-fixed-dim: 158 215 91;
+            --color-surface-variant: 224 227 230;
+            --color-surface-container-highest: 224 227 230;
+            --color-outline: 113 122 109;
+            --color-error-container: 255 218 214;
+            --color-on-primary-fixed-variant: 12 82 22;
+            --color-error: 186 26 26;
+            --color-outline-variant: 192 201 187;
+            --color-tertiary-fixed: 185 244 116;
+            --color-on-primary: 255 255 255;
+            --color-on-tertiary-fixed-variant: 46 79 0;
+            --color-surface: 247 249 252;
+            --color-secondary-container: 252 130 12;
+            --color-on-background: 25 28 30;
+            --color-surface-tint: 42 107 44;
+            --color-on-secondary-fixed: 49 19 0;
+            --color-on-primary-fixed: 0 34 3;
+            --color-surface-container-low: 242 244 247;
+            --color-secondary-fixed: 255 220 198;
+            --color-primary: 0 69 13;
+            --color-on-error-container: 147 0 10;
+            --color-on-primary-container: 144 214 137;
+            --color-surface-bright: 247 249 252;
+            --color-background: 247 249 252;
+            --color-tertiary-container: 54 92 0;
+            --color-surface-dim: 216 218 221;
+            --color-on-surface-variant: 65 73 62;
+            --color-tertiary: 38 67 0;
+            --color-on-error: 255 255 255;
+            --color-surface-container-high: 230 232 235;
+            --color-on-secondary-fixed-variant: 114 54 0;
+            --color-inverse-surface: 45 49 51;
+        }
+
+        /* Dark theme overrides, toggled via the .dark class on <html> */
+        html.dark {
+            --color-inverse-primary: 0 69 13;
+            --color-on-secondary-container: 255 220 198;
+            --color-primary-fixed-dim: 145 215 138;
+            --color-inverse-on-surface: 34 38 35;
+            --color-secondary: 255 183 134;
+            --color-on-secondary: 74 33 0;
+            --color-primary-fixed: 172 244 164;
+            --color-secondary-fixed-dim: 255 183 134;
+            --color-surface-container-lowest: 10 14 12;
+            --color-surface-container: 30 34 31;
+            --color-primary-container: 12 82 22;
+            --color-on-tertiary-fixed: 15 32 0;
+            --color-on-tertiary-container: 185 244 116;
+            --color-on-tertiary: 26 46 0;
+            --color-on-surface: 226 229 226;
+            --color-tertiary-fixed-dim: 158 215 91;
+            --color-surface-variant: 65 73 62;
+            --color-surface-container-highest: 53 57 54;
+            --color-outline: 139 148 133;
+            --color-error-container: 147 0 10;
+            --color-on-primary-fixed-variant: 12 82 22;
+            --color-error: 255 180 171;
+            --color-outline-variant: 65 73 62;
+            --color-tertiary-fixed: 185 244 116;
+            --color-on-primary: 6 58 13;
+            --color-on-tertiary-fixed-variant: 46 79 0;
+            --color-surface: 16 20 18;
+            --color-secondary-container: 114 54 0;
+            --color-on-background: 226 229 226;
+            --color-surface-tint: 145 215 138;
+            --color-on-secondary-fixed: 49 19 0;
+            --color-on-primary-fixed: 0 34 3;
+            --color-surface-container-low: 25 29 27;
+            --color-secondary-fixed: 255 220 198;
+            --color-primary: 145 215 138;
+            --color-on-error-container: 255 218 214;
+            --color-on-primary-container: 172 244 164;
+            --color-surface-bright: 58 62 59;
+            --color-background: 16 20 18;
+            --color-tertiary-container: 46 79 0;
+            --color-surface-dim: 16 20 18;
+            --color-on-surface-variant: 192 201 187;
+            --color-tertiary: 158 215 91;
+            --color-on-error: 105 0 5;
+            --color-surface-container-high: 41 45 42;
+            --color-on-secondary-fixed-variant: 114 54 0;
+            --color-inverse-surface: 226 229 226;
+        }
+
+        body {
+            background-color: rgb(var(--color-background));
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .login-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgb(var(--color-outline-variant));
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "rgb(var(--color-surface-tint) / <alpha-value>)",
+                        "outline": "rgb(var(--color-outline) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+                        "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+                        "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+                        "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+                        "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+                        "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+                        "tertiary-fixed-dim": "rgb(var(--color-tertiary-fixed-dim) / <alpha-value>)",
+                        "error": "rgb(var(--color-error) / <alpha-value>)",
+                        "on-tertiary-container": "rgb(var(--color-on-tertiary-container) / <alpha-value>)",
+                        "on-primary-fixed-variant": "rgb(var(--color-on-primary-fixed-variant) / <alpha-value>)",
+                        "on-primary-fixed": "rgb(var(--color-on-primary-fixed) / <alpha-value>)",
+                        "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+                        "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+                        "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+                        "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+                        "secondary-fixed-dim": "rgb(var(--color-secondary-fixed-dim) / <alpha-value>)",
+                        "inverse-primary": "rgb(var(--color-inverse-primary) / <alpha-value>)",
+                        "tertiary-fixed": "rgb(var(--color-tertiary-fixed) / <alpha-value>)",
+                        "on-secondary-container": "rgb(var(--color-on-secondary-container) / <alpha-value>)",
+                        "error-container": "rgb(var(--color-error-container) / <alpha-value>)",
+                        "on-error": "rgb(var(--color-on-error) / <alpha-value>)",
+                        "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+                        "primary-fixed-dim": "rgb(var(--color-primary-fixed-dim) / <alpha-value>)",
+                        "on-error-container": "rgb(var(--color-on-error-container) / <alpha-value>)",
+                        "background": "rgb(var(--color-background) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+                        "on-tertiary-fixed": "rgb(var(--color-on-tertiary-fixed) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+                        "primary-fixed": "rgb(var(--color-primary-fixed) / <alpha-value>)",
+                        "surface": "rgb(var(--color-surface) / <alpha-value>)",
+                        "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+                        "on-tertiary-fixed-variant": "rgb(var(--color-on-tertiary-fixed-variant) / <alpha-value>)",
+                        "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+                        "inverse-surface": "rgb(var(--color-inverse-surface) / <alpha-value>)",
+                        "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+                        "on-secondary-fixed": "rgb(var(--color-on-secondary-fixed) / <alpha-value>)",
+                        "primary": "rgb(var(--color-primary) / <alpha-value>)",
+                        "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+                        "secondary-fixed": "rgb(var(--color-secondary-fixed) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+                        "inverse-on-surface": "rgb(var(--color-inverse-on-surface) / <alpha-value>)",
+                        "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+                        "on-secondary-fixed-variant": "rgb(var(--color-on-secondary-fixed-variant) / <alpha-value>)",
+                        "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "base": "8px",
+                        "container-max": "1440px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "headline-xl": ["Manrope"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface bg-background min-h-screen flex items-center justify-center p-4">
+<!-- Theme Toggle -->
+<button
+    aria-label="Basculer le thème sombre"
+    class="fixed top-4 right-4 z-20 p-2 rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-primary shadow-sm transition-colors"
+    id="theme-toggle"
+    type="button"
+>
+<span class="material-symbols-outlined" data-icon="dark_mode" id="theme-toggle-icon">dark_mode</span>
+</button>
+<!-- Atmospheric Background Element -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/5 blur-[120px]"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-10 w-full max-w-[480px]">
+<!-- Logo Section -->
+<div class="flex flex-col items-center mb-8">
+<div class="w-16 h-16 bg-surface-container-lowest flex items-center justify-center rounded-xl mb-4 shadow-sm overflow-hidden">
+<img alt="Logo" class="w-full h-full object-contain p-1" src="{% static 'img/logo.png' %}"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Oils of Africa</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Gestion Operations </p>
+</div>
+<!-- Login Card -->
+<div class="bg-surface-container-lowest login-card rounded-xl p-8 md:p-10">
+<header class="mb-8">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Bon retour</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Accès sécurisé aux opérations et aux dossiers.</p>
+</header>
+{% if messages %}
+<div class="space-y-2 mb-6">
+{% for message in messages %}
+<div class="flex items-center gap-2 px-4 py-3 rounded-lg text-body-sm font-body-sm {% if 'alert-danger' in message.tags %}bg-error-container text-on-error-container{% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+<span class="material-symbols-outlined !text-[20px]" data-icon="{% if 'alert-danger' in message.tags %}error{% else %}check_circle{% endif %}">{% if 'alert-danger' in message.tags %}error{% else %}check_circle{% endif %}</span>
+<span>{{ message }}</span>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+<form class="space-y-6" id="loginForm" method="post" action="{% url 'users:login' %}">
+{% csrf_token %}
+<!-- Username/Email Field -->
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" for="email">Email ou nom d'utilisateur</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline" data-icon="person">person</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md" id="email" name="email" placeholder="Entrez votre identifiant" required="" type="text" value="{{ email|default:'' }}"/>
+</div>
+</div>
+<!-- Code Field (4 chiffres uniquement) -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" for="password">Code </label>
+<a class="font-label-md text-label-md text-secondary hover:underline" href="{% url 'users:forgot_password' %}">Code oublié ?</a>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline" data-icon="lock">lock</span>
+<input autocomplete="one-time-code" class="w-full pl-10 pr-12 py-3 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md tracking-[0.5em]" id="password" inputmode="numeric" maxlength="4" name="password" pattern="\d{4}" placeholder="••••" required="" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" data-icon="visibility" id="passwordIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me & Policy -->
+<div class="flex items-center space-x-2">
+<input class="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary-container" id="remember" name="remember" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface-variant" for="remember">Rester connecté pendant 30 jours</label>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-headline-md text-headline-sm hover:bg-primary-container transition-all flex items-center justify-center gap-2 group" type="submit">
+                    Se connecter
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+</div>
+<!-- Footer Info -->
+<footer class="mt-8 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                © 2026 Gestion Operation.
+                <br class="md:hidden"/>
+<a class="text-primary hover:underline mx-2" href="#">Politique de sécurité</a> •
+                <a class="text-primary hover:underline mx-2" href="#">Assistance</a>
+</p>
+</footer>
+</main>
+<!-- Side Decoration (Hidden on Mobile) -->
+<div class="hidden lg:block fixed right-0 top-0 bottom-0 w-[35%] bg-primary overflow-hidden">
+<div class="absolute inset-0 opacity-40">
+<div class="w-full h-full bg-cover bg-center" data-alt="A cinematic, high-angle aerial photograph of a vast container terminal at dawn. Hundreds of neatly stacked colorful shipping containers create a geometric bento-grid pattern across the landscape. Giant green cranes stand tall against a misty, deep teal and amber morning sky. The lighting is crisp and industrial, conveying a sense of organized power and global scale." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB6qjj4i3oGfNboqqvyMUdzmykoRTaz1mGCzhDX1OlZTQMhu1nbejqB7_24L0MakPExi3OBvGgSoxjylHoAXO5QHllVMFs_Ik5htUBoP3zorIPLZMRgLrVkeMuv-NW5oszPmjjSKYqJb21IGq7Z8SY_4G7B7D3u8rqTYBTiH3NoRY_DBuggKx05EwWdVc5IhzvH0jLmXj2FpqqpM3J5QH5Sf-564gUS_4bs4edDPGoZ7DmZ9jBaqkib')"></div>
+</div>
+<div class="absolute inset-0 bg-gradient-to-l from-primary/80 via-primary/40 to-transparent"></div>
+<div class="absolute bottom-20 left-12 right-12 text-on-primary">
+<div class="inline-block px-3 py-1 bg-secondary text-on-secondary font-label-md text-label-md rounded-full mb-6">Système d'Opérations en cours</div>
+<h3 class="font-headline-xl text-headline-xl mb-4 leading-tight">Optimiser le flux d'Opérations.</h3>
+<p class="font-body-lg text-body-lg text-on-primary/80 max-w-md">Accédez à votre tableau de bord en temps réel pour gérer les operations logistique portuaire et les dossiers critiques.</p>
+</div>
+</div>
+<script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.innerText = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.innerText = 'visibility';
+            }
+        }
+
+        // Le champ code n'accepte que des chiffres (4 max), aligné sur la validation cote serveur
+        document.getElementById('password').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        });
+
+        // Micro-interaction: spinner while the real POST request is in flight
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <span class="animate-spin inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
+                <span class="ml-2">Authentification...</span>
+            `;
+        });
+
+        // Dark / light theme toggle, persisted in localStorage
+        (function () {
+            const root = document.documentElement;
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-toggle-icon');
+
+            function applyIcon() {
+                const isDark = root.classList.contains('dark');
+                icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+                toggleBtn.setAttribute('aria-label', isDark ? 'Passer au thème clair' : 'Passer au thème sombre');
+            }
+
+            applyIcon();
+
+            toggleBtn.addEventListener('click', function () {
+                const isDark = root.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                applyIcon();
+            });
+        })();
+
+        // Material Symbols Logic (Fallback for static rendering)
+        document.querySelectorAll('[data-icon]').forEach(el => {
+            if (!el.classList.contains('material-symbols-outlined')) {
+                const iconName = el.getAttribute('data-icon');
+                const span = document.createElement('span');
+                span.className = 'material-symbols-outlined';
+                span.textContent = iconName;
+                if (el.getAttribute('data-weight') === 'fill') {
+                    span.style.fontVariationSettings = "'FILL' 1";
+                }
+                // Only if el is just a placeholder, otherwise we'd need more logic
+            }
+        });
+    </script>
+</body></html>

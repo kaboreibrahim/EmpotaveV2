@@ -1,0 +1,270 @@
+{% extends 'DashboardClient/base_client.html' %}
+
+{% block title %}Dossier {{ dossier.TRD }}{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-24 space-y-6">
+  <nav class="flex mb-2 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardClient:dossier-liste' %}">Dossiers</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">{{ dossier.TRD }}</span>
+  </nav>
+
+  <!-- En-tete -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-wrap items-center gap-8 shadow-sm">
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Reference (TRD)</span>
+      <span class="font-mono-data text-mono-data font-bold text-primary">{{ dossier.TRD }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Projet</span>
+      <span class="font-headline-sm text-headline-sm text-on-surface">{{ dossier.projet }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Booking</span>
+      <span class="font-mono-data text-mono-data text-on-surface">{{ dossier.Booking }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Itineraire</span>
+      <span class="flex items-center gap-1 text-body-md text-on-surface">
+        <span class="material-symbols-outlined text-sm">anchor</span>
+        {{ dossier.Id_POL.nom }} <span class="material-symbols-outlined text-sm">arrow_forward</span> {{ dossier.Id_POD.nom }}
+      </span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Statut</span>
+      {% if dossier.statut == 'en_attente' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% elif dossier.statut == 'selection_en_cours' or dossier.statut == 'empotage_en_cours' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% elif dossier.statut == 'dossier_termine' %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% else %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
+      {% endif %}
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      {% if dossier.date_de_selection %}
+      <a href="{% url 'DashboardAgentSelection:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport de sélection">
+        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+        Rapport sélection
+      </a>
+      {% endif %}
+      {% if dossier.date_de_empotage %}
+      <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport d'empotage">
+        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+        Rapport empotage
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Timeline du dossier -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+    {% if dossier.statut == 'annulé' %}
+    <div class="flex items-center gap-3 text-error">
+      <span class="material-symbols-outlined text-2xl">cancel</span>
+      <span class="font-bold text-body-md">Dossier annulé</span>
+    </div>
+    {% else %}
+    <div class="grid grid-cols-5">
+      {% for etape in etapes_timeline %}
+      <div class="relative flex flex-col items-center text-center px-2">
+        {% if not forloop.last %}
+        <div class="absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
+        {% endif %}
+        <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2
+          {% if etape.atteinte %}bg-primary border-primary text-on-primary{% else %}bg-surface-container-lowest border-outline-variant text-on-surface-variant{% endif %}">
+          <span class="material-symbols-outlined text-lg">{{ etape.icone }}</span>
+        </div>
+        <p class="mt-2 text-label-sm font-label-md {% if etape.atteinte %}text-on-surface{% else %}text-on-surface-variant{% endif %}">{{ etape.label }}</p>
+        <p class="text-label-sm text-on-surface-variant">{{ etape.date|date:"d/m/Y"|default:"—" }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Informations du dossier -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">work</span>Informations du projet
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Pays</dt><dd class="font-bold text-right">{{ dossier.Id_Pays|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Projet</dt><dd class="font-bold text-right">{{ dossier.projet|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">inventory_2</span>Détails des conteneurs
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Type de conteneur</dt><dd class="font-bold text-right">{{ dossier.get_type_conteneur_display }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Commodité</dt><dd class="font-bold text-right">{{ dossier.Id_Commodite.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Nombre de conteneurs</dt><dd class="font-bold text-right">{{ nb_conteneurs }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">location_on</span>Localisation
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Site de sélection</dt><dd class="font-bold text-right">{{ dossier.Id_SiteSelection.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Site d'empotage</dt><dd class="font-bold text-right">{{ dossier.Id_SiteEmpotage.nom|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">directions_boat</span>Informations maritimes
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Compagnie maritime</dt><dd class="font-bold text-right">{{ dossier.Id_CompagnieMaritime.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Port de chargement</dt><dd class="font-bold text-right">{{ dossier.Id_POL.nom|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Port de déchargement</dt><dd class="font-bold text-right">{{ dossier.Id_POD.nom|default:"—" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h4 class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        <span class="material-symbols-outlined text-lg text-primary">event</span>Dates importantes
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Création du dossier</dt><dd class="font-bold text-right">{{ dossier.date_created|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Sélection</dt><dd class="font-bold text-right">{{ dossier.date_de_selection|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Pose et habillage</dt><dd class="font-bold text-right">{{ dossier.date_de_empotage|date:"d F Y H:i"|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Soumission du rapport</dt><dd class="font-bold text-right">{{ dossier.date_de_soumission_du_rapport|date:"d F Y H:i"|default:"—" }}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Resume de la cargaison -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+    <h3 class="text-headline-sm font-headline-sm text-on-surface mb-4">Résumé de la cargaison</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">Conteneurs</span>
+        <span class="text-headline-md font-headline-md text-on-surface">{{ nb_conteneurs }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">Poids total</span>
+        <span class="text-headline-md font-headline-md text-on-surface">{{ poids_total }} <span class="text-body-sm font-normal">kg</span></span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">ISO Tanks</span>
+        <span class="text-headline-md font-headline-md text-primary">{{ nb_iso }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-label-sm text-on-surface-variant uppercase">Flexitanks</span>
+        <span class="text-headline-md font-headline-md text-secondary">{{ nb_flexi }}</span>
+      </div>
+    </div>
+    <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+      <div class="h-full rounded-full transition-all duration-500 {% if progression_pct == 100 %}bg-primary{% elif progression_pct >= 50 %}bg-tertiary{% else %}bg-secondary{% endif %}" style="width: {{ progression_pct }}%"></div>
+    </div>
+    <div class="flex justify-between text-label-sm mt-2">
+      <span class="text-on-surface-variant">Progression empotage</span>
+      <span class="font-bold text-on-surface">{{ progression_pct }}% ({{ nb_empotes }}/{{ nb_conteneurs }})</span>
+    </div>
+  </div>
+
+  <!-- Conteneurs ISO / Flexitank -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Conteneurs (ISO / Flexitank)</h3>
+      <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded">{{ nb_conteneurs }} au total</span>
+    </div>
+    <div class="overflow-x-auto max-h-[420px] overflow-y-auto rounded-lg border border-outline-variant">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant sticky top-0 z-10">
+          <tr>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Référence</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Type</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">État</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Statut</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase text-right">Poids net</th>
+            <th class="px-4 py-compact-row"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for ligne in conteneurs %}
+          {% with conteneur=ligne.objet %}
+          <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardClient:conteneur-detail' conteneur.pk %}'">
+            <td class="px-4 py-standard-row font-mono-data font-bold">{{ conteneur.reference }}</td>
+            <td class="px-4 py-standard-row">
+              {% if ligne.est_iso %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary">
+                <span class="material-symbols-outlined text-[14px]">propane_tank</span>ISO Tank
+              </span>
+              {% else %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary">
+                <span class="material-symbols-outlined text-[14px]">water_drop</span>Flexitank
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-standard-row text-body-sm capitalize">{{ conteneur.get_etat_display }}</td>
+            <td class="px-4 py-standard-row">
+              {% if conteneur.statut == 'empote' %}
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded uppercase bg-primary/10 text-primary">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>{{ conteneur.get_statut_display }}
+              </span>
+              {% else %}
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded uppercase bg-surface-container-high text-on-surface-variant">
+                <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ conteneur.get_statut_display }}
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-standard-row text-body-sm text-right font-mono-data">{{ conteneur.poids_net }} kg</td>
+            <td class="px-4 py-standard-row text-right">
+              <a href="{% url 'DashboardClient:conteneur-detail' conteneur.pk %}" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail" onclick="event.stopPropagation()">
+                <span class="material-symbols-outlined text-xl">visibility</span>
+              </a>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-12 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">inventory_2</span>
+              Aucun conteneur enregistré pour ce dossier.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Documents (lecture seule) -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-headline-sm font-headline-sm text-on-surface">Documents</h3>
+      <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded font-bold">{{ documents_total_ajoutes }}/{{ documents_total_requis }}</span>
+    </div>
+    <div class="mb-4">
+      <div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-500 {% if documents_progression_pct == 100 %}bg-primary{% elif documents_progression_pct >= 50 %}bg-tertiary{% else %}bg-secondary{% endif %}" style="width: {{ documents_progression_pct }}%"></div>
+      </div>
+      <div class="flex justify-between text-label-sm mt-2">
+        <span class="text-on-surface-variant">{{ documents_total_ajoutes }} document{{ documents_total_ajoutes|pluralize }} sur {{ documents_total_requis }} {{ documents_total_ajoutes|pluralize:"a,ont" }} été ajouté{{ documents_total_ajoutes|pluralize }}.</span>
+        <span class="font-bold text-on-surface">{{ documents_progression_pct }}%</span>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      {% for ligne in lignes_documents %}
+      {% include 'DashboardClient/document/_document_row.html' %}
+      {% empty %}
+      <div class="text-center py-8">
+        <span class="material-symbols-outlined text-4xl block mb-2 text-on-surface-variant opacity-40">description</span>
+        <p class="text-body-sm text-on-surface-variant">Aucun type de document n'est configuré dans le système.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

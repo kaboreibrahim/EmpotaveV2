@@ -1,0 +1,183 @@
+ {% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Référentiel Pays{% endblock %}
+
+{% block content %}
+<div class="space-y-8" x-data="{ vue: (localStorage.getItem('pays_vue') || 'table') }" x-init="$watch('vue', value => localStorage.setItem('pays_vue', value))">
+
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span>Référentiels</span>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-primary font-bold">Pays</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Référentiel Pays</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Gérez la liste des pays utilisés par les ports, commodités, sites et compagnies maritimes.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="{% url 'DashboardPersonnel:pays-create' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+        <span class="material-symbols-outlined" data-icon="public">public</span>
+        <span class="font-label-md text-label-md uppercase">Ajouter un pays</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Row (données réelles) -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <span class="material-symbols-outlined text-[120px]">flag</span>
+      </div>
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Total pays</span>
+      <span class="text-headline-lg font-headline-lg text-primary">{{ paginator.count }}</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <span class="material-symbols-outlined text-[120px]">anchor</span>
+      </div>
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Ports enregistrés</span>
+      <span class="text-headline-lg font-headline-lg text-secondary">{{ total_ports }}</span>
+      <span class="text-body-sm text-on-surface-variant">POL + POD confondus</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Pays avec ports</span>
+      <span class="text-headline-lg font-headline-lg text-primary-container">{{ pays_avec_ports }} / {{ paginator.count }}</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Dernière mise à jour</span>
+      <span class="text-headline-lg font-headline-lg text-on-surface">{{ derniere_maj|date:"d/m/Y"|default:"—" }}</span>
+      {% if derniere_maj %}<span class="text-body-sm text-on-surface-variant">{{ derniere_maj|date:"H:i" }}</span>{% endif %}
+    </div>
+  </div>
+
+  <!-- Data table -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-6 border-b border-outline-variant flex items-center justify-end">
+      <!-- Toggle vue table / cartes -->
+      <div class="inline-flex items-center rounded-lg border border-outline-variant overflow-hidden shrink-0">
+        <button type="button"
+                @click="vue = 'table'"
+                :class="vue === 'table' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'"
+                class="p-2.5 transition-colors"
+                aria-label="Vue tableau">
+          <span class="material-symbols-outlined text-[20px]">table_rows</span>
+        </button>
+        <button type="button"
+                @click="vue = 'cartes'"
+                :class="vue === 'cartes' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'"
+                class="p-2.5 transition-colors border-l border-outline-variant"
+                aria-label="Vue cartes">
+          <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- VUE TABLE -->
+    <div x-show="vue === 'table'" class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Nom</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Ports (POL + POD)</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Ajouté le</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for pays in pays_list %}
+          <tr class="hover:bg-primary/5 transition-colors group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-6 shrink-0 rounded-sm border border-outline-variant bg-surface-container overflow-hidden flex items-center justify-center">
+                  {% if pays.drapeau %}
+                  <img src="{{ pays.drapeau.url }}" alt="" class="w-full h-full object-cover" />
+                  {% else %}
+                  <span class="material-symbols-outlined text-[16px] text-outline-variant">flag</span>
+                  {% endif %}
+                </div>
+                <span class="font-bold text-on-surface">{{ pays.nom }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ pays.nb_ports }}</td>
+            <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ pays.date_created|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'DashboardPersonnel:pays-update' pays.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" aria-label="Modifier {{ pays.nom }}">
+                <span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-6 py-6 text-body-sm text-on-surface-variant text-center">Aucun pays enregistré.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VUE CARTES -->
+    <div x-show="vue === 'cartes'" x-cloak class="p-6">
+      {% if pays_list %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for pays in pays_list %}
+        <div class="bg-surface-container-low border border-outline-variant rounded-xl p-5 flex flex-col gap-3 hover:shadow-md hover:border-primary/40 transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-7 shrink-0 rounded-sm border border-outline-variant bg-surface-container overflow-hidden flex items-center justify-center">
+              {% if pays.drapeau %}
+              <img src="{{ pays.drapeau.url }}" alt="" class="w-full h-full object-cover" />
+              {% else %}
+              <span class="material-symbols-outlined text-[16px] text-outline-variant">flag</span>
+              {% endif %}
+            </div>
+            <p class="font-bold text-on-surface leading-tight truncate">{{ pays.nom }}</p>
+          </div>
+          <div class="flex items-center gap-4 text-body-sm text-on-surface-variant">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">anchor</span>
+              {{ pays.nb_ports }} port{{ pays.nb_ports|pluralize }}
+            </span>
+          </div>
+          <div class="text-body-sm text-on-surface-variant flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+            <span>Ajouté le {{ pays.date_created|date:"d/m/Y" }}</span>
+          </div>
+          <div class="flex items-center justify-end gap-1 pt-2 border-t border-outline-variant/50 mt-auto">
+            <a href="{% url 'DashboardPersonnel:pays-update' pays.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" aria-label="Modifier {{ pays.nom }}">
+              <span class="material-symbols-outlined text-[20px]" data-icon="edit_square">edit_square</span>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-body-sm text-on-surface-variant text-center py-8">Aucun pays enregistré.</p>
+      {% endif %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest/30 flex items-center justify-between flex-wrap gap-4">
+      <span class="text-label-md font-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} pays au total
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        {% endif %}
+        {% for num in paginator.page_range %}
+        <a href="?page={{ num }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant transition-colors {% if num == page_obj.number %}text-primary font-bold bg-primary/5{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}">{{ num }}</a>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

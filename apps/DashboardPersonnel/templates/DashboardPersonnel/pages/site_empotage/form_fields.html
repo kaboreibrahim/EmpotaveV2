@@ -1,0 +1,47 @@
+{% if form.non_field_errors %}
+<div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-error/10 border border-error text-error text-body-sm">
+  <span class="material-symbols-outlined">error</span>
+  <span>{{ form.non_field_errors.0 }}</span>
+</div>
+{% endif %}
+
+<section class="form-section-card p-8 rounded-xl shadow-sm relative overflow-hidden">
+  <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+  <div class="flex items-start gap-4 mb-8">
+    <div class="p-2 bg-primary/5 rounded-lg text-primary">
+      <span class="material-symbols-outlined">warehouse</span>
+    </div>
+    <div>
+      <h4 class="text-headline-md font-headline-md text-primary">Informations du site d'empotage</h4>
+      <p class="text-body-sm text-on-surface-variant">Nom, contact, lieu et pays de rattachement.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="flex flex-col gap-2">
+      <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_nom">Nom</label>
+      <input class="custom-input px-4 py-3 bg-surface-container-lowest text-body-md" id="id_nom" name="nom" required type="text" value="{{ form.nom.value|default:'' }}" />
+      {% if form.nom.errors %}<p class="text-body-sm text-error mt-1">{{ form.nom.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_contact">Contact</label>
+      <input class="custom-input px-4 py-3 bg-surface-container-lowest text-body-md" id="id_contact" name="contact" required type="text" value="{{ form.contact.value|default:'' }}" />
+      {% if form.contact.errors %}<p class="text-body-sm text-error mt-1">{{ form.contact.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_lieu">Lieu</label>
+      <input class="custom-input px-4 py-3 bg-surface-container-lowest text-body-md" id="id_lieu" name="lieu" required type="text" value="{{ form.lieu.value|default:'' }}" />
+      {% if form.lieu.errors %}<p class="text-body-sm text-error mt-1">{{ form.lieu.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_Id_Pays">Pays</label>
+      <select class="custom-input px-4 py-3 bg-surface-container-lowest text-body-md" id="id_Id_Pays" name="Id_Pays" required>
+        <option value="">Choisir un pays</option>
+        {% for pays in form.fields.Id_Pays.queryset %}
+        <option value="{{ pays.pk }}"{% if form.Id_Pays.value|stringformat:"s" == pays.pk|stringformat:"s" %} selected{% endif %}>{{ pays.nom }}</option>
+        {% endfor %}
+      </select>
+      {% if form.Id_Pays.errors %}<p class="text-body-sm text-error mt-1">{{ form.Id_Pays.errors.0 }}</p>{% endif %}
+    </div>
+  </div>
+</section>

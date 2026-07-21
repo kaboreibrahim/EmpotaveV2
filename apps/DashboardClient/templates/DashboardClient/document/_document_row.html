@@ -1,0 +1,29 @@
+<div class="flex items-center justify-between gap-4 p-3 border border-outline-variant rounded-lg flex-wrap">
+  <div class="flex items-center gap-3 min-w-0">
+    <span class="flex items-center justify-center w-9 h-9 rounded-full shrink-0 {{ ligne.statut_meta.classes }}">
+      <span class="material-symbols-outlined text-xl">{{ ligne.statut_meta.icone }}</span>
+    </span>
+    <div class="min-w-0">
+      <p class="text-body-md font-bold text-on-surface truncate">{{ ligne.type_document.type_document }}</p>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-tight {{ ligne.statut_meta.classes }}">{{ ligne.statut_meta.label }}</span>
+        {% if ligne.document %}
+        <span class="text-label-sm text-on-surface-variant">Ajouté le {{ ligne.document.date_created|date:"d/m/Y H:i" }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2 shrink-0">
+    {% if ligne.document and ligne.document.fichier %}
+    <a href="{{ ligne.document.fichier.url }}" target="_blank" rel="noopener" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Voir">
+      <span class="material-symbols-outlined text-[20px]">visibility</span>
+    </a>
+    <a href="{{ ligne.document.fichier.url }}" download class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Télécharger">
+      <span class="material-symbols-outlined text-[20px]">download</span>
+    </a>
+    {% else %}
+    <span class="text-label-sm text-on-surface-variant">Document non encore disponible</span>
+    {% endif %}
+  </div>
+</div>

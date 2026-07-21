@@ -1,0 +1,121 @@
+{% extends 'DashboardAgentSelection/base_agent_selection.html' %}
+{% load static %}
+{% block title %}Ajouter un conteneur — {{ dossier.projet }}{% endblock %}
+
+{% block content %}
+
+<style>
+  .form-focus-ring:focus { outline: none; border-color: rgb(var(--color-primary)); box-shadow: 0 0 0 2px rgb(var(--color-primary-container) / 0.3); }
+</style>
+
+  <!-- Header -->
+  <div class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+        <a class="hover:text-primary" href="{% url 'DashboardAgentSelection:dossier-liste' %}">Dossiers</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <a class="hover:text-primary" href="{% url 'DashboardAgentSelection:dossier-detail' dossier.id %}">{{ dossier.TRD }}</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-on-surface font-bold">Ajouter un conteneur</span>
+      </nav>
+      <h2 class="font-headline-lg text-headline-lg text-primary">Ajouter un conteneur</h2>
+      <p class="text-on-surface-variant mt-1">
+        Dossier {{ dossier.projet }} —
+        {% if est_iso %}
+          <span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm font-bold uppercase">ISO Tank</span>
+        {% else %}
+          <span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed text-label-sm font-bold uppercase">Flexitank</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl border border-error">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-24">
+    {% csrf_token %}
+
+    <!-- Identification -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-6 text-primary">
+        <span class="material-symbols-outlined">fingerprint</span>
+        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">1. Identification</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Référence <span class="text-error">*</span></label>
+          {{ form.reference }}
+          {% if form.reference.errors %}<p class="text-label-sm text-error mt-1">{{ form.reference.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">État <span class="text-error">*</span></label>
+          {{ form.etat }}
+          {% if form.etat.errors %}<p class="text-label-sm text-error mt-1">{{ form.etat.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Type de dossier</label>
+          <input class="w-full bg-surface-container-low border border-outline-variant rounded p-3 text-body-md text-on-surface-variant" disabled value="{{ dossier.get_type_conteneur_display }}" type="text">
+        </div>
+      </div>
+    </section>
+
+   
+    <!-- Photos obligatoires -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+      <div class="flex items-center gap-2 mb-2 text-primary">
+        <span class="material-symbols-outlined">photo_camera</span>
+        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">3. Photos obligatoires</h3>
+      </div>
+      <p class="text-body-sm text-on-surface-variant mb-6">
+        Ces 5 photos sont requises pour que le dossier puisse être soumis à l'agent d'empotage.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Photo avant <span class="text-error">*</span></label>
+          {{ form.photo_devant }}
+          {% if form.photo_devant.errors %}<p class="text-label-sm text-error mt-1">{{ form.photo_devant.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Photo derrière <span class="text-error">*</span></label>
+          {{ form.photo_derriere }}
+          {% if form.photo_derriere.errors %}<p class="text-label-sm text-error mt-1">{{ form.photo_derriere.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Photo intérieure <span class="text-error">*</span></label>
+          {{ form.photo_interieur }}
+          {% if form.photo_interieur.errors %}<p class="text-label-sm text-error mt-1">{{ form.photo_interieur.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Photo latéral droit <span class="text-error">*</span></label>
+          {{ form.photo_lateral_droit }}
+          {% if form.photo_lateral_droit.errors %}<p class="text-label-sm text-error mt-1">{{ form.photo_lateral_droit.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-1">
+          <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Photo latéral gauche <span class="text-error">*</span></label>
+          {{ form.photo_lateral_gauche }}
+          {% if form.photo_lateral_gauche.errors %}<p class="text-label-sm text-error mt-1">{{ form.photo_lateral_gauche.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </section>
+  <!-- Actions -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center justify-between gap-4">
+      <p class="text-body-sm text-on-surface-variant flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-primary">info</span>
+        L'ajout du premier conteneur démarre automatiquement la sélection du dossier.
+      </p>
+      <div class="flex gap-3">
+        <a href="{% url 'DashboardAgentSelection:dossier-detail' dossier.id %}" class="px-6 py-2 rounded-lg border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors">
+          Annuler
+        </a>
+        <button type="submit" class="flex items-center gap-2 px-6 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity shadow-sm">
+          <span class="material-symbols-outlined">add</span> Ajouter le conteneur
+        </button>
+      </div>
+    </div>
+  </form>
+
+{% endblock content %}

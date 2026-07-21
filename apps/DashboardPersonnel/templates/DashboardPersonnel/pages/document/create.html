@@ -1,0 +1,106 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Nouveau Document{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto pb-24">
+  <nav class="flex mb-6 text-label-md font-label-md text-outline">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:document-liste' %}">Documents</a>
+    <span class="mx-2">/</span>
+    <span class="text-on-surface font-bold">Nouveau document</span>
+  </nav>
+
+  <div class="mb-10">
+    <h1 class="text-headline-lg font-headline-lg text-primary">Ajouter un document</h1>
+    <p class="text-on-surface-variant mt-1">Rattachez une pièce justificative à un dossier.</p>
+  </div>
+
+  <!-- Squelette de chargement (affiché brièvement au premier rendu de la page) -->
+  <div id="form-squelette" class="space-y-gutter">
+    <div class="skeleton-block h-40 rounded-xl"></div>
+    <div class="skeleton-block h-32 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+  </div>
+
+  <div id="form-contenu" class="hidden">
+    {% if form.non_field_errors %}
+    <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-error/10 border border-error text-error text-body-sm mb-6">
+      <span class="material-symbols-outlined">error</span>
+      <span>{{ form.non_field_errors.0 }}</span>
+    </div>
+    {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="space-y-gutter">
+    {% csrf_token %}
+
+    <!-- Informations générales -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
+        <h3 class="font-headline-md text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">description</span>
+          Informations générales
+        </h3>
+        <span class="bg-primary-container/20 text-primary px-2 py-0.5 rounded text-label-sm">Requis</span>
+      </div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_dossier">Dossier lié</label>
+          {{ form.dossier }}
+          {% if form.dossier.errors %}<p class="text-body-sm text-error mt-1">{{ form.dossier.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider" for="id_type_document">Type de document</label>
+          {{ form.type_document }}
+          {% if form.type_document.errors %}<p class="text-body-sm text-error mt-1">{{ form.type_document.errors.0 }}</p>{% endif %}
+          <p class="text-label-sm text-on-surface-variant">Un seul document par type est autorisé par dossier.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fichier -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-outline-variant bg-surface-container-low">
+        <h3 class="font-headline-md text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">upload_file</span>
+          Fichier
+        </h3>
+      </div>
+      <div class="p-6">
+        <div class="border-2 border-dashed border-outline-variant rounded-lg p-8 flex flex-col items-center justify-center bg-surface hover:bg-surface-container-low transition-colors">
+          <div class="w-14 h-14 rounded-full bg-primary-fixed-dim/40 flex items-center justify-center mb-3">
+            <span class="material-symbols-outlined text-primary text-[28px]">cloud_upload</span>
+          </div>
+          {{ form.fichier }}
+          <p class="text-label-sm text-on-surface-variant mt-3">PDF, JPG ou PNG</p>
+          {% if form.instance.fichier %}
+          <p class="text-body-sm text-on-surface mt-2">Fichier actuel : <a class="text-primary hover:underline" href="{{ form.instance.fichier.url }}" target="_blank" rel="noopener">{{ form.instance.fichier.name }}</a></p>
+          {% endif %}
+          {% if form.fichier.errors %}<p class="text-body-sm text-error mt-2">{{ form.fichier.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-2">
+      <a class="px-8 py-3 rounded-lg border border-outline text-label-md font-label-md font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors" href="{% url 'DashboardPersonnel:document-liste' %}">Annuler</a>
+      <button class="px-10 py-3 rounded-lg bg-primary text-on-primary font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center gap-2" type="submit">
+        <span class="material-symbols-outlined">save</span>
+        Ajouter le document
+      </button>
+    </div>
+  </form>
+  </div>
+</div>
+
+<script>
+  // Bref squelette de chargement au premier affichage de la page, avant de révéler le formulaire.
+  (function () {
+    const squelette = document.getElementById('form-squelette');
+    const contenu = document.getElementById('form-contenu');
+    setTimeout(function () {
+      squelette.classList.add('hidden');
+      contenu.classList.remove('hidden');
+    }, 300);
+  })();
+</script>
+{% endblock %}

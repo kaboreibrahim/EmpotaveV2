@@ -1,0 +1,159 @@
+{% extends 'DashboardAgentSelection/base_agent_selection.html' %}
+{% block title %}Dashboard — Agent Sélection{% endblock %}
+
+{% block content %}
+
+  <!-- Header -->
+  <div class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <h2 class="font-headline-lg text-headline-lg text-primary">Bonjour, {{ request.user.get_full_name|default:request.user.username }}</h2>
+      <p class="text-on-surface-variant">Aperçu de vos dossiers de sélection.</p>
+    </div>
+    <a href="{% url 'DashboardAgentSelection:dossier-liste' %}" class="flex items-center gap-2 bg-primary text-on-primary font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+      <span class="material-symbols-outlined">list_alt</span>
+      Voir tous mes dossiers
+    </a>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-primary">folder_open</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">Dossiers attribués</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_dossiers }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-on-secondary-fixed-variant">pending_actions</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">En attente</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_en_attente }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-on-tertiary-fixed-variant">fact_check</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">Sélection en cours</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_en_cours }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-on-primary-fixed-variant">inventory_2</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">Conteneurs sélectionnés</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_conteneurs }}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+    <!-- Colonne principale -->
+    <div class="lg:col-span-2 space-y-gutter">
+
+      <!-- Dossiers a traiter -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
+          <h3 class="font-headline-md text-headline-md text-primary">Dossiers à traiter</h3>
+          <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded">{{ a_traiter|length }}</span>
+        </div>
+        <div class="divide-y divide-outline-variant">
+          {% for dossier in a_traiter %}
+          <a href="{% url 'DashboardAgentSelection:dossier-detail' dossier.id %}" class="flex items-center justify-between gap-4 p-gutter hover:bg-surface-container-low transition-colors">
+            <div class="min-w-0">
+              <p class="font-bold text-on-surface truncate">{{ dossier.projet }}</p>
+              <p class="text-body-sm text-on-surface-variant font-label-md">{{ dossier.TRD }} — {{ dossier.Id_Pays.nom }}</p>
+            </div>
+            {% if dossier.statut == 'en_attente' %}
+              <span class="shrink-0 bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-md">{{ dossier.get_statut_display }}</span>
+            {% else %}
+              <span class="shrink-0 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-label-md">{{ dossier.get_statut_display }}</span>
+            {% endif %}
+          </a>
+          {% empty %}
+          <div class="p-10 text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">task_alt</span>
+            Aucun dossier en attente d'action.
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- Dossiers recents -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
+          <h3 class="font-headline-md text-headline-md text-primary">Dossiers récents</h3>
+        </div>
+        <div class="divide-y divide-outline-variant">
+          {% for dossier in recents %}
+          <a href="{% url 'DashboardAgentSelection:dossier-detail' dossier.id %}" class="flex items-center justify-between gap-4 p-gutter hover:bg-surface-container-low transition-colors">
+            <div class="min-w-0">
+              <p class="font-bold text-on-surface truncate">{{ dossier.projet }}</p>
+              <p class="text-body-sm text-on-surface-variant font-label-md">{{ dossier.TRD }}</p>
+            </div>
+            <span class="shrink-0 text-body-sm text-on-surface-variant">{{ dossier.date_created|date:"d/m/Y" }}</span>
+          </a>
+          {% empty %}
+          <div class="p-10 text-center text-on-surface-variant">
+            Aucun dossier attribué pour le moment.
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Colonne laterale -->
+    <div class="space-y-gutter">
+      <!-- Repartition ISO / Flexitank -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-gutter space-y-4">
+        <h3 class="font-headline-md text-headline-md text-primary">Répartition des conteneurs</h3>
+        {% if total_conteneurs %}
+        <div class="w-full h-3 rounded-full overflow-hidden flex bg-surface-container-low">
+          <div class="h-full bg-primary" style="width: {{ pct_iso }}%"></div>
+          <div class="h-full bg-secondary" style="width: {{ pct_flexi }}%"></div>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+            ISO Tanks — <span class="font-bold">{{ nb_iso }}</span> ({{ pct_iso }}%)
+          </span>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+            Flexitanks — <span class="font-bold">{{ nb_flexi }}</span> ({{ pct_flexi }}%)
+          </span>
+        </div>
+        {% else %}
+        <p class="text-body-sm text-on-surface-variant">Aucun conteneur sélectionné pour le moment.</p>
+        {% endif %}
+      </section>
+
+      <!-- Statuts -->
+      <section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-gutter space-y-3">
+        <h3 class="font-headline-md text-headline-md text-primary mb-1">Vue d'ensemble des statuts</h3>
+        <div class="flex justify-between text-body-sm">
+          <span class="text-on-surface-variant">En attente</span>
+          <span class="font-bold">{{ total_en_attente }}</span>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="text-on-surface-variant">Sélection en cours</span>
+          <span class="font-bold">{{ total_en_cours }}</span>
+        </div>
+        <div class="flex justify-between text-body-sm">
+          <span class="text-on-surface-variant">Terminés</span>
+          <span class="font-bold">{{ total_termines }}</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+{% endblock content %}

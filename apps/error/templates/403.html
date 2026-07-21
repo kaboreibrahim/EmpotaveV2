@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Erreur 403 - LogiStuff</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #faf9fd; color: #1a1b1e; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .vessel-float { animation: float 6s ease-in-out infinite; }
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(1deg); }
+    }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden">
+<header class="fixed top-0 left-0 right-0 h-16 flex items-center px-6 z-50">
+<div class="flex items-center gap-2">
+<img src="{% static 'img/logo.png' %}" alt="Logo" class="h-9 w-auto object-contain"/>
+<span class="text-[#002046] font-black tracking-tight text-lg">LogiStuff</span>
+</div>
+</header>
+<main class="relative w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 z-10">
+<div class="flex-1 text-center md:text-left space-y-6">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-[#ffdad6] text-[#93000a] rounded-full border border-[#ba1a1a]/20">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span class="text-xs font-semibold">ERREUR 403 / ACCÈS REFUSÉ</span>
+</div>
+<h1 class="text-3xl lg:text-5xl leading-tight text-[#002046] font-black">
+    Accès non autorisé.
+</h1>
+<p class="text-base text-[#505f76] max-w-md">
+    Vous n'avez pas les permissions nécessaires pour accoster à ce terminal. Comme un navire sans autorisation de quai, l'accès à cette ressource vous est refusé.
+</p>
+<div class="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
+<a class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#002046] text-white rounded font-semibold transition-all hover:bg-[#1b365d] active:scale-95" href="/">
+<span class="material-symbols-outlined">home</span>
+Retour à l'accueil
+</a>
+<a class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-[#74777f] text-[#002046] rounded font-semibold transition-all hover:bg-[#e3e2e6]" href="/">
+<span class="material-symbols-outlined">login</span>
+Se reconnecter
+</a>
+</div>
+</div>
+<div class="flex-1 w-full max-w-sm flex items-center justify-center">
+<div class="vessel-float relative">
+<span class="material-symbols-outlined text-[#ba1a1a]" style="font-size:180px;">block</span>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 h-12 flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#ba1a1a]"></div>
+<span class="text-xs text-[#44474e]">Accès restreint</span>
+</div>
+</div>
+</footer>
+</body>
+</html>

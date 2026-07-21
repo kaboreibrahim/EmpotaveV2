@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Rapport d'empotage — {{ dossier.projet }}</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 1.4cm;
+      @bottom-center {
+        content: "Document généré le {{ date_generation|date:'d/m/Y à H:i' }} — Page " counter(page) " / " counter(pages);
+        font-size: 8px;
+        color: #7f8c8d;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      color: #2c3e50;
+      font-size: 11px;
+      margin: 0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #bdc3c7;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .header img.logo { height: 50px; }
+    .header img.logo-otl { height: 50px; margin-left: 16px; }
+    .header img.drapeau { height: 24px; margin-left: 8px; vertical-align: middle; }
+    .titre h1 {
+      font-size: 18px;
+      color: #2c3e50;
+      margin: 0 0 4px 0;
+    }
+    .titre p {
+      margin: 0;
+      font-size: 12px;
+      color: #34495e;
+    }
+    .infos {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+    .infos .colonne { flex: 1; }
+    .infos table { width: 100%; border-collapse: collapse; }
+    .infos td {
+      padding: 4px 0;
+      font-size: 10.5px;
+      vertical-align: top;
+    }
+    .infos td.label {
+      font-weight: bold;
+      color: #34495e;
+      width: 40%;
+    }
+    h2.section-title {
+      font-size: 13px;
+      color: #34495e;
+      border-left: 4px solid #2980b9;
+      padding-left: 8px;
+      margin: 18px 0 8px 0;
+    }
+    table.conteneurs {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.conteneurs th {
+      background-color: #34495e;
+      color: #fff;
+      text-align: left;
+      padding: 6px;
+      font-size: 9px;
+    }
+    table.conteneurs td {
+      padding: 5px 6px;
+      border-bottom: 1px solid #ecf0f1;
+      font-size: 9px;
+    }
+    table.conteneurs tr:nth-child(even) { background-color: #f8f9fa; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 9.5px;
+      color: #fff;
+      background-color: #2980b9;
+    }
+    .total {
+      margin-top: 10px;
+      text-align: right;
+      font-size: 11px;
+      color: #34495e;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+    }
+    .signatures .signature {
+      width: 260px;
+      text-align: center;
+    }
+    .signatures .signature .ligne {
+      border-top: 1px solid #2c3e50;
+      margin-bottom: 6px;
+    }
+    .signatures .signature .label {
+      font-size: 10px;
+      font-weight: bold;
+      color: #2980b9;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+    <div class="header">
+    <img class="logo" src="{{ logo_url }}" alt="Oils of Africa">
+    <div class="titre">
+      <h1>
+        {% if dossier.type_conteneur == 'ISO_20_pieds' %}
+          Rapport d'empotage — ISO Tanks
+        {% else %}
+          Rapport d'empotage — Conteneurs
+        {% endif %}
+      </h1>
+      <p>
+        Dossier : {{ dossier.projet }} ({{ dossier.Id_Pays.nom }})
+        {% if drapeau_url %}<img class="drapeau" src="{{ drapeau_url }}" alt="{{ dossier.Id_Pays.nom }}">{% endif %}
+      </p>
+    </div>
+    <img class="logo logo-otl" src="{{ otl_logo_url }}" alt="OTL & Bulk Liquid">
+  </div>
+
+
+  <div class="infos">
+    <div class="colonne">
+      <table>
+        <tr><td class="label">Client</td><td>{{ dossier.id_client }}</td></tr>
+        <tr><td class="label">Référence TRD</td><td>{{ dossier.TRD }}</td></tr>
+        <tr><td class="label">Booking</td><td>{{ dossier.Booking }}</td></tr>
+        <tr><td class="label">Site de sélection</td><td>{{ dossier.Id_SiteSelection }}</td></tr>
+        <tr><td class="label">Site d'empotage</td><td>{{ dossier.Id_SiteEmpotage }}</td></tr>
+        <tr><td class="label">Commodité</td><td>{{ dossier.Id_Commodite }}</td></tr>
+        <tr><td class="label">Nombre de conteneurs</td><td>{{ nombre_conteneurs }}</td></tr>
+      </table>
+    </div>
+    <div class="colonne">
+      <table>
+        <tr>
+          <td class="label">Agent de sélection</td>
+          <td>{{ dossier.Id_Agent_selection|default:"—" }}
+            {% if dossier.Id_Agent_selection.user.numero %}— {{ dossier.Id_Agent_selection.user.numero }}{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Agent d'empotage</td>
+          <td>{{ dossier.Id_Agent_empotage|default:"—" }}
+            {% if dossier.Id_Agent_empotage.user.numero %}— {{ dossier.Id_Agent_empotage.user.numero }}{% endif %}
+          </td>
+        </tr>
+        <tr><td class="label">Compagnie maritime</td><td>{{ dossier.Id_CompagnieMaritime }}</td></tr>
+        <tr><td class="label">POL</td><td>{{ dossier.Id_POL }}</td></tr>
+        <tr><td class="label">POD</td><td>{{ dossier.Id_POD }}</td></tr>
+        <tr><td class="label">Date d'empotage</td><td>{{ dossier.date_de_empotage|date:"d/m/Y à H:i"|default:"—" }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  {% if dossier.type_conteneur == 'ISO_20_pieds' %}
+  <h2 class="section-title">Liste des ISO Tanks empotés</h2>
+  {% else %}
+  <h2 class="section-title">Liste des conteneurs empotés</h2>
+  {% endif %}
+  {% if dossier.type_conteneur == 'ISO_20_pieds' %}
+  <table class="conteneurs">
+    <thead>
+      <tr>
+        <th>N°</th>
+        <th>Statut</th>
+        <th>Référence</th>
+        <th>Température (°C)</th>
+        <th>Plomb amateur 1</th>
+        <th>Plomb amateur 2</th>
+        <th>Plomb amateur 3</th>
+        <th>Plombs Oils 1</th>
+        <th>Plombs Oils 2</th>
+        <th>Poids net (kg)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for conteneur in conteneurs %}
+      <tr>
+        <td>{{ forloop.counter|stringformat:"02d" }}</td>
+        <td>{{ conteneur.statut }}</td>
+        <td>{{ conteneur.reference }}</td>
+        <td>{{ conteneur.temperature|default:"—" }}</td>
+        <td>{{ conteneur.plomb_amateur1|default:"—" }}</td>
+        <td>{{ conteneur.plomb_amateur2|default:"—" }}</td>
+        <td>{{ conteneur.plomb_amateur3|default:"—" }}</td>
+        <td>{{ conteneur.plombs_oils1|default:"—" }}</td>
+        <td>{{ conteneur.plombs_oils2|default:"—" }}</td>
+        <td>{{ conteneur.poids_net|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10">Aucun conteneur enregistré pour ce dossier.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <table class="conteneurs">
+    <thead>
+      <tr>
+        <th>N°</th>
+        <th>Statut</th>
+        <th>Référence</th>
+        <th>Température (°C)</th>
+        <th>N° Heating pad</th>
+        <th>N° Flexitank</th>
+        <th>Poids brute (kg)</th>
+        <th>Poids équipements (kg)</th>
+        <th>Poids net (kg)</th>
+        <th>Plombs amateur</th>
+        <th>Plombs Oils</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for conteneur in conteneurs %}
+      <tr>
+        <td>{{ forloop.counter|stringformat:"02d" }}</td>
+        <td>{{ conteneur.statut }}</td>
+        <td>{{ conteneur.reference }}</td>
+        <td>{{ conteneur.temperature|default:"—" }}</td>
+        <td>{{ conteneur.numero_heating_pad|default:"—" }}</td>
+        <td>{{ conteneur.numero_flexitank|default:"—" }}</td>
+        <td>{{ conteneur.poids_brute|default:"—" }}</td>
+        <td>{{ conteneur.poids_equipements|default:"—" }}</td>
+        <td>{{ conteneur.poids_net|default:"—" }}</td>
+        <td>{{ conteneur.plombs_amateur|default:"—" }}</td>
+        <td>{{ conteneur.plombs_oils|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="11">Aucun conteneur enregistré pour ce dossier.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <p class="total">Total : {{ nombre_conteneurs }} conteneur(s)</p>
+
+  <div class="signatures">
+    <div class="signature">
+      <div class="ligne"></div>
+      <span class="label">Opérateur OTL&amp;Bulk Liquid</span>
+    </div>
+    <div class="signature">
+      <div class="ligne"></div>
+      <span class="label">Directeur d'exploitation</span>
+    </div>
+  </div>
+
+</body>
+</html>

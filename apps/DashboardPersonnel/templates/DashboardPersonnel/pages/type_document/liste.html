@@ -1,0 +1,130 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Référentiel Types de Documents{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span>Référentiels</span>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-primary font-bold">Types de documents</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Référentiel Types de Documents</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Gérez la liste des documents attendus pour chaque dossier (facture, packing list, certificats...).</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:type-document-create' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add</span>
+      <span class="font-label-md text-label-md uppercase">Ajouter un type de document</span>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2 relative overflow-hidden group">
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <span class="material-symbols-outlined text-[120px]">description</span>
+      </div>
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Types de documents</span>
+      <span class="text-headline-lg font-headline-lg text-primary">{{ total_types }}</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Résultats affichés</span>
+      <span class="text-headline-lg font-headline-lg text-secondary">{{ paginator.count }}</span>
+      <span class="text-body-sm text-on-surface-variant">Après recherche</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col gap-2">
+      <span class="text-label-md font-label-md text-on-surface-variant uppercase">Documents déposés</span>
+      <span class="text-headline-lg font-headline-lg text-primary-container">{{ total_documents }}</span>
+    </div>
+  </div>
+
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <form method="get" class="p-6 border-b border-outline-variant flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+      <div class="relative w-full lg:max-w-xl">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        {{ filtre_form.q }}
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+        <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+          <span class="material-symbols-outlined text-sm">filter_alt</span>
+          Filtrer
+        </button>
+        {% if request.GET.q %}
+        <a href="{% url 'DashboardPersonnel:type-document-liste' %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+          <span class="material-symbols-outlined text-sm">close</span>
+          Réinitialiser
+        </a>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Type de document</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Documents déposés</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          {% for type_doc in type_document_list %}
+          <tr class="hover:bg-primary/5 transition-colors group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined">description</span>
+                </div>
+                <span class="font-bold text-on-surface">{{ type_doc.type_document }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-fixed text-on-secondary-fixed">
+                {{ type_doc.nb_documents }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'DashboardPersonnel:type-document-update' type_doc.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" aria-label="Modifier {{ type_doc.type_document }}">
+                <span class="material-symbols-outlined">edit_square</span>
+              </a>
+              <a href="{% url 'DashboardPersonnel:type-document-delete' type_doc.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-error transition-colors" aria-label="Supprimer {{ type_doc.type_document }}">
+                <span class="material-symbols-outlined">delete</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="px-6 py-8 text-body-sm text-on-surface-variant text-center">Aucun type de document trouvé.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-6 border-t border-outline-variant bg-surface-container-lowest/30 flex items-center justify-between flex-wrap gap-4">
+      <span class="text-label-md font-label-md text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} type{{ paginator.count|pluralize }} de document{{ paginator.count|pluralize }}
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        {% endif %}
+        {% for num in paginator.page_range %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant transition-colors {% if num == page_obj.number %}text-primary font-bold bg-primary/5{% else %}text-on-surface-variant hover:bg-surface-container-high{% endif %}">{{ num }}</a>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

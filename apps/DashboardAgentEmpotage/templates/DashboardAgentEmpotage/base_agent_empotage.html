@@ -1,0 +1,586 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>{% block title %}Espace Agent Empotage{% endblock %}</title>
+
+  <script>
+    // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+  <link rel="icon" type="image/webp" href="{% static 'img/otl.webp' %}">
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Manrope:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Light theme (default) */
+    :root {
+      --color-inverse-primary: 145 215 138;
+      --color-on-secondary-container: 74 56 0;
+      --color-primary-fixed-dim: 145 215 138;
+      --color-inverse-on-surface: 239 241 244;
+      --color-secondary: 214 168 0;
+      --color-on-secondary: 42 32 0;
+      --color-primary-fixed: 172 244 164;
+      --color-secondary-fixed-dim: 235 195 60;
+      --color-surface-container-lowest: 255 255 255;
+      --color-surface-container: 236 238 241;
+      --color-primary-container: 27 94 32;
+      --color-on-tertiary-fixed: 15 32 0;
+      --color-on-tertiary-container: 157 214 91;
+      --color-on-tertiary: 255 255 255;
+      --color-on-surface: 25 28 30;
+      --color-tertiary-fixed-dim: 158 215 91;
+      --color-surface-variant: 224 227 230;
+      --color-surface-container-highest: 224 227 230;
+      --color-outline: 113 122 109;
+      --color-error-container: 255 218 214;
+      --color-on-primary-fixed-variant: 12 82 22;
+      --color-error: 186 26 26;
+      --color-outline-variant: 192 201 187;
+      --color-tertiary-fixed: 185 244 116;
+      --color-on-primary: 255 255 255;
+      --color-on-tertiary-fixed-variant: 46 79 0;
+      --color-surface: 247 249 252;
+      --color-secondary-container: 255 232 163;
+      --color-on-background: 25 28 30;
+      --color-surface-tint: 42 107 44;
+      --color-on-secondary-fixed: 42 32 0;
+      --color-on-primary-fixed: 0 34 3;
+      --color-surface-container-low: 242 244 247;
+      --color-secondary-fixed: 255 232 163;
+      --color-primary: 0 69 13;
+      --color-on-error-container: 147 0 10;
+      --color-on-primary-container: 144 214 137;
+      --color-surface-bright: 247 249 252;
+      --color-background: 247 249 252;
+      --color-tertiary-container: 54 92 0;
+      --color-surface-dim: 216 218 221;
+      --color-on-surface-variant: 65 73 62;
+      --color-tertiary: 38 67 0;
+      --color-on-error: 255 255 255;
+      --color-surface-container-high: 230 232 235;
+      --color-on-secondary-fixed-variant: 106 79 0;
+      --color-inverse-surface: 45 49 51;
+    }
+
+    /* Dark theme overrides, toggled via the .dark class on <html> */
+    html.dark {
+      --color-inverse-primary: 0 69 13;
+      --color-on-secondary-container: 255 232 163;
+      --color-primary-fixed-dim: 145 215 138;
+      --color-inverse-on-surface: 34 38 35;
+      --color-secondary: 235 195 60;
+      --color-on-secondary: 58 44 0;
+      --color-primary-fixed: 172 244 164;
+      --color-secondary-fixed-dim: 235 195 60;
+      --color-surface-container-lowest: 10 14 12;
+      --color-surface-container: 30 34 31;
+      --color-primary-container: 12 82 22;
+      --color-on-tertiary-fixed: 15 32 0;
+      --color-on-tertiary-container: 185 244 116;
+      --color-on-tertiary: 26 46 0;
+      --color-on-surface: 226 229 226;
+      --color-tertiary-fixed-dim: 158 215 91;
+      --color-surface-variant: 65 73 62;
+      --color-surface-container-highest: 53 57 54;
+      --color-outline: 139 148 133;
+      --color-error-container: 147 0 10;
+      --color-on-primary-fixed-variant: 12 82 22;
+      --color-error: 255 180 171;
+      --color-outline-variant: 65 73 62;
+      --color-tertiary-fixed: 185 244 116;
+      --color-on-primary: 6 58 13;
+      --color-on-tertiary-fixed-variant: 46 79 0;
+      --color-surface: 16 20 18;
+      --color-secondary-container: 106 79 0;
+      --color-on-background: 226 229 226;
+      --color-surface-tint: 145 215 138;
+      --color-on-secondary-fixed: 42 32 0;
+      --color-on-primary-fixed: 0 34 3;
+      --color-surface-container-low: 25 29 27;
+      --color-secondary-fixed: 255 232 163;
+      --color-primary: 145 215 138;
+      --color-on-error-container: 255 218 214;
+      --color-on-primary-container: 172 244 164;
+      --color-surface-bright: 58 62 59;
+      --color-background: 16 20 18;
+      --color-tertiary-container: 46 79 0;
+      --color-surface-dim: 16 20 18;
+      --color-on-surface-variant: 192 201 187;
+      --color-tertiary: 158 215 91;
+      --color-on-error: 105 0 5;
+      --color-surface-container-high: 41 45 42;
+      --color-on-secondary-fixed-variant: 106 79 0;
+      --color-inverse-surface: 226 229 226;
+    }
+
+    body {
+      background-color: rgb(var(--color-background));
+      color: rgb(var(--color-on-background));
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgb(var(--color-outline-variant));
+      border-radius: 10px;
+    }
+
+    /* Collapsible sidebar (works at every breakpoint, toggled via body.sidebar-open) */
+    #sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+    body.sidebar-open #sidebar {
+      transform: translateX(0);
+    }
+
+    #sidebar-overlay {
+      display: none;
+    }
+    @media (max-width: 1023.98px) {
+      body.sidebar-open #sidebar-overlay {
+        display: block;
+      }
+    }
+
+    #shell {
+      transition: margin-left 0.3s ease-in-out;
+    }
+    #topbar {
+      left: 0;
+      transition: left 0.3s ease-in-out;
+    }
+    @media (min-width: 1024px) {
+      body.sidebar-open #shell {
+        margin-left: 16rem;
+      }
+      body.sidebar-open #topbar {
+        left: 16rem;
+      }
+    }
+
+    .skeleton-block {
+      background-image: linear-gradient(
+        90deg,
+        rgb(var(--color-surface-container-high)) 25%,
+        rgb(var(--color-surface-container-low)) 37%,
+        rgb(var(--color-surface-container-high)) 63%
+      );
+      background-size: 400% 100%;
+      animation: skeleton-shimmer 1.4s ease infinite;
+      border-radius: 0.5rem;
+    }
+    @keyframes skeleton-shimmer {
+      0% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton-block {
+        animation: none;
+      }
+    }
+  </style>
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-primary": "rgb(var(--color-inverse-primary) / <alpha-value>)",
+            "on-secondary-container": "rgb(var(--color-on-secondary-container) / <alpha-value>)",
+            "primary-fixed-dim": "rgb(var(--color-primary-fixed-dim) / <alpha-value>)",
+            "inverse-on-surface": "rgb(var(--color-inverse-on-surface) / <alpha-value>)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+            "primary-fixed": "rgb(var(--color-primary-fixed) / <alpha-value>)",
+            "secondary-fixed-dim": "rgb(var(--color-secondary-fixed-dim) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "on-tertiary-fixed": "rgb(var(--color-on-tertiary-fixed) / <alpha-value>)",
+            "on-tertiary-container": "rgb(var(--color-on-tertiary-container) / <alpha-value>)",
+            "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "tertiary-fixed-dim": "rgb(var(--color-tertiary-fixed-dim) / <alpha-value>)",
+            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "error-container": "rgb(var(--color-error-container) / <alpha-value>)",
+            "on-primary-fixed-variant": "rgb(var(--color-on-primary-fixed-variant) / <alpha-value>)",
+            "error": "rgb(var(--color-error) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "tertiary-fixed": "rgb(var(--color-tertiary-fixed) / <alpha-value>)",
+            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "on-tertiary-fixed-variant": "rgb(var(--color-on-tertiary-fixed-variant) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface-tint": "rgb(var(--color-surface-tint) / <alpha-value>)",
+            "on-secondary-fixed": "rgb(var(--color-on-secondary-fixed) / <alpha-value>)",
+            "on-primary-fixed": "rgb(var(--color-on-primary-fixed) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "secondary-fixed": "rgb(var(--color-secondary-fixed) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "on-error-container": "rgb(var(--color-on-error-container) / <alpha-value>)",
+            "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
+            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "on-error": "rgb(var(--color-on-error) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "on-secondary-fixed-variant": "rgb(var(--color-on-secondary-fixed-variant) / <alpha-value>)",
+            "inverse-surface": "rgb(var(--color-inverse-surface) / <alpha-value>)"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "margin-mobile": "16px",
+            "margin-desktop": "40px",
+            "gutter": "24px",
+            "container-max": "1440px",
+            "base": "8px"
+          },
+          "fontFamily": {
+            "label-md": ["JetBrains Mono"],
+            "headline-xl": ["Manrope"],
+            "headline-lg-mobile": ["Manrope"],
+            "body-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "headline-lg": ["Manrope"],
+            "headline-md": ["Manrope"]
+          },
+          "fontSize": {
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "headline-xl": ["48px", {"lineHeight": "56px", "fontWeight": "700"}],
+            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="font-body-md text-body-md selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
+
+  <!-- Alertes flottantes (ex: dossier rétrogradé) : bandeau rouge en haut, tant que non lues -->
+  {% if alertes_non_lues %}
+  <div class="fixed top-4 inset-x-0 z-[80] mx-auto w-full max-w-2xl px-4 space-y-3">
+    {% for alerte in alertes_non_lues %}
+    <div class="flex items-start gap-3 p-4 bg-error text-on-error rounded-xl shadow-2xl border border-error">
+      <span class="material-symbols-outlined shrink-0">error</span>
+      <p class="flex-1 text-body-sm font-bold">{{ alerte.message }}</p>
+      <form method="post" action="{% url 'notification:marquer-lue' alerte.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="hover:opacity-80" aria-label="Marquer comme lu">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Sidebar overlay (mobile only, shown while the sidebar is open) -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 z-40"></div>
+
+  <!-- Sidebar Navigation -->
+  <aside id="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest dark:bg-surface-container-low border-r border-outline-variant dark:border-outline flex flex-col py-base z-50">
+    <div class="px-6 py-8 flex items-center gap-3 relative">
+      <img src="{% static 'img/otl.webp' %}" alt="OTL & Bulk Liquid" class="h-8 w-8 object-contain shrink-0" />
+      <div>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">OTL &amp; Bulk Liquid</h1>
+        <p class="text-on-surface-variant font-label-md text-label-md mt-1">Agent Empotage</p>
+      </div>
+      <button
+        id="sidebar-close"
+        type="button"
+        class="absolute -top-2 right-0 p-1 text-on-surface-variant hover:text-primary rounded-full transition-colors duration-300"
+        aria-label="Fermer le menu"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <nav class="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+      <a
+        href="{% url 'DashboardAgentEmpotage:dashboard-agent-empotage' %}"
+        class="flex items-center gap-3 px-4 py-3 transition-all duration-200 {% if request.resolver_match.url_name == 'dashboard-agent-empotage' %}border-l-4 border-secondary bg-surface-container text-primary font-semibold{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors{% endif %}"
+      >
+        <span class="material-symbols-outlined">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a
+        href="{% url 'DashboardAgentEmpotage:dossier-liste' %}"
+        class="flex items-center gap-3 px-4 py-3 transition-all duration-200 {% if request.resolver_match.url_name == 'dossier-liste' %}border-l-4 border-secondary bg-surface-container text-primary font-semibold{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors{% endif %}"
+      >
+        <span class="material-symbols-outlined">inventory_2</span>
+        <span>Dossiers à empoter</span>
+      </a>
+      <a
+        href="{% url 'DashboardAgentEmpotage:dossier-liste-terminer' %}"
+        class="flex items-center gap-3 px-4 py-3 transition-all duration-200 {% if request.resolver_match.url_name == 'dossier-liste-terminer' %}border-l-4 border-secondary bg-surface-container text-primary font-semibold{% else %}text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors{% endif %}"
+      >
+        <span class="material-symbols-outlined">task_alt</span>
+        <span>Dossiers Terminés</span>
+      </a>
+    </nav>
+    <div class="px-6 py-6 border-t border-outline-variant">
+      <form action="{% url 'users:logout' %}" method="post">
+        {% csrf_token %}
+        <button class="w-full bg-secondary text-on-secondary font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity" type="submit">
+          <span class="material-symbols-outlined">logout</span>
+          <span>Deconnexion</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Top Navigation Bar -->
+  <header id="topbar" class="fixed top-0 right-0 h-16 bg-surface dark:bg-background border-b border-outline-variant dark:border-outline z-40 flex justify-between items-center px-margin-desktop">
+    <div class="flex items-center gap-gutter w-1/2">
+      <button
+        id="sidebar-toggle"
+        type="button"
+        class="p-2 -ml-2 text-on-surface-variant hover:text-primary transition-colors"
+        aria-label="Afficher / masquer le menu"
+      >
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-base">
+      <button
+        id="theme-toggle"
+        type="button"
+        class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors"
+        aria-label="Basculer le thème sombre"
+      >
+        <span class="material-symbols-outlined" id="theme-toggle-icon">dark_mode</span>
+      </button>
+      <div class="relative">
+        <button
+          id="notif-toggle"
+          type="button"
+          class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors relative"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-label="Notifications"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          {% if notifications_non_lues %}
+          <span class="absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-error text-on-error text-[10px] font-bold rounded-full">
+            {{ notifications_non_lues }}
+          </span>
+          {% endif %}
+        </button>
+        <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden">
+          <div class="flex items-center justify-between p-4 border-b border-outline-variant">
+            <h4 class="font-bold text-body-md text-on-surface">Notifications</h4>
+            {% if notifications_non_lues %}
+            <form method="post" action="{% url 'notification:marquer-toutes-lues' %}">
+              {% csrf_token %}
+              <button type="submit" class="text-label-sm text-primary hover:underline">Tout marquer comme lu</button>
+            </form>
+            {% endif %}
+          </div>
+          <div class="max-h-96 overflow-y-auto custom-scrollbar divide-y divide-outline-variant">
+            {% for notif in notifications_recentes %}
+            <form method="post" action="{% url 'notification:marquer-lue' notif.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="w-full text-left p-4 flex gap-3 hover:bg-surface-container-low transition-colors {% if not notif.is_read %}bg-primary/5{% endif %}">
+                <span class="w-2 h-2 rounded-full mt-1.5 shrink-0 {% if not notif.is_read %}bg-primary{% endif %}"></span>
+                <span>
+                  <span class="block text-body-sm text-on-surface">{{ notif.message }}</span>
+                  <span class="block text-label-sm text-on-surface-variant mt-1">{{ notif.date_created|timesince }}</span>
+                </span>
+              </button>
+            </form>
+            {% empty %}
+            <div class="p-8 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-3xl block mb-2 opacity-40">notifications_off</span>
+              <p class="text-body-sm">Aucune notification.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+        {% if user.photo %}
+          <img class="w-full h-full object-cover" src="{{ user.photo.url }}" alt="{{ user.get_full_name|default:user.username }}" />
+        {% else %}
+          <span class="material-symbols-outlined">account_circle</span>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main id="shell" class="pt-16 min-h-screen bg-surface">
+    <div class="max-w-[1440px] mx-auto p-margin-desktop space-y-gutter">
+      {% include "partials/_messages.html" %}
+      {% block content %}{% endblock content %}
+    </div>
+  </main>
+
+  <script>
+    // Sidebar show/hide toggle (mobile: temporary overlay drawer; desktop: persisted preference)
+    (function () {
+      const body = document.body;
+      const overlay = document.getElementById('sidebar-overlay');
+      const toggleBtn = document.getElementById('sidebar-toggle');
+      const closeBtn = document.getElementById('sidebar-close');
+      const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
+
+      function openSidebar() {
+        body.classList.add('sidebar-open');
+        if (isDesktop()) {
+          localStorage.setItem('sidebarOpen', '1');
+        }
+      }
+
+      function closeSidebar() {
+        body.classList.remove('sidebar-open');
+        if (isDesktop()) {
+          localStorage.setItem('sidebarOpen', '0');
+        }
+      }
+
+      function toggleSidebar() {
+        if (body.classList.contains('sidebar-open')) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      }
+
+      // Sidebar starts open on desktop unless the user hid it before; always starts closed on mobile.
+      if (isDesktop() && localStorage.getItem('sidebarOpen') !== '0') {
+        body.classList.add('sidebar-open');
+      }
+
+      toggleBtn.addEventListener('click', toggleSidebar);
+      closeBtn.addEventListener('click', closeSidebar);
+      overlay.addEventListener('click', closeSidebar);
+    })();
+
+    // Dark / light theme toggle, persisted in localStorage
+    (function () {
+      const root = document.documentElement;
+      const toggleBtn = document.getElementById('theme-toggle');
+      const icon = document.getElementById('theme-toggle-icon');
+
+      function applyIcon() {
+        const isDark = root.classList.contains('dark');
+        icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        toggleBtn.setAttribute('aria-label', isDark ? 'Passer au thème clair' : 'Passer au thème sombre');
+      }
+
+      applyIcon();
+
+      toggleBtn.addEventListener('click', function () {
+        const isDark = root.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        applyIcon();
+      });
+    })();
+
+    // Notifications dropdown: toggled from the topbar bell, closes on outside click / Escape
+    (function () {
+      const toggleBtn = document.getElementById('notif-toggle');
+      const panel = document.getElementById('notif-panel');
+      if (!toggleBtn || !panel) return;
+
+      function closePanel() {
+        panel.classList.add('hidden');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      function togglePanel() {
+        const isOpen = !panel.classList.contains('hidden');
+        if (isOpen) {
+          closePanel();
+        } else {
+          panel.classList.remove('hidden');
+          toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+      }
+
+      toggleBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        togglePanel();
+      });
+      panel.addEventListener('click', function (event) {
+        event.stopPropagation();
+      });
+      document.addEventListener('click', closePanel);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closePanel();
+      });
+    })();
+
+    // Micro-interaction Script
+    document.querySelectorAll('button, tr').forEach(el => {
+      el.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.style.position = 'absolute';
+        ripple.style.width = '2px';
+        ripple.style.height = '2px';
+        ripple.style.background = 'rgba(255, 255, 255, 0.3)';
+        ripple.style.borderRadius = '50%';
+        ripple.style.transform = 'scale(0)';
+        ripple.style.animation = 'ripple 0.6s linear';
+        ripple.style.left = e.clientX - el.getBoundingClientRect().left + 'px';
+        ripple.style.top = e.clientY - el.getBoundingClientRect().top + 'px';
+
+        if (el.classList.contains('bg-surface-container-lowest')) ripple.style.background = 'rgba(0, 69, 13, 0.1)';
+
+        el.style.position = el.style.position || 'relative';
+        el.style.overflow = 'hidden';
+        el.appendChild(ripple);
+
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+    // Add a simple keyframe for the ripple
+    const rippleStyle = document.createElement('style');
+    rippleStyle.innerHTML = `
+      @keyframes ripple {
+        to { transform: scale(100); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(rippleStyle);
+  </script>
+</body>
+</html>

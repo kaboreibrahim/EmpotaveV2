@@ -1,0 +1,21 @@
+{% comment %}
+Champ photo avec aperçu : miniature de la photo déjà enregistrée (si présente),
+remplacée en direct par un aperçu du nouveau fichier dès qu'il est sélectionné.
+Attend dans le contexte : `field` (BoundField du ModelForm) et `label`.
+Optionnel : `current` (FieldFile déjà enregistré sur l'instance, pour la miniature initiale).
+{% endcomment %}
+<div class="space-y-1">
+  <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">{{ label }}</label>
+  <div class="flex items-center gap-3">
+    <img
+      id="preview-{{ field.id_for_label }}"
+      src="{% if current %}{{ current.url }}{% endif %}"
+      class="w-16 h-16 rounded-lg object-cover border border-outline-variant bg-surface-container-high shrink-0 {% if not current %}hidden{% endif %}"
+      alt="Aperçu"
+    >
+    <div class="flex-1">
+      {{ field }}
+      {% if field.errors %}<p class="text-label-sm text-error mt-1">{{ field.errors.0 }}</p>{% endif %}
+    </div>
+  </div>
+</div>

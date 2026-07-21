@@ -1,0 +1,20 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Votre code de réinitialisation{% endblock %}
+{% block preheader %}Votre code de réinitialisation à 6 chiffres : {{ code }}{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-size:20px;line-height:28px;color:#191c1e;">Bonjour {{ user_name }},</h1>
+<p style="margin:0 0 24px;font-size:15px;line-height:24px;color:#414940;">
+    Vous avez demandé la réinitialisation de votre code de connexion. Utilisez le code ci-dessous pour continuer&nbsp;:
+</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+<tr>
+<td align="center">
+<span style="display:inline-block;padding:16px 32px;background-color:#f0f5ee;border:1px dashed #96b487;border-radius:8px;font-family:'JetBrains Mono',Consolas,monospace;font-size:28px;font-weight:700;letter-spacing:6px;color:#00450d;">{{ code }}</span>
+</td>
+</tr>
+</table>
+<p style="margin:0 0 8px;font-size:14px;line-height:20px;color:#717a6d;">Ce code expire dans {{ validity_minutes }} minutes.</p>
+<p style="margin:0;font-size:14px;line-height:20px;color:#717a6d;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+{% endblock %}

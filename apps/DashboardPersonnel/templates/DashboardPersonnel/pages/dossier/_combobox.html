@@ -1,0 +1,27 @@
+<div class="space-y-2">
+  <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">{{ label }}</label>
+  <div class="flex items-start gap-2" x-data="searchableSelect('{{ field_name }}', {{ js_var }}, '{{ bound_field.value|default:'' }}')" @click.outside="open = false">
+    <div class="relative flex-1">
+      <input type="hidden" name="{{ field_name }}" :value="selected">
+      <div class="relative">
+        <input type="text" class="custom-input px-4 py-3 pr-9" placeholder="{{ placeholder }}"
+               x-model="query" @focus="open = true" @input="typing = true; open = true" autocomplete="off">
+        <button type="button" x-show="selected" @click="clear()" class="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-error">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+      <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg">
+        <template x-for="opt in filteredOptions" :key="opt.value">
+          <button type="button" @click="select(opt)" class="w-full text-left px-4 py-2 text-body-sm hover:bg-primary/10" x-text="opt.label"></button>
+        </template>
+        <p x-show="filteredOptions.length === 0" class="px-4 py-2 text-body-sm text-on-surface-variant">Aucun résultat</p>
+      </div>
+    </div>
+    {% if quick_add_type %}
+    <button type="button" @click="$dispatch('open-quick-add', {type: '{{ quick_add_type }}'})" class="shrink-0 p-3 rounded-lg border border-outline-variant text-primary hover:bg-primary/5" title="Ajouter une donnée manquante">
+      <span class="material-symbols-outlined">add</span>
+    </button>
+    {% endif %}
+  </div>
+  {% if bound_field.errors %}<p class="text-body-sm text-error mt-1">{{ bound_field.errors.0 }}</p>{% endif %}
+</div>

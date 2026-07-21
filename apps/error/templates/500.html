@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Erreur 500 - suivi Empotage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    @keyframes drift {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(0.5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    .ship-float { animation: drift 6s ease-in-out infinite; }
+    .scan-line {
+        width: 100%; height: 2px; background: rgba(174, 199, 247, 0.3);
+        position: absolute; top: 0; left: 0; animation: scan 4s linear infinite; z-index: 10;
+    }
+    @keyframes scan {
+        0% { top: 0%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+</style>
+</head>
+<body class="bg-[#faf9fd] text-[#1a1b1e] overflow-hidden min-h-screen flex flex-col">
+<header class="h-16 flex items-center px-6">
+<div class="flex items-center gap-2">
+<img src="{% static 'img/logo.png' %}" alt="Logo" class="h-9 w-auto object-contain"/>
+<span class="text-[#002046] font-black tracking-tight text-lg">Système d'Empotage</span>
+</div>
+
+</header>
+<main class="flex-grow flex items-center justify-center relative px-6">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute inset-0 bg-[radial-gradient(#002046_1px,transparent_1px)] [background-size:24px_24px]"></div>
+</div>
+<div class="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-20">
+<div class="flex justify-center items-center order-2 lg:order-1">
+<div class="relative w-full aspect-square max-w-md group">
+<div class="absolute inset-0 bg-white/40 backdrop-blur-sm border border-[#c4c6cf] rounded-xl overflow-hidden shadow-sm">
+<div class="scan-line"></div>
+<div class="h-full w-full flex flex-col items-center justify-center p-8 relative">
+<div class="ship-float relative z-20">
+<span class="material-symbols-outlined text-[#465f88]" style="font-size:120px;">directions_boat</span>
+<div class="absolute -top-4 -right-4 bg-[#ba1a1a] text-white text-xs font-mono px-2 py-1 rounded shadow-lg animate-pulse">ERR_INTERNAL_500</div>
+<div class="absolute bottom-2 -left-6 bg-[#1b365d] text-[#87a0cd] text-xs font-mono px-2 py-1 rounded shadow-lg">SYS_REBOOT_INIT</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="text-center lg:text-left order-1 lg:order-2">
+<div class="inline-flex items-center gap-2 bg-[#ffdad6] text-[#93000a] px-3 py-1 rounded-full mb-6 border border-[#ba1a1a]/20">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="text-xs font-semibold uppercase tracking-widest">Code 500</span>
+</div>
+<h1 class="text-3xl lg:text-5xl text-[#002046] mb-4 font-black">Panne technique détectée.</h1>
+<p class="text-base text-[#44474e] mb-8 max-w-md">
+    Nos ingénieurs travaillent à remettre le navire à flot. Merci de votre patience pendant que nous stabilisons les systèmes.
+</p>
+<div class="flex flex-col sm:flex-row gap-4 items-center lg:items-start">
+<button class="group px-8 py-4 bg-[#002046] text-white rounded-lg font-semibold flex items-center gap-2 hover:bg-[#1b365d] transition-all active:scale-95 shadow-lg" onclick="window.location.reload()">
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-180 duration-500">refresh</span>
+Réessayer
+</button>
+<a class="px-8 py-4 border border-[#74777f] text-[#002046] rounded-lg font-semibold flex items-center gap-2 hover:bg-[#e3e2e6] transition-all" href="/">
+<span class="material-symbols-outlined text-[20px]">home</span>
+Retour à l'accueil
+</a>
+</div>
+<div class="mt-12 pt-8 border-t border-[#c4c6cf]">
+<div class="flex items-center gap-6 justify-center lg:justify-start">
+<div class="flex flex-col">
+<span class="text-xs text-[#44474e] mb-1 uppercase tracking-tighter opacity-70">État du terminal</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#ba1a1a] animate-ping"></span>
+<span class="font-mono text-sm">Maintenance en cours</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-xs text-[#44474e] mb-1 uppercase tracking-tighter opacity-70">Référence</span>
+<span class="font-mono text-sm text-[#74777f]">{{ request.path|default:"STF-7742-X" }}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000001", "fields": {"type_document": "Facture Commerciale"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000002", "fields": {"type_document": "Packing List"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000003", "fields": {"type_document": "Certificat d'Origine"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000004", "fields": {"type_document": "Confirmation Booking"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000005", "fields": {"type_document": "Certificat Phytosanitaire"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000006", "fields": {"type_document": "Copies des BLS"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000007", "fields": {"type_document": "Rapport d'Empotage"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000008", "fields": {"type_document": "Rapport de Sélection"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000009", "fields": {"type_document": "Autorisation d'Exportation"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000010", "fields": {"type_document": "EC"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000011", "fields": {"type_document": "COA"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000012", "fields": {"type_document": "Déclaration"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000013", "fields": {"type_document": "IER d'Entrée"}},
+  {"model": "documents.typedocument", "pk": "00000001-0000-0000-0000-000000000014", "fields": {"type_document": "IER de Sortie"}}
+]

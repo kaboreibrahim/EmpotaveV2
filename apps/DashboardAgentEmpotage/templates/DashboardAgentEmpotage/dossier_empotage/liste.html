@@ -1,0 +1,287 @@
+{% extends 'DashboardAgentEmpotage/base_agent_empotage.html' %}
+{% load static %}
+{% block title %}Dossiers à empoter{% endblock %}
+
+{% block content %}
+
+  <!-- Header Section -->
+  <div class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <h2 class="font-headline-lg text-headline-lg text-primary">Dossiers à empoter</h2>
+      <p class="text-on-surface-variant">Dossiers d'empotage assignés à {{ request.user.get_full_name|default:request.user.username }}.</p>
+    </div>
+    <!-- Vue liste / carte -->
+    <div id="vue-toggle" class="flex bg-surface-container-lowest border border-outline-variant rounded-lg p-1 gap-1" role="group" aria-label="Choix de la vue">
+      <button type="button" data-vue="liste" class="vue-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="true">
+        <span class="material-symbols-outlined text-[18px]">view_list</span>
+        Liste
+      </button>
+      <button type="button" data-vue="carte" class="vue-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="false">
+        <span class="material-symbols-outlined text-[18px]">grid_view</span>
+        Cartes
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-primary">folder_open</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">Total attribués</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_dossiers }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+      <div class="w-12 h-12 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-on-tertiary-fixed-variant">inventory_2</span>
+      </div>
+      <div>
+        <p class="text-on-surface-variant text-body-sm">Empotage en cours</p>
+        <p class="text-headline-md font-bold mt-1">{{ total_empotage_en_cours }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters -->
+  <form method="get" class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex flex-wrap items-end gap-4">
+    <div class="flex-1 min-w-[220px]">
+      <label class="block text-label-md font-label-md text-on-surface-variant mb-1">Statut</label>
+      <select name="statut" onchange="this.form.submit()" class="w-full bg-surface-container-low border-none rounded-lg text-body-sm py-2 px-3 focus:ring-2 focus:ring-primary-container">
+        <option value="">Tous les statuts</option>
+        {% for value, label in statut_choices %}
+          <option value="{{ value }}" {% if value == statut_filtre %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if statut_filtre %}
+      <a href="{% url 'DashboardAgentEmpotage:dossier-liste' %}" class="text-body-sm text-primary hover:underline pb-2">Réinitialiser</a>
+    {% endif %}
+  </form>
+
+  <!-- Squelette de chargement (affiché brièvement, puis remplacé par la vue choisie) -->
+  <section id="vue-squelette" class="space-y-3">
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+  </section>
+
+  <!-- Vue Liste (table) -->
+  <section id="vue-liste" class="hidden bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md border-b border-outline-variant">
+            <th class="px-6 py-4">Projet & TRD</th>
+            <th class="px-6 py-4">Client</th>
+            <th class="px-6 py-4">Pays</th>
+            <th class="px-6 py-4">Conteneurs</th>
+            <th class="px-6 py-4">Date de création</th>
+            <th class="px-6 py-4">Statut</th>
+            <th class="px-6 py-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for dossier in dossiers %}
+          <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}'">
+            <td class="px-6 py-4">
+              <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="font-bold text-primary hover:underline">{{ dossier.projet }}</a>
+              <div class="text-body-sm text-on-surface-variant font-label-md">{{ dossier.TRD }}</div>
+            </td>
+            <td class="px-6 py-4">{{ dossier.id_client }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                {% if dossier.Id_Pays.drapeau %}
+                  <img src="{{ dossier.Id_Pays.drapeau.url }}" alt="{{ dossier.Id_Pays.nom }}" class="w-5 h-4 object-cover rounded-sm">
+                {% endif %}
+                {{ dossier.Id_Pays.nom }}
+              </div>
+            </td>
+            <td class="px-6 py-4">{{ dossier.nombre_conteneurs }}</td>
+            <td class="px-6 py-4 text-on-surface-variant">{{ dossier.date_created|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4">
+              <span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-label-md">{{ dossier.get_statut_display }}</span>
+            </td>
+            <td class="px-6 py-4 text-right" onclick="event.stopPropagation()">
+              <div class="flex justify-end gap-2">
+                <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}"
+                   class="px-3 py-1 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors"
+                   title="Voir le détail">
+                  <span class="material-symbols-outlined text-sm align-middle">visibility</span>
+                </a>
+                <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.id %}"
+                   class="px-3 py-1 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors"
+                   title="Télécharger le rapport">
+                  <span class="material-symbols-outlined text-sm align-middle">download</span>
+                </a>
+                <form method="post" action="{% url 'DashboardAgentEmpotage:dossier-soumettre' dossier.id %}" onsubmit="return confirm('Clôturer ce dossier et notifier l\'équipe ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="px-3 py-1 bg-primary text-on-primary text-body-sm rounded-lg hover:opacity-90 transition-opacity">
+                    Clôturer
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="px-6 py-10 text-center text-on-surface-variant">
+              Aucun dossier attribué{% if statut_filtre %} pour ce statut{% endif %}.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
+      <span class="text-body-sm text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} — {{ paginator.count }} dossier{{ paginator.count|pluralize }}
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}"
+             class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Précédent</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}"
+             class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Suivant</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Vue Cartes -->
+  <section id="vue-carte" class="hidden space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+      {% for dossier in dossiers %}
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}'">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="font-bold text-primary hover:underline truncate block">{{ dossier.projet }}</a>
+            <div class="text-body-sm text-on-surface-variant font-label-md">{{ dossier.TRD }}</div>
+          </div>
+          <span class="shrink-0 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-label-md">{{ dossier.get_statut_display }}</span>
+        </div>
+
+        <dl class="grid grid-cols-2 gap-y-2 text-body-sm">
+          <dt class="text-on-surface-variant">Client</dt>
+          <dd class="text-right truncate">{{ dossier.id_client }}</dd>
+          <dt class="text-on-surface-variant">Pays</dt>
+          <dd class="text-right flex items-center justify-end gap-2">
+            {% if dossier.Id_Pays.drapeau %}
+              <img src="{{ dossier.Id_Pays.drapeau.url }}" alt="{{ dossier.Id_Pays.nom }}" class="w-5 h-4 object-cover rounded-sm">
+            {% endif %}
+            {{ dossier.Id_Pays.nom }}
+          </dd>
+          <dt class="text-on-surface-variant">Conteneurs</dt>
+          <dd class="text-right">{{ dossier.nombre_conteneurs }}</dd>
+          <dt class="text-on-surface-variant">Créé le</dt>
+          <dd class="text-right">{{ dossier.date_created|date:"d/m/Y" }}</dd>
+        </dl>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant" onclick="event.stopPropagation()">
+          <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}"
+             class="px-3 py-1 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors"
+             title="Voir le détail">
+            <span class="material-symbols-outlined text-sm align-middle">visibility</span>
+          </a>
+          <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.id %}"
+             class="px-3 py-1 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors"
+             title="Télécharger le rapport">
+            <span class="material-symbols-outlined text-sm align-middle">download</span>
+          </a>
+          <form method="post" action="{% url 'DashboardAgentEmpotage:dossier-soumettre' dossier.id %}" onsubmit="return confirm('Clôturer ce dossier et notifier l\'équipe ?');">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1 bg-primary text-on-primary text-body-sm rounded-lg hover:opacity-90 transition-opacity">
+              Clôturer
+            </button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full bg-surface-container-lowest rounded-xl border border-outline-variant px-6 py-10 text-center text-on-surface-variant">
+        Aucun dossier attribué{% if statut_filtre %} pour ce statut{% endif %}.
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-4 bg-surface-container-lowest border border-outline-variant rounded-xl flex justify-between items-center">
+      <span class="text-body-sm text-on-surface-variant">
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} — {{ paginator.count }} dossier{{ paginator.count|pluralize }}
+      </span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}"
+             class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Précédent</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}"
+             class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Suivant</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+<style>
+  .vue-toggle-btn {
+    color: rgb(var(--color-on-surface-variant));
+  }
+  .vue-toggle-btn.actif {
+    background-color: rgb(var(--color-primary));
+    color: rgb(var(--color-on-primary));
+  }
+</style>
+
+<script>
+  // Bascule vue liste / carte, persistée en localStorage. Un court passage par le
+  // squelette masque le remplacement du contenu (au chargement initial et lors du switch).
+  (function () {
+    const squelette = document.getElementById('vue-squelette');
+    const vueListe = document.getElementById('vue-liste');
+    const vueCarte = document.getElementById('vue-carte');
+    const boutons = document.querySelectorAll('.vue-toggle-btn');
+    const STORAGE_KEY = 'agentEmpotageDossierVue';
+
+    function appliquerVue(vue) {
+      boutons.forEach(function (btn) {
+        const estActif = btn.dataset.vue === vue;
+        btn.classList.toggle('actif', estActif);
+        btn.setAttribute('aria-pressed', estActif ? 'true' : 'false');
+      });
+      vueListe.classList.toggle('hidden', vue !== 'liste');
+      vueCarte.classList.toggle('hidden', vue !== 'carte');
+    }
+
+    function afficherVue(vue) {
+      squelette.classList.remove('hidden');
+      vueListe.classList.add('hidden');
+      vueCarte.classList.add('hidden');
+      setTimeout(function () {
+        appliquerVue(vue);
+        squelette.classList.add('hidden');
+      }, 300);
+    }
+
+    const vueInitiale = localStorage.getItem(STORAGE_KEY) === 'carte' ? 'carte' : 'liste';
+    afficherVue(vueInitiale);
+
+    boutons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const vue = btn.dataset.vue;
+        localStorage.setItem(STORAGE_KEY, vue);
+        afficherVue(vue);
+      });
+    });
+  })();
+</script>
+
+{% endblock content %}
