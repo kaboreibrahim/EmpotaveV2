@@ -14,6 +14,7 @@ from .views.dossier.create import CreerDossier
 from .views.dossier.edit import ModifierDossier
 from .views.dossier.detail import DetailDossier
 from .views.dossier.actions import retrograder_dossier
+from .views.payement import DashboardPaiementView, DetailPaiementView, ListePaiementView
 from .views.conteneur.detail import DetailConteneur
 from .views.conteneur.recherche import RechercheConteneur
 from .views.document import (
@@ -78,6 +79,11 @@ urlpatterns = [
     path('dossiers/modifier/<uuid:pk>/', ModifierDossier.as_view(), name='dossier-update'),
     path('dossiers/<uuid:pk>/', DetailDossier.as_view(), name='dossier-detail'),
     path('dossiers/<uuid:dossier_id>/retrograder/', retrograder_dossier, name='dossier-retrograder'),
+
+    #PAIEMENTS (suivi lecture seule, accès restreint via conteneurs.can_voir_paiements)
+    path('paiements/accueil/', DashboardPaiementView.as_view(), name='dashboard-paiement'),
+    path('paiements/liste/', ListePaiementView.as_view(), name='paiement-liste'),
+    path('paiements/<uuid:pk>/', DetailPaiementView.as_view(), name='paiement-detail'),
 
     #CONTENEUR
     path('conteneurs/rechercher/', RechercheConteneur.as_view(), name='conteneur-recherche'),

@@ -15,6 +15,7 @@ from weasyprint import HTML
 from apps.audit.models import AuditLog
 from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier, ISOTanks
+from apps.conteneurs.services import verifier_paiement
 from apps.notification.services import notifier, notifier_personnel
 
 
@@ -157,6 +158,7 @@ def generate_dossier_report(request, dossier_id):
 def soumettre_dossier(request, dossier_id):
     """Clôture l'empotage : génère le rapport, termine le dossier et notifie l'équipe."""
     dossier = get_object_or_404(Dossier, id=dossier_id)
+    verifier_paiement(dossier)
 
     if dossier.statut != 'empotage_en_cours':
         messages.error(request, "Le dossier n'est pas dans un état valide pour être soumis.")

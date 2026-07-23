@@ -18,6 +18,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 from apps.common.fields import WebPImageField
@@ -71,6 +72,9 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
     date_de_empotage               = models.DateTimeField(null=True, blank=True) # saisir par l'agent d'empotage
     date_de_soumission_du_rapport  = models.DateTimeField(null=True, blank=True) # saisir automatiquement quand le rapport est soumis
 
+    commentaire_creation   = models.TextField(blank=True, verbose_name="Commentaire de création") # saisi par le personnel lors de la création du dossier
+    commentaire_soumission = models.TextField(blank=True, verbose_name="Commentaire de soumission") # saisi par l'agent de sélection lors de la soumission du dossier
+
     # Référentiels
     Id_Pays              = models.ForeignKey(Pays,              on_delete=models.CASCADE,  related_name='dossiers')
     Id_POD               = models.ForeignKey(POD,               on_delete=models.CASCADE,  related_name='dossiers')
@@ -86,10 +90,29 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
     id_client          = models.ForeignKey(Client,          on_delete=models.CASCADE,                         related_name='dossiers')
     Id_Personnel        = models.ForeignKey(Personnel,        on_delete=models.SET_NULL, null=True, blank=True, related_name='dossiers_crees')
     Id_Agent_operationel=models.ForeignKey(Personnel, on_delete=models.SET_NULL, null=True, blank=True, related_name='dossiers_operationnel')
+
+    # Paiement (verrou avant traitement par les agents)
+    est_paye             = models.BooleanField(default=False)
+    date_paiement        = models.DateTimeField(null=True, blank=True)
+    commentaire_paiement = models.TextField(blank=True)
+    montant_paiement     = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    preuve_paiement      = models.FileField(
+        upload_to='paiements/preuves/%Y/%m/', null=True, blank=True,
+        validators=[FileExtensionValidator(['pdf'])],
+    )
+    utilisateur_paiement = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='paiements_valides',
+    )
+
     class Meta:
         verbose_name        = "Dossier"
         verbose_name_plural = "Dossiers"
         ordering            = ['-date_created']
+        permissions          = [
+            ('can_valider_paiement', "Peut valider le paiement d'un dossier"),
+            ('can_voir_paiements', "Peut voir le suivi des paiements des dossiers"),
+        ]
 
     def __str__(self):
         pays_nom = self.Id_Pays.nom if self.Id_Pays_id else ''
@@ -123,9 +146,13 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
             self.date_de_empotage = timezone.now()
             self.save()
 
-    def soumettre_rapport(self):
+    def soumettre_rapport(self, commentaire=''):
         self.date_de_soumission_du_rapport = timezone.now()
-        self.save(update_fields=['date_de_soumission_du_rapport'])
+        update_fields = ['date_de_soumission_du_rapport']
+        if commentaire:
+            self.commentaire_soumission = commentaire
+            update_fields.append('commentaire_soumission')
+        self.save(update_fields=update_fields)
 
     def terminer(self):
         self.statut                 = 'dossier_termine'
@@ -135,6 +162,21 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
     def annuler(self):
         self.statut = 'annulé'
         self.save(update_fields=['statut'])
+
+    def valider_paiement(self, user, commentaire='', date_paiement=None, montant=None, preuve=None):
+        """Enregistre le paiement du dossier et le débloque pour les agents."""
+        self.est_paye = True
+        self.date_paiement = date_paiement or timezone.now()
+        self.commentaire_paiement = commentaire
+        self.utilisateur_paiement = user
+        update_fields = ['est_paye', 'date_paiement', 'commentaire_paiement', 'utilisateur_paiement']
+        if montant is not None:
+            self.montant_paiement = montant
+            update_fields.append('montant_paiement')
+        if preuve is not None:
+            self.preuve_paiement = preuve
+            update_fields.append('preuve_paiement')
+        self.save(update_fields=update_fields)
 
     def retrograder_apres_terminaison(self):
         """Rouvre un dossier termine : le repasse en empotage_en_cours pour correction

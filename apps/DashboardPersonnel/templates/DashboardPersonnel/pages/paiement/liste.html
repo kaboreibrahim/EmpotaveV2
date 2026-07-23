@@ -1,0 +1,108 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Dossiers — Paiements{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <a class="hover:text-primary" href="{% url 'DashboardPersonnel:dashboard-paiement' %}">Paiements</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-primary font-bold">Dossiers</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Dossiers</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Suivi des dossiers payés et en attente de paiement.</p>
+    </div>
+  </div>
+
+  <!-- Recherche + filtre paiement -->
+  <form method="get" class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-wrap items-end gap-5 shadow-sm">
+    <div class="flex flex-col gap-1.5 flex-1 min-w-[260px]">
+      <label class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Recherche</label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+        <input
+          type="text"
+          name="q"
+          value="{{ q }}"
+          placeholder="Recherche (TRD, projet, booking, client...)"
+          class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-sm text-body-sm rounded-lg"
+        />
+      </div>
+    </div>
+    {% if filtre_paye %}<input type="hidden" name="paye" value="{{ filtre_paye }}">{% endif %}
+    <div class="flex items-center gap-2">
+      <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+        <span class="material-symbols-outlined text-sm">search</span>
+        Rechercher
+      </button>
+      {% if q %}
+      <a href="?{% if filtre_paye %}paye={{ filtre_paye }}{% endif %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+        <span class="material-symbols-outlined text-sm">close</span>
+        Réinitialiser
+      </a>
+      {% endif %}
+      <div class="flex items-center gap-2 ml-2">
+        <a href="?{% if q %}q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if not filtre_paye %}bg-primary text-on-primary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">Tous</a>
+        <a href="?paye=0{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if filtre_paye == '0' %}bg-secondary text-on-secondary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">En attente</a>
+        <a href="?paye=1{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if filtre_paye == '1' %}bg-primary text-on-primary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">Payés</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tableau -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant">
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">TRD</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Projet</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Client</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Statut</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Paiement</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for dossier in dossiers %}
+          <tr class="hover:bg-primary/5 transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}'">
+            <td class="px-6 py-4 font-mono-data text-primary font-bold">{{ dossier.TRD }}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.projet }}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.get_statut_display }}</td>
+            <td class="px-6 py-4">
+              {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Détails" onclick="event.stopPropagation()">
+                <span class="material-symbols-outlined text-[20px]">visibility</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-10 text-center text-on-surface-variant">Aucun dossier ne correspond à votre recherche.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex items-center justify-between px-6 py-4 border-t border-outline-variant text-body-sm">
+      <span class="text-on-surface-variant">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high">Précédent</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high">Suivant</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

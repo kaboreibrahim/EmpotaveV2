@@ -4,6 +4,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.conteneurs.models import Flexitanks, ISOTanks
+from apps.conteneurs.services import verifier_paiement
 from apps.DashboardAgentEmpotage.forms import FlexitankEmpotageForm, ISOTankEmpotageForm
 
 CREATE_TEMPLATE = 'DashboardAgentEmpotage/dossier_empotage/create.html'
@@ -29,6 +30,7 @@ def _conteneur_ouvert_a_l_empotage(request, pk):
         est_iso = False
     if conteneur is None:
         raise Http404("Conteneur introuvable ou non attribué à cet agent.")
+    verifier_paiement(conteneur.dossier)
     if conteneur.dossier.statut not in STATUTS_OUVERTS_A_L_EMPOTAGE:
         raise Http404("Ce dossier n'est plus ouvert à la saisie d'empotage.")
     return conteneur, est_iso

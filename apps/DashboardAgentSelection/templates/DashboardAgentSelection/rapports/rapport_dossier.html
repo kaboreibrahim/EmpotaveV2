@@ -111,7 +111,8 @@
 <body>
 
   <div class="header">
-    <img class="logo" src="{{ logo_url }}" alt="Oils of Africa">
+    <img class="logo logo-otl" src="{{ otl_logo_url }}" alt="OTL & Bulk Liquid">
+
     <div class="titre">
       <h1>
         {% if dossier.type_conteneur == 'ISO_20_pieds' %}
@@ -125,7 +126,7 @@
         {% if drapeau_url %}<img class="drapeau" src="{{ drapeau_url }}" alt="{{ dossier.Id_Pays.nom }}">{% endif %}
       </p>
     </div>
-    <img class="logo logo-otl" src="{{ otl_logo_url }}" alt="OTL & Bulk Liquid">
+    <img class="logo" src="{{ logo_url }}" alt="Oils of Africa">
   </div>
 
   <div class="infos">
@@ -197,9 +198,10 @@
     </div>
     <div class="signature">
       <div class="ligne"></div>
-      <span class="label">Directeur d'exploitation</span>
+      <span class="label">Directeur d'exploitation OOA</span>
     </div>
   </div>
 
 </body>
 </html>
+

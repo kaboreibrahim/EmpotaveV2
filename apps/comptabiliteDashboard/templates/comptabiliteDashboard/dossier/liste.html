@@ -1,0 +1,231 @@
+{% extends 'comptabiliteDashboard/base_comptabilite.html' %}
+
+{% block title %}Dossiers — Comptabilité{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto space-y-gutter">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface">Dossiers</h2>
+      <p class="text-on-surface-variant text-body-sm mt-1">Suivi des dossiers en attente de paiement et des dossiers payés.</p>
+    </div>
+    <!-- Vue liste / carte -->
+    <div id="vue-toggle" class="flex bg-surface-container-lowest border border-outline-variant rounded-lg p-1 gap-1" role="group" aria-label="Choix de la vue">
+      <button type="button" data-vue="liste" class="vue-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="true">
+        <span class="material-symbols-outlined text-[18px]">view_list</span>
+        Liste
+      </button>
+      <button type="button" data-vue="carte" class="vue-toggle-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="false">
+        <span class="material-symbols-outlined text-[18px]">grid_view</span>
+        Cartes
+      </button>
+    </div>
+  </div>
+
+  <!-- Recherche + filtre paiement -->
+  <form method="get" class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex flex-wrap items-center gap-4 shadow-sm">
+    <div class="relative flex-1 min-w-[260px]">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        placeholder="Recherche (TRD, projet, booking, client...)"
+        class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-sm text-body-sm rounded-lg"
+      />
+    </div>
+    {% if filtre_paye %}<input type="hidden" name="paye" value="{{ filtre_paye }}">{% endif %}
+    <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-all">
+      <span class="material-symbols-outlined text-sm">search</span>
+      Rechercher
+    </button>
+    {% if q %}
+    <a href="?{% if filtre_paye %}paye={{ filtre_paye }}{% endif %}" class="inline-flex items-center justify-center gap-2 px-5 py-2 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+      <span class="material-symbols-outlined text-sm">close</span>
+      Réinitialiser
+    </a>
+    {% endif %}
+    <div class="flex items-center gap-2 ml-auto">
+      <a href="?{% if q %}q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if not filtre_paye %}bg-primary text-on-primary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">Tous</a>
+      <a href="?paye=0{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if filtre_paye == '0' %}bg-secondary text-on-secondary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">En attente</a>
+      <a href="?paye=1{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 rounded-lg text-label-md font-bold {% if filtre_paye == '1' %}bg-primary text-on-primary{% else %}border border-outline-variant text-on-surface-variant hover:bg-surface-container-high{% endif %}">Payés</a>
+    </div>
+  </form>
+
+  <!-- Squelette de chargement (affiché brièvement, puis remplacé par la vue choisie) -->
+  <section id="vue-squelette" class="space-y-3">
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+    <div class="skeleton-block h-14 rounded-xl"></div>
+  </section>
+
+  <!-- Vue Liste (table) -->
+  <section id="vue-liste" class="hidden bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant">
+          <tr>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">TRD</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Projet</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Client</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Statut</th>
+            <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Paiement</th>
+            <th class="px-4 py-compact-row"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for dossier in dossiers %}
+          <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+            <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
+            <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
+            <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+            <td class="px-4 py-standard-row text-body-sm">{{ dossier.get_statut_display }}</td>
+            <td class="px-4 py-standard-row">
+              {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+            </td>
+            <td class="px-4 py-standard-row text-right">
+              <a href="{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail" onclick="event.stopPropagation()">
+                <span class="material-symbols-outlined text-xl">visibility</span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-12 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">folder_off</span>
+              Aucun dossier trouvé.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex items-center justify-between px-4 py-3 border-t border-outline-variant text-body-sm">
+      <span class="text-on-surface-variant">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high">Précédent</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high">Suivant</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Vue Cartes -->
+  <section id="vue-carte" class="hidden space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+      {% for dossier in dossiers %}
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <a href="{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}" class="font-bold text-primary hover:underline truncate block">{{ dossier.projet }}</a>
+            <div class="text-body-sm text-on-surface-variant font-label-md">{{ dossier.TRD }}</div>
+          </div>
+          {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+        </div>
+
+        <dl class="grid grid-cols-2 gap-y-2 text-body-sm">
+          <dt class="text-on-surface-variant">Client</dt>
+          <dd class="text-right truncate">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</dd>
+          <dt class="text-on-surface-variant">Statut</dt>
+          <dd class="text-right">{{ dossier.get_statut_display }}</dd>
+          <dt class="text-on-surface-variant">Créé le</dt>
+          <dd class="text-right">{{ dossier.date_created|date:"d/m/Y" }}</dd>
+          {% if dossier.est_paye %}
+          <dt class="text-on-surface-variant">Payé le</dt>
+          <dd class="text-right">{{ dossier.date_paiement|date:"d/m/Y" }}</dd>
+          {% endif %}
+        </dl>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant" onclick="event.stopPropagation()">
+          <a href="{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}"
+             class="px-3 py-1 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors"
+             title="Voir le détail">
+            <span class="material-symbols-outlined text-sm align-middle">visibility</span>
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full bg-surface-container-lowest rounded-xl border border-outline-variant px-6 py-10 text-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">folder_off</span>
+        Aucun dossier trouvé.
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="p-4 bg-surface-container-lowest border border-outline-variant rounded-xl flex justify-between items-center">
+      <span class="text-body-sm text-on-surface-variant">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Précédent</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if filtre_paye %}&paye={{ filtre_paye }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-3 py-1 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">Suivant</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+  .vue-toggle-btn {
+    color: rgb(var(--color-on-surface-variant));
+  }
+  .vue-toggle-btn.actif {
+    background-color: rgb(var(--color-primary));
+    color: rgb(var(--color-on-primary));
+  }
+</style>
+
+<script>
+  // Bascule vue liste / carte, persistée en localStorage. Un court passage par le
+  // squelette masque le remplacement du contenu (au chargement initial et lors du switch).
+  (function () {
+    const squelette = document.getElementById('vue-squelette');
+    const vueListe = document.getElementById('vue-liste');
+    const vueCarte = document.getElementById('vue-carte');
+    const boutons = document.querySelectorAll('.vue-toggle-btn');
+    const STORAGE_KEY = 'comptabiliteDossierVue';
+
+    function appliquerVue(vue) {
+      boutons.forEach(function (btn) {
+        const estActif = btn.dataset.vue === vue;
+        btn.classList.toggle('actif', estActif);
+        btn.setAttribute('aria-pressed', estActif ? 'true' : 'false');
+      });
+      vueListe.classList.toggle('hidden', vue !== 'liste');
+      vueCarte.classList.toggle('hidden', vue !== 'carte');
+    }
+
+    function afficherVue(vue) {
+      squelette.classList.remove('hidden');
+      vueListe.classList.add('hidden');
+      vueCarte.classList.add('hidden');
+      setTimeout(function () {
+        appliquerVue(vue);
+        squelette.classList.add('hidden');
+      }, 300);
+    }
+
+    const vueInitiale = localStorage.getItem(STORAGE_KEY) === 'carte' ? 'carte' : 'liste';
+    afficherVue(vueInitiale);
+
+    boutons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const vue = btn.dataset.vue;
+        localStorage.setItem(STORAGE_KEY, vue);
+        afficherVue(vue);
+      });
+    });
+  })();
+</script>
+{% endblock %}

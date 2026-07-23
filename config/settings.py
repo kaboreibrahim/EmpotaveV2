@@ -11,6 +11,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / '.env')
 
+# Surcharge locale pour le développement (non versionnée) :
+# permet de pointer vers une base Postgres locale sans toucher
+# aux identifiants de production dans .env
+load_dotenv(BASE_DIR / '.env.dev', override=True)
+
 # ---------------------------------------------------------------
 # Patch MySQL (conservé au cas où on rebascule sur MySQL)
 # ---------------------------------------------------------------
@@ -68,6 +73,7 @@ INSTALLED_APPS = [
     'apps.DashboardAgentEmpotage',
     'apps.DashboardClient',
     'apps.DashboardPersonnel',
+    'apps.comptabiliteDashboard',
     'apps.error'
 
 ]
@@ -107,6 +113,7 @@ TEMPLATES = [
             os.path.join(BASE_DIR, 'apps/DashboardAgentEmpotage/templates'),
             os.path.join(BASE_DIR, 'apps/DashboardClient/templates'),
             os.path.join(BASE_DIR, 'apps/DashboardPersonnel/templates'),
+            os.path.join(BASE_DIR, 'apps/comptabiliteDashboard/templates'),
             os.path.join(BASE_DIR, 'apps/documents/templates'),
             os.path.join(BASE_DIR, 'apps/notifications/templates'),
             os.path.join(BASE_DIR, 'apps/error/templates'),
@@ -202,6 +209,7 @@ EMAIL_BACKEND = os.environ.get(
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 

@@ -6,9 +6,10 @@ Adapté depuis gestion_conteneurs/urls.py.
 - Statiques et médias en dev
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 
 
@@ -22,6 +23,7 @@ urlpatterns = [
     path('DashboardClient/', include('apps.DashboardClient.urls')),
     path('DashboardAgentSelection/', include('apps.DashboardAgentSelection.urls')),
     path('DashboardAgentEmpotage/', include('apps.DashboardAgentEmpotage.urls')),
+    path('comptabiliteDashboard/', include('apps.comptabiliteDashboard.urls')),
     path('notifications/', include('apps.notification.urls')),
 ]
 
@@ -29,7 +31,13 @@ urlpatterns = [
 
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += static(settings.MEDIA_URL,  document_root=settings.MEDIA_ROOT)
+
+# Sert les médias (photos uploadées, etc.) même quand DEBUG=False :
+# static() ne génère aucune route hors DEBUG, mais cet hébergement
+# ne dispose pas d'un serveur web séparé pour /medias/.
+urlpatterns += [
+    re_path(r'^medias/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
 
 
 # ---------------------------------------------------------------

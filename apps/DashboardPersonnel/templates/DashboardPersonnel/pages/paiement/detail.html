@@ -1,0 +1,86 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Dossier {{ dossier.TRD }} — Paiement{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+    <a class="hover:text-primary" href="{% url 'DashboardPersonnel:paiement-liste' %}">Paiements</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="text-primary font-bold">{{ dossier.TRD }}</span>
+  </nav>
+
+  <!-- En-tete -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-wrap items-center gap-8 shadow-sm">
+    <div class="flex flex-col">
+      <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Reference (TRD)</span>
+      <span class="font-mono-data font-bold text-primary">{{ dossier.TRD }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Client</span>
+      <span class="text-headline-sm font-headline-sm text-on-surface">
+        {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}
+      </span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Projet</span>
+      <span class="text-body-md text-on-surface">{{ dossier.projet }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Statut du dossier</span>
+      <span class="text-body-md text-on-surface">{{ dossier.get_statut_display }}</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest">Paiement</span>
+      {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+    </div>
+    <div class="ml-auto">
+      <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">folder_open</span>
+        Voir le dossier complet
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Informations paiement (lecture seule) -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3 shadow-sm">
+      <h4 class="flex items-center gap-2 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+        <span class="material-symbols-outlined text-lg text-primary">payments</span>Paiement
+      </h4>
+      {% if dossier.est_paye %}
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Date de paiement</dt><dd class="font-bold text-right">{{ dossier.date_paiement|date:"d F Y H:i" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Montant</dt><dd class="font-bold text-right">{% if dossier.montant_paiement %}{{ dossier.montant_paiement }}{% else %}—{% endif %}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Validé par</dt><dd class="font-bold text-right">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</dd></div>
+        <div class="flex flex-col gap-1"><dt class="text-on-surface-variant">Commentaire</dt><dd class="font-bold text-right">{{ dossier.commentaire_paiement|default:"—" }}</dd></div>
+        <div class="flex justify-between items-center gap-4">
+          <dt class="text-on-surface-variant">Preuve de paiement</dt>
+          <dd class="text-right">
+            {% if dossier.preuve_paiement %}
+            <a href="{{ dossier.preuve_paiement.url }}" target="_blank" class="inline-flex items-center gap-1 text-primary hover:underline font-bold">
+              <span class="material-symbols-outlined text-sm">picture_as_pdf</span>Voir le PDF
+            </a>
+            {% else %}—{% endif %}
+          </dd>
+        </div>
+      </dl>
+      {% else %}
+      <p class="text-body-sm text-on-surface-variant">Ce dossier est en attente de validation du paiement par le service comptable. Tant que le paiement n'est pas validé, les agents ne peuvent pas démarrer leur traitement.</p>
+      {% endif %}
+    </div>
+
+    <!-- Acteurs -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3 shadow-sm">
+      <h4 class="flex items-center gap-2 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">
+        <span class="material-symbols-outlined text-lg text-primary">group</span>Agents et client
+      </h4>
+      <dl class="space-y-2 text-body-md text-on-surface">
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Client</dt><dd class="font-bold text-right">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Agent de sélection</dt><dd class="font-bold text-right">{{ dossier.Id_Agent_selection|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Agent d'habillage &amp; empotage</dt><dd class="font-bold text-right">{{ dossier.Id_Agent_empotage|default:"—" }}</dd></div>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

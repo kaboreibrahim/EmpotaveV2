@@ -4,7 +4,7 @@ cffi==2.1.0
 charset-normalizer==3.4.9
 crispy-bootstrap4==2024.1
 cssselect2==0.9.0
-Django==5.0.14
+Django==5.2.16
 django-braces==1.17.0
 django-crispy-forms==2.4
 django-filter==24.3

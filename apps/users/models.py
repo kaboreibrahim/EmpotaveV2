@@ -12,14 +12,16 @@ Changements vs version précédente :
 """
 import uuid
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db import models
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
 from django_lifecycle import LifecycleModel
 from safedelete.models import SafeDeleteModel, SOFT_DELETE_CASCADE
+from safedelete.signals import post_softdelete
 
 from core.mixins import TimestampMixin
 from apps.common.fields import WebPImageField
@@ -42,6 +44,7 @@ class Users(AbstractUser, SafeDeleteModel):
         ('agent_empotage',  'Agent Habillage & Empotage'),
         ('personnel',        'Personnel'),
         ('client',          'Client'),
+        ('comptable',       'Comptable'),
     ]
 
     numero       = models.CharField(max_length=20, blank=True, null=True)
@@ -186,6 +189,42 @@ class Agent_empotage(SafeDeleteModel, LifecycleModel, TimestampMixin):
 
     def __str__(self):
         return str(self.user)
+
+
+# =============================================================================
+# PERSONNEL COMPTABLE
+# =============================================================================
+
+class PersonnelComptable(SafeDeleteModel, LifecycleModel, TimestampMixin):
+    """Wrapper lié à Users pour le rôle Comptable (accès à comptabiliteDashboard,
+    validation des paiements)."""
+    _safedelete_policy = SOFT_DELETE_CASCADE
+    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='personnel_comptable')
+
+    class Meta:
+        verbose_name        = "Personnel comptable"
+        verbose_name_plural = "Personnel comptable"
+
+    def __str__(self):
+        return str(self.user)
+
+
+@receiver(post_save, sender=PersonnelComptable)
+def personnel_comptable_created_handler(sender, instance, created, **kwargs):
+    """Ajoute automatiquement l'utilisateur au groupe Django "Comptable"
+    (droits d'accès à comptabiliteDashboard + validation des paiements)."""
+    if created:
+        groupe, _ = Group.objects.get_or_create(name='Comptable')
+        instance.user.groups.add(groupe)
+
+
+@receiver([post_delete, post_softdelete], sender=PersonnelComptable)
+def personnel_comptable_deleted_handler(sender, instance, **kwargs):
+    """Retire l'utilisateur du groupe "Comptable" que la suppression soit
+    un soft-delete (cas normal) ou un delete définitif."""
+    groupe = Group.objects.filter(name='Comptable').first()
+    if groupe:
+        instance.user.groups.remove(groupe)
 
 
  

@@ -1,0 +1,519 @@
+{% extends 'comptabiliteDashboard/base_comptabilite.html' %}
+
+{% block title %}Dashboard Comptabilité{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto space-y-gutter">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h2 class="text-headline-lg font-headline-lg text-on-surface">Bienvenue, {{ user.get_full_name|default:user.username }}</h2>
+      <p class="text-body-sm text-on-surface-variant mt-1">Suivi des dossiers en attente de paiement et des dossiers payés.</p>
+    </div>
+    <!-- Onglets -->
+    <div id="onglets-toggle" class="flex flex-wrap bg-surface-container-lowest border border-outline-variant rounded-lg p-1 gap-1" role="tablist" aria-label="Sections du dashboard">
+      <button type="button" data-onglet="vue-ensemble" class="onglet-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="true">
+        <span class="material-symbols-outlined text-[18px]">dashboard</span>
+        Vue d'ensemble
+      </button>
+      <button type="button" data-onglet="paiements" class="onglet-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="false">
+        <span class="material-symbols-outlined text-[18px]">payments</span>
+        Paiements
+      </button>
+      <button type="button" data-onglet="alertes" class="onglet-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="false">
+        <span class="material-symbols-outlined text-[18px]">warning</span>
+        Alertes
+        {% if dossiers_alerte_paiement %}
+        <span class="ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-on-error text-[10px] font-bold rounded-full">{{ dossiers_alerte_paiement|length }}</span>
+        {% endif %}
+      </button>
+      <button type="button" data-onglet="historique" class="onglet-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-label-md font-label-md transition-colors" aria-pressed="false">
+        <span class="material-symbols-outlined text-[18px]">history</span>
+        Historique
+      </button>
+    </div>
+  </div>
+
+  <!-- Squelette de chargement -->
+  <section id="onglet-squelette" class="space-y-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div class="skeleton-block h-24 rounded-xl"></div>
+      <div class="skeleton-block h-24 rounded-xl"></div>
+      <div class="skeleton-block h-24 rounded-xl"></div>
+      <div class="skeleton-block h-24 rounded-xl"></div>
+    </div>
+    <div class="skeleton-block h-64 rounded-xl"></div>
+  </section>
+
+  <!-- ============================== VUE D'ENSEMBLE ============================== -->
+  <section id="onglet-vue-ensemble" class="hidden space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary">hourglass_top</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">En attente de paiement</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">{{ total_en_attente }}</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Payés</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">{{ total_payes }}</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-surface-variant">folder</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Total des dossiers</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">{{ total_dossiers }}</p>
+          <p class="text-label-sm text-on-surface-variant">{{ pct_payes }}% payés</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-tertiary">payments</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Encaissé en {{ mois_courant_label }}</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">{{ montant_ce_mois|floatformat:0 }}</p>
+          <p class="text-label-sm text-on-surface-variant">Total encaissé : {{ montant_total|floatformat:0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Paiement</h3>
+        <p class="text-label-sm text-on-surface-variant mb-4">{{ total_payes }} dossier{{ total_payes|pluralize }} payé{{ total_payes|pluralize }} sur {{ total_dossiers }}.</p>
+        {% if total_dossiers %}
+        <div class="h-56 relative"><canvas id="chart-paiement-donut"></canvas></div>
+        {% else %}
+        <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun dossier pour le moment.</p>
+        {% endif %}
+      </div>
+
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-4">Répartition par statut</h3>
+        {% if labels_statuts %}
+        <div class="h-56 relative"><canvas id="chart-statuts-donut"></canvas></div>
+        {% else %}
+        <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun dossier pour le moment.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PAIEMENTS ============================== -->
+  <section id="onglet-paiements" class="hidden space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full {% if evolution_pct >= 0 %}bg-primary/10{% else %}bg-error/10{% endif %} flex items-center justify-center">
+          <span class="material-symbols-outlined {% if evolution_pct >= 0 %}text-primary{% else %}text-error{% endif %}">
+            {% if evolution_pct >= 0 %}trending_up{% else %}trending_down{% endif %}
+          </span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Vs {{ mois_precedent_label }}</p>
+          <p class="text-headline-lg font-headline-lg {% if evolution_pct >= 0 %}text-primary{% else %}text-error{% endif %}">
+            {% if evolution_pct > 0 %}+{% endif %}{{ evolution_pct }}%
+          </p>
+          <p class="text-label-sm text-on-surface-variant">{{ montant_mois_precedent|floatformat:0 }} le mois passé</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary">schedule</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Délai moyen de paiement</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">
+            {% if delai_moyen_paiement is not None %}{{ delai_moyen_paiement }} j{% else %}—{% endif %}
+          </p>
+          <p class="text-label-sm text-on-surface-variant">entre création et validation</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary">payments</span>
+        </div>
+        <div>
+          <p class="text-label-sm text-on-surface-variant uppercase tracking-wider">Encaissé en {{ mois_courant_label }}</p>
+          <p class="text-headline-lg font-headline-lg text-on-surface">{{ montant_ce_mois|floatformat:0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Montant encaissé par mois</h3>
+        <p class="text-label-sm text-on-surface-variant mb-4">Paiements validés en {{ annee_courante }}.</p>
+        {% if montant_total %}
+        <div class="h-64"><canvas id="chart-montants-mois"></canvas></div>
+        {% else %}
+        <p class="text-body-sm text-on-surface-variant text-center py-16">Aucun paiement avec montant renseigné pour le moment.</p>
+        {% endif %}
+      </div>
+
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-4">Top clients</h3>
+        <div class="space-y-3">
+          {% for ligne in top_clients %}
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant text-label-sm font-bold flex items-center justify-center shrink-0">{{ forloop.counter }}</span>
+              <span class="text-body-sm truncate">{% if ligne.client %}{{ ligne.client.user.get_full_name|default:ligne.client.user.username }}{% else %}—{% endif %}</span>
+            </div>
+            <span class="text-body-sm font-bold text-on-surface shrink-0">{{ ligne.total|floatformat:0 }}</span>
+          </div>
+          {% empty %}
+          <p class="text-body-sm text-on-surface-variant text-center py-8">Aucun paiement avec montant renseigné.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+      <div class="flex items-center justify-between p-gutter pb-0">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Dossiers payés récemment</h3>
+        <a href="{% url 'comptabiliteDashboard:dossier-liste' %}?paye=1" class="text-label-sm text-primary hover:underline font-bold">Voir tout</a>
+      </div>
+      <div class="overflow-x-auto p-gutter">
+        <table class="w-full text-left border-collapse rounded-lg border border-outline-variant overflow-hidden">
+          <thead class="bg-surface-container-low border-b border-outline-variant">
+            <tr>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">TRD</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Projet</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Montant</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Payé le</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Comptable</th>
+              <th class="px-4 py-compact-row"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for dossier in dossiers_payes_recents %}
+            <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+              <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.montant_paiement %}{{ dossier.montant_paiement|floatformat:0 }}{% else %}—{% endif %}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_paiement|date:"d/m/Y H:i" }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</td>
+              <td class="px-4 py-standard-row text-right">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight">
+                  <span class="material-symbols-outlined text-[14px]">check_circle</span>Payé
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="px-4 py-10 text-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl block mb-2 opacity-40">payments</span>
+                Aucun dossier payé pour le moment.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== ALERTES ============================== -->
+  <section id="onglet-alertes" class="hidden space-y-6">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+      <div class="p-gutter pb-0 flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">warning</span>
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">En attente de paiement depuis plus de {{ jours_alerte_paiement }} jours</h3>
+      </div>
+      <p class="text-label-sm text-on-surface-variant px-gutter mt-1">Ces dossiers bloquent le démarrage du traitement des agents depuis longtemps.</p>
+      <div class="overflow-x-auto p-gutter">
+        <table class="w-full text-left border-collapse rounded-lg border border-outline-variant overflow-hidden">
+          <thead class="bg-error-container/40 border-b border-outline-variant">
+            <tr>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">TRD</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Projet</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Client</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Créé le</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">En attente depuis</th>
+              <th class="px-4 py-compact-row"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for dossier in dossiers_alerte_paiement %}
+            <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+              <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_created|date:"d/m/Y" }}</td>
+              <td class="px-4 py-standard-row">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>{{ dossier.date_created|timesince }}
+                </span>
+              </td>
+              <td class="px-4 py-standard-row text-right">
+                <a href="{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir le détail" onclick="event.stopPropagation()">
+                  <span class="material-symbols-outlined text-xl">visibility</span>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="px-4 py-10 text-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl block mb-2 opacity-40">task_alt</span>
+                Aucune alerte : aucun dossier en attente depuis plus de {{ jours_alerte_paiement }} jours.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+      <div class="flex items-center justify-between p-gutter pb-0">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Tous les dossiers en attente de paiement</h3>
+        <a href="{% url 'comptabiliteDashboard:dossier-liste' %}?paye=0" class="text-label-sm text-primary hover:underline font-bold">Voir tout</a>
+      </div>
+      <div class="overflow-x-auto p-gutter">
+        <table class="w-full text-left border-collapse rounded-lg border border-outline-variant overflow-hidden">
+          <thead class="bg-surface-container-low border-b border-outline-variant">
+            <tr>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">TRD</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Projet</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Client</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Créé le</th>
+              <th class="px-4 py-compact-row"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for dossier in dossiers_en_attente %}
+            <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+              <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_created|date:"d/m/Y" }}</td>
+              <td class="px-4 py-standard-row text-right">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight">
+                  <span class="material-symbols-outlined text-[14px]">hourglass_top</span>En attente
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-4 py-10 text-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl block mb-2 opacity-40">task_alt</span>
+                Aucun dossier en attente de paiement.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== HISTORIQUE ============================== -->
+  <section id="onglet-historique" class="hidden space-y-6">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+      <div class="flex items-center justify-between p-gutter pb-0">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Historique des paiements validés</h3>
+        <a href="{% url 'comptabiliteDashboard:dossier-liste' %}?paye=1" class="text-label-sm text-primary hover:underline font-bold">Voir tout</a>
+      </div>
+      <div class="overflow-x-auto p-gutter">
+        <table class="w-full text-left border-collapse rounded-lg border border-outline-variant overflow-hidden">
+          <thead class="bg-surface-container-low border-b border-outline-variant">
+            <tr>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">TRD</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Projet</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Client</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Montant</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Payé le</th>
+              <th class="px-4 py-compact-row text-label-md text-on-surface-variant uppercase">Comptable</th>
+              <th class="px-4 py-compact-row"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for dossier in dossiers_payes_recents %}
+            <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
+              <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.montant_paiement %}{{ dossier.montant_paiement|floatformat:0 }}{% else %}—{% endif %}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_paiement|date:"d/m/Y H:i" }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</td>
+              <td class="px-4 py-standard-row text-right">
+                {% if dossier.preuve_paiement %}
+                <a href="{{ dossier.preuve_paiement.url }}" target="_blank" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir la preuve PDF" onclick="event.stopPropagation()">
+                  <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="px-4 py-10 text-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl block mb-2 opacity-40">history</span>
+                Aucun paiement validé pour le moment.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+{{ labels_paiement|json_script:"data-labels-paiement" }}
+{{ valeurs_paiement|json_script:"data-valeurs-paiement" }}
+{{ couleurs_paiement|json_script:"data-couleurs-paiement" }}
+{{ labels_statuts|json_script:"data-labels-statuts" }}
+{{ valeurs_statuts|json_script:"data-valeurs-statuts" }}
+{{ couleurs_statuts|json_script:"data-couleurs-statuts" }}
+{{ labels_montants_mois|json_script:"data-labels-montants-mois" }}
+{{ valeurs_montants_mois|json_script:"data-valeurs-montants-mois" }}
+
+<style>
+  .onglet-btn {
+    color: rgb(var(--color-on-surface-variant));
+  }
+  .onglet-btn.actif {
+    background-color: rgb(var(--color-primary));
+    color: rgb(var(--color-on-primary));
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+  (function () {
+    // Bascule entre les 4 onglets thématiques, persistée en localStorage, avec un
+    // court passage par le squelette pour masquer le remplacement du contenu.
+    const squelette = document.getElementById('onglet-squelette');
+    const sections = {
+      'vue-ensemble': document.getElementById('onglet-vue-ensemble'),
+      'paiements': document.getElementById('onglet-paiements'),
+      'alertes': document.getElementById('onglet-alertes'),
+      'historique': document.getElementById('onglet-historique'),
+    };
+    const boutons = document.querySelectorAll('.onglet-btn');
+    const STORAGE_KEY = 'comptabiliteDashboardOnglet';
+    let graphiquesInitialises = false;
+
+    function appliquerOnglet(onglet) {
+      boutons.forEach(function (btn) {
+        const estActif = btn.dataset.onglet === onglet;
+        btn.classList.toggle('actif', estActif);
+        btn.setAttribute('aria-pressed', estActif ? 'true' : 'false');
+      });
+      Object.entries(sections).forEach(function ([nom, section]) {
+        section.classList.toggle('hidden', nom !== onglet);
+      });
+      if (onglet === 'vue-ensemble' || onglet === 'paiements') {
+        initialiserGraphiques();
+      }
+    }
+
+    function afficherOnglet(onglet) {
+      squelette.classList.remove('hidden');
+      Object.values(sections).forEach(function (section) { section.classList.add('hidden'); });
+      setTimeout(function () {
+        appliquerOnglet(onglet);
+        squelette.classList.add('hidden');
+      }, 300);
+    }
+
+    const ongletInitial = localStorage.getItem(STORAGE_KEY) || 'vue-ensemble';
+    afficherOnglet(sections[ongletInitial] ? ongletInitial : 'vue-ensemble');
+
+    boutons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const onglet = btn.dataset.onglet;
+        localStorage.setItem(STORAGE_KEY, onglet);
+        afficherOnglet(onglet);
+      });
+    });
+
+    function initialiserGraphiques() {
+      if (graphiquesInitialises || typeof Chart === 'undefined') return;
+      graphiquesInitialises = true;
+
+      Chart.defaults.font.family = 'Inter';
+      Chart.defaults.color = '#44474e';
+
+      const donutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+      };
+
+      const canvasPaiement = document.getElementById('chart-paiement-donut');
+      if (canvasPaiement) {
+        new Chart(canvasPaiement, {
+          type: 'doughnut',
+          data: {
+            labels: JSON.parse(document.getElementById('data-labels-paiement').textContent),
+            datasets: [{
+              data: JSON.parse(document.getElementById('data-valeurs-paiement').textContent),
+              backgroundColor: JSON.parse(document.getElementById('data-couleurs-paiement').textContent),
+              borderColor: '#faf9fd',
+              borderWidth: 2,
+            }],
+          },
+          options: donutOptions,
+        });
+      }
+
+      const canvasStatuts = document.getElementById('chart-statuts-donut');
+      if (canvasStatuts) {
+        new Chart(canvasStatuts, {
+          type: 'doughnut',
+          data: {
+            labels: JSON.parse(document.getElementById('data-labels-statuts').textContent),
+            datasets: [{
+              data: JSON.parse(document.getElementById('data-valeurs-statuts').textContent),
+              backgroundColor: JSON.parse(document.getElementById('data-couleurs-statuts').textContent),
+              borderColor: '#faf9fd',
+              borderWidth: 2,
+            }],
+          },
+          options: donutOptions,
+        });
+      }
+
+      const canvasMontantsMois = document.getElementById('chart-montants-mois');
+      if (canvasMontantsMois) {
+        const labelsMontantsMois = JSON.parse(document.getElementById('data-labels-montants-mois').textContent);
+        const valeursMontantsMois = JSON.parse(document.getElementById('data-valeurs-montants-mois').textContent);
+        const indexPicMontants = valeursMontantsMois.indexOf(Math.max(...valeursMontantsMois));
+        new Chart(canvasMontantsMois, {
+          type: 'bar',
+          data: {
+            labels: labelsMontantsMois.map((m) => m.slice(0, 3)),
+            datasets: [{
+              label: 'Montant encaissé',
+              data: valeursMontantsMois,
+              backgroundColor: valeursMontantsMois.map((_, i) => (i === indexPicMontants ? '#00450d' : '#aec7f7')),
+              borderRadius: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 } },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+      }
+    }
+  })();
+</script>
+{% endblock %}

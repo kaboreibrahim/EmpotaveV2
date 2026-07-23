@@ -1,0 +1,9 @@
+{% if dossier.est_paye %}
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight w-fit">
+  <span class="material-symbols-outlined text-[14px]">check_circle</span>Payé
+</span>
+{% else %}
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight w-fit">
+  <span class="material-symbols-outlined text-[14px]">hourglass_top</span>En attente de paiement
+</span>
+{% endif %}

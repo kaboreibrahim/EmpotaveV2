@@ -34,6 +34,7 @@
             <span class="w-1.5 h-1.5 rounded-full bg-error"></span>{{ dossier.get_statut_display }}
           </span>
         {% endif %}
+        {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
       </div>
     </div>
     <div class="flex items-center gap-3">
@@ -55,6 +56,26 @@
       {% endif %}
     </div>
   </section>
+
+  {% if dossier.commentaire_creation %}
+    <section class="flex items-start gap-3 p-4 bg-tertiary/10 border border-tertiary/20 rounded-xl">
+      <span class="material-symbols-outlined text-tertiary">description</span>
+      <div>
+        <p class="text-label-sm font-bold text-tertiary uppercase mb-1">Commentaire de création</p>
+        <p class="text-body-sm text-on-surface-variant whitespace-pre-line">{{ dossier.commentaire_creation }}</p>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if dossier.commentaire_soumission %}
+    <section class="flex items-start gap-3 p-4 bg-secondary/10 border border-secondary/20 rounded-xl">
+      <span class="material-symbols-outlined text-secondary">comment</span>
+      <div>
+        <p class="text-label-sm font-bold text-secondary uppercase mb-1">Commentaire de soumission</p>
+        <p class="text-body-sm text-on-surface-variant whitespace-pre-line">{{ dossier.commentaire_soumission }}</p>
+      </div>
+    </section>
+  {% endif %}
 
   <!-- KPI Cards & Répartition par état -->
   <section class="grid grid-cols-12 gap-gutter">
@@ -220,6 +241,17 @@
             value="{{ dossier.date_de_selection|date:'Y-m-d\TH:i'|default:'' }}"
             class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
           />
+          <label for="id_commentaire_soumission" class="block text-label-sm font-bold text-on-surface-variant uppercase mb-1 mt-4">
+            Commentaire
+          </label>
+          <textarea
+            id="id_commentaire_soumission"
+            name="commentaire_soumission"
+            rows="3"
+            required
+            placeholder="Ajoutez une remarque visible sur le dashboard..."
+            class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
+          >{{ dossier.commentaire_soumission }}</textarea>
           <div class="flex justify-end gap-3 mt-6">
             <button type="button" id="soumission-cancel" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
               Annuler
@@ -249,6 +281,10 @@
         document.addEventListener('keydown', function (event) {
           if (event.key === 'Escape') close();
         });
+
+        if (new URLSearchParams(window.location.search).get('soumettre') === '1') {
+          open();
+        }
       })();
     </script>
   {% endif %}

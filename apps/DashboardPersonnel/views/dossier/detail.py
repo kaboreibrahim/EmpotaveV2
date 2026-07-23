@@ -51,6 +51,7 @@ class DetailDossier(ModulePermissionRequiredMixin, DetailView):
 
         context['etapes_timeline'] = [
             {'label': 'Dossier créé', 'icone': 'folder_open', 'date': dossier.date_created, 'atteinte': True},
+            {'label': 'Paiement validé', 'icone': 'payments', 'date': dossier.date_paiement, 'atteinte': dossier.est_paye},
             {'label': 'Sélection', 'icone': 'fact_check', 'date': dossier.date_de_selection, 'atteinte': bool(dossier.date_de_selection)},
             {'label': 'Rapport soumis', 'icone': 'description', 'date': dossier.date_de_soumission_du_rapport, 'atteinte': bool(dossier.date_de_soumission_du_rapport)},
             {'label': 'Habillage & empotage', 'icone': 'inventory_2', 'date': dossier.date_de_empotage, 'atteinte': bool(dossier.date_de_empotage)},

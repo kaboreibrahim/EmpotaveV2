@@ -43,6 +43,10 @@
       <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight w-fit">{{ dossier.get_statut_display }}</span>
       {% endif %}
     </div>
+    <div class="flex flex-col">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Paiement</span>
+      {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+    </div>
     <div class="ml-auto flex items-center gap-3">
       {% if dossier.date_de_selection %}
       <a href="{% url 'DashboardAgentSelection:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport de sélection">
@@ -67,7 +71,7 @@
       <span class="font-bold text-body-md">Dossier annulé</span>
     </div>
     {% else %}
-    <div class="grid grid-cols-5">
+    <div class="grid grid-cols-6">
       {% for etape in etapes_timeline %}
       <div class="relative flex flex-col items-center text-center px-2">
         {% if not forloop.last %}
@@ -82,6 +86,13 @@
       </div>
       {% endfor %}
     </div>
+    {% if dossier.est_paye %}
+    <div class="mt-4 pt-4 border-t border-outline-variant text-body-sm text-on-surface-variant">
+      <span class="font-bold text-on-surface">Paiement validé</span> le {{ dossier.date_paiement|date:"d F Y H:i" }}
+      par {{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}.
+      {% if dossier.commentaire_creation %}<br>« {{ dossier.commentaire_creation }} »{% endif %}
+    </div>
+    {% endif %}
     {% endif %}
   </div>
 

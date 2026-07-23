@@ -30,6 +30,7 @@
             <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>{{ dossier.get_statut_display }}
           </span>
         {% endif %}
+        {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
       </div>
     </div>
     <div class="flex items-center gap-3">

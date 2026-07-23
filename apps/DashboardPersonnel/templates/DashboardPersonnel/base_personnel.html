@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>{% block title %}Dashboard Personnel{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}" />
 
   <script>
     // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
@@ -465,6 +466,12 @@
           <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
           <span class="text-label-md">Empotage</span>
         </a>   {% endcomment %}
+      {% if perms.conteneurs.can_voir_paiements %}
+      <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'DashboardPersonnel:dashboard-paiement' %}">
+        <span class="material-symbols-outlined" data-icon="payments">payments</span>
+        <span class="text-label-md">Paiements</span>
+      </a>
+      {% endif %}
       <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'DashboardPersonnel:document-liste' %}">
         <span class="material-symbols-outlined" data-icon="description">description</span>
         <span class="text-label-md">Documents</span>
@@ -619,7 +626,11 @@
             <p class="text-label-md font-bold text-on-surface">{{ user.get_full_name|default:user.username }}</p>
             <p class="text-label-sm text-on-surface-variant">{{ user.get_user_type_display|default:"Personnel" }}</p>
           </div>
+          {% if user.photo %}
+          <img src="{{ user.photo.url }}" alt="{{ user.get_full_name|default:user.username }}" class="w-9 h-9 rounded-full object-cover">
+          {% else %}
           <span class="material-symbols-outlined text-3xl text-primary" data-icon="account_circle">account_circle</span>
+          {% endif %}
         </button>
       </div>
     </header>

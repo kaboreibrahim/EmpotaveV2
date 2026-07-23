@@ -14,6 +14,7 @@ from weasyprint import HTML
 from apps.audit.models import AuditLog
 from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier, ISOTanks
+from apps.conteneurs.services import verifier_paiement
 from apps.DashboardAgentSelection.forms import PHOTOS_OBLIGATOIRES
 from apps.notification.services import notifier, notifier_personnel
 
@@ -102,6 +103,7 @@ def generate_dossier_report(request, dossier_id):
 def soumettre_dossier(request, dossier_id):
     """Clôture la sélection : génère le rapport et l'envoie par email à l'agent d'empotage."""
     dossier = get_object_or_404(Dossier, id=dossier_id)
+    verifier_paiement(dossier)
 
     if dossier.statut != 'selection_en_cours':
         messages.error(request, "Le dossier n'est pas dans un état valide pour être soumis.")
@@ -120,6 +122,11 @@ def soumettre_dossier(request, dossier_id):
         date_de_selection = timezone.make_aware(date_de_selection)
     dossier.date_de_selection = date_de_selection
 
+    commentaire = request.POST.get('commentaire_soumission', '').strip()
+    if not commentaire:
+        messages.error(request, "Veuillez renseigner un commentaire de soumission.")
+        return redirect('DashboardAgentSelection:dossier-detail', dossier_id=dossier.id)
+
     copie = []
     if dossier.Id_Agent_empotage and dossier.Id_Agent_empotage.user.email:
         copie.append(dossier.Id_Agent_empotage.user.email)
@@ -134,7 +141,8 @@ def soumettre_dossier(request, dossier_id):
         f"{expediteur_nom} et est prêt pour l'habillage & l'empotage.\n\n"
         f"Client : {dossier.id_client}\n"
         f"Pays : {dossier.Id_Pays.nom}\n\n"
-        "Le rapport PDF détaillant le dossier et ses conteneurs est joint à cet email.\n"
+        + (f"Commentaire de l'agent de sélection :\n{commentaire}\n\n" if commentaire else "")
+        + "Le rapport PDF détaillant le dossier et ses conteneurs est joint à cet email.\n"
         "Pour plus de détails, connectez-vous à https://empotage-oils-of-africa.net/login/"
     )
 
@@ -163,7 +171,7 @@ def soumettre_dossier(request, dossier_id):
         return redirect('DashboardAgentSelection:dossier-detail', dossier_id=dossier.id)
 
     dossier.demarrer_empotage()
-    dossier.soumettre_rapport()
+    dossier.soumettre_rapport(commentaire=commentaire)
     log_action(dossier, AuditLog.ACTION_SUBMIT, extra={'rapport': 'selection'})
 
     message_soumission = (

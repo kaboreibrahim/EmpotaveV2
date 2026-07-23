@@ -4,6 +4,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.conteneurs.models import Dossier
+from apps.conteneurs.services import verifier_paiement
 from apps.DashboardAgentSelection.forms import (
     FlexitankSelectionForm,
     ISOTankSelectionForm,
@@ -22,6 +23,7 @@ def _dossier_ouvert_a_la_selection(request, dossier_id):
     if not request.user.is_superuser:
         qs = qs.filter(Id_Agent_selection__user=request.user)
     dossier = get_object_or_404(qs, id=dossier_id)
+    verifier_paiement(dossier)
     if dossier.statut not in STATUTS_OUVERTS_A_LA_SELECTION:
         raise Http404("Ce dossier n'est plus ouvert à l'ajout de conteneurs.")
     return dossier

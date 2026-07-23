@@ -7,6 +7,7 @@ from .models import (
     Client,
     CodeVerication,
     Personnel,
+    PersonnelComptable,
     Users,
 )
 
@@ -102,4 +103,9 @@ class AgentSelectionAdmin(UserWrapperAdmin):
 
 @admin.register(Agent_empotage)
 class AgentEmpotageAdmin(UserWrapperAdmin):
+    pass
+
+
+@admin.register(PersonnelComptable)
+class PersonnelComptableAdmin(UserWrapperAdmin):
     pass

@@ -47,7 +47,11 @@ class DossierForm(forms.ModelForm):
             'Id_Pays', 'Id_POL', 'Id_POD', 'Id_Commodite', 'Id_CompagnieMaritime',
             'Id_SiteSelection', 'Id_SiteEmpotage', 'id_client',
             'Id_Agent_selection', 'Id_Agent_empotage', 'Id_Agent_operationel',
+            'commentaire_creation',
         ]
+        widgets = {
+            'commentaire_creation': forms.HiddenInput(),
+        }
 
 
 class DossierOptionsMixin:
@@ -98,6 +102,10 @@ class CreerDossier(ModulePermissionRequiredMixin, DossierOptionsMixin, FormMessa
     success_message = "Le dossier « %(TRD)s » a ete cree avec succes."
 
     def form_valid(self, form):
+        if not form.cleaned_data.get('commentaire_creation', '').strip():
+            form.add_error(None, "Veuillez renseigner un commentaire de création.")
+            return self.form_invalid(form)
+
         form.instance.Id_Personnel = getattr(self.request.user, 'personel', None)
         response = super().form_valid(form)
         dossier = self.object

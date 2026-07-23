@@ -1,0 +1,105 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Suivi des paiements{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span class="text-primary font-bold">Paiements</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Suivi des paiements</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Vue d'ensemble des dossiers payés et en attente de paiement.</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:paiement-liste' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">list_alt</span>
+      <span class="font-label-md text-label-md uppercase">Voir tous les dossiers</span>
+    </a>
+  </div>
+
+  <!-- KPI -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">hourglass_top</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">En attente de paiement</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_en_attente }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Payés</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_payes }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">folder</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Total des dossiers</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_dossiers }}</p>
+        <p class="text-[11px] text-on-surface-variant">{{ pct_payes }}% payés</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">payments</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Encaissé ce mois</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ montant_ce_mois|floatformat:0 }}</p>
+        <p class="text-[11px] text-on-surface-variant">Total : {{ montant_total|floatformat:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Dossiers en attente de paiement</h3>
+        <a href="{% url 'DashboardPersonnel:paiement-liste' %}?paye=0" class="text-label-sm text-primary hover:underline font-bold">Voir tout</a>
+      </div>
+      <div class="space-y-2">
+        {% for dossier in dossiers_en_attente %}
+        <a href="{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}" class="flex items-center justify-between gap-3 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">
+          <div class="min-w-0">
+            <p class="font-bold text-on-surface truncate">{{ dossier.projet }}</p>
+            <p class="text-label-sm text-on-surface-variant font-mono-data">{{ dossier.TRD }} — {{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</p>
+          </div>
+          {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+        </a>
+        {% empty %}
+        <p class="text-body-sm text-on-surface-variant text-center py-8">Aucun dossier en attente de paiement.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Dossiers payés récemment</h3>
+        <a href="{% url 'DashboardPersonnel:paiement-liste' %}?paye=1" class="text-label-sm text-primary hover:underline font-bold">Voir tout</a>
+      </div>
+      <div class="space-y-2">
+        {% for dossier in dossiers_payes_recents %}
+        <a href="{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}" class="flex items-center justify-between gap-3 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">
+          <div class="min-w-0">
+            <p class="font-bold text-on-surface truncate">{{ dossier.projet }}</p>
+            <p class="text-label-sm text-on-surface-variant font-mono-data">{{ dossier.TRD }} — {{ dossier.date_paiement|date:"d/m/Y" }}</p>
+          </div>
+          {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+        </a>
+        {% empty %}
+        <p class="text-body-sm text-on-surface-variant text-center py-8">Aucun dossier payé pour le moment.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

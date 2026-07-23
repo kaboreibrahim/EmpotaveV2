@@ -16,6 +16,7 @@ ROLE_REDIRECTS = {
     'agent_empotage':  'DashboardAgentEmpotage:dashboard-agent-empotage',
     'client':          'DashboardClient:dashboard-client',
     'personnel':       'DashboardPersonnel:dashboard-personnel',
+    'comptable':       'comptabiliteDashboard:dashboard-comptabilite',
 }
 
 ROLE_LABELS = {
@@ -23,6 +24,7 @@ ROLE_LABELS = {
     'agent_empotage':  "Agent d'empotage",
     'client':          'Client',
     'personnel':       'Personnel',
+    'comptable':       'Comptable',
 }
 
 

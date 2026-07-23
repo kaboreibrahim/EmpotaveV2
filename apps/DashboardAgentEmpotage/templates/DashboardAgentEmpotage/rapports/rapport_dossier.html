@@ -121,7 +121,8 @@
 <body>
 
     <div class="header">
-    <img class="logo" src="{{ logo_url }}" alt="Oils of Africa">
+    <img class="logo logo-otl" src="{{ otl_logo_url }}" alt="OTL & Bulk Liquid">
+
     <div class="titre">
       <h1>
         {% if dossier.type_conteneur == 'ISO_20_pieds' %}
@@ -135,7 +136,8 @@
         {% if drapeau_url %}<img class="drapeau" src="{{ drapeau_url }}" alt="{{ dossier.Id_Pays.nom }}">{% endif %}
       </p>
     </div>
-    <img class="logo logo-otl" src="{{ otl_logo_url }}" alt="OTL & Bulk Liquid">
+      <img class="logo" src="{{ logo_url }}" alt="Oils of Africa">
+
   </div>
 
 
@@ -223,9 +225,9 @@
         <th>Température (°C)</th>
         <th>N° Heating pad</th>
         <th>N° Flexitank</th>
-        <th>Poids brute (kg)</th>
         <th>Poids équipements (kg)</th>
         <th>Poids net (kg)</th>
+        <th>Poids brute (kg)</th>
         <th>Plombs amateur</th>
         <th>Plombs Oils</th>
       </tr>
@@ -239,9 +241,9 @@
         <td>{{ conteneur.temperature|default:"—" }}</td>
         <td>{{ conteneur.numero_heating_pad|default:"—" }}</td>
         <td>{{ conteneur.numero_flexitank|default:"—" }}</td>
-        <td>{{ conteneur.poids_brute|default:"—" }}</td>
         <td>{{ conteneur.poids_equipements|default:"—" }}</td>
         <td>{{ conteneur.poids_net|default:"—" }}</td>
+        <td>{{ conteneur.poids_brute|default:"—" }}</td>
         <td>{{ conteneur.plombs_amateur|default:"—" }}</td>
         <td>{{ conteneur.plombs_oils|default:"—" }}</td>
       </tr>
@@ -261,9 +263,10 @@
     </div>
     <div class="signature">
       <div class="ligne"></div>
-      <span class="label">Directeur d'exploitation</span>
+      <span class="label">Directeur d'exploitation OOA </span>
     </div>
   </div>
 
 </body>
 </html>
+

@@ -111,6 +111,7 @@
             <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">POD</th>
             <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Conteneurs</th>
             <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Statut</th>
+            <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Paiement</th>
             <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider">Date création</th>
             <th class="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
           </tr>
@@ -162,6 +163,9 @@
               <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">{{ dossier.get_statut_display }}</span>
               {% endif %}
             </td>
+            <td class="px-6 py-4">
+              {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
+            </td>
             <td class="px-6 py-4 text-body-sm text-on-surface-variant">{{ dossier.date_created|date:"d M Y" }}</td>
             <td class="px-6 py-4 text-right">
               <a href="{% url 'DashboardPersonnel:dossier-detail' dossier.pk %}" class="p-2 inline-flex text-on-surface-variant hover:text-primary transition-colors" title="Détails">
@@ -174,7 +178,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Aucun dossier ne correspond à votre recherche.</td>
+            <td colspan="9" class="px-6 py-10 text-center text-on-surface-variant">Aucun dossier ne correspond à votre recherche.</td>
           </tr>
           {% endfor %}
         </tbody>
