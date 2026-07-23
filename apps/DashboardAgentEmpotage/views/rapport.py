@@ -1,9 +1,11 @@
 from decimal import Decimal
 from itertools import chain
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.staticfiles.finders import find as find_static
 from django.core.mail import EmailMultiAlternatives
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -123,19 +125,27 @@ def _nom_fichier_rapport(dossier):
     return f"Rapport_empotage_{prefixe}_{dossier.projet}.pdf".replace(' ', '_')
 
 
+def _uri_fichier_statique(chemin_relatif):
+    """Chemin file:// vers un fichier static, pour que WeasyPrint le lise directement du
+    disque plutôt que via une requête HTTP vers le serveur lui-même (source de blocages/
+    timeouts en prod, notamment sur des hébergements à un seul worker comme cPanel)."""
+    chemin = find_static(chemin_relatif)
+    return Path(chemin).as_uri() if chemin else None
+
+
 def _rendre_rapport_pdf(request, dossier):
     """Rend le template HTML du rapport avec le contexte du dossier et le convertit en PDF."""
     drapeau_url = None
     if dossier.Id_Pays.drapeau:
-        drapeau_url = request.build_absolute_uri(dossier.Id_Pays.drapeau.url)
+        drapeau_url = Path(dossier.Id_Pays.drapeau.path).as_uri()
 
     contexte = {
         'dossier': dossier,
         'conteneurs': _conteneurs_pour_rapport(dossier),
         'nombre_conteneurs': dossier.isotanks.count() + dossier.flexitanks.count(),
         'date_generation': timezone.now(),
-        'logo_url': request.build_absolute_uri(static('img/logo.jpg')),
-        'otl_logo_url': request.build_absolute_uri(static('img/otl.webp')),
+        'logo_url': _uri_fichier_statique('img/logo.jpg'),
+        'otl_logo_url': _uri_fichier_statique('img/otl.webp'),
         'drapeau_url': drapeau_url,
     }
     html_string = render_to_string(RAPPORT_TEMPLATE, contexte)
