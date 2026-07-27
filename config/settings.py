@@ -215,6 +215,56 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # ---------------------------------------------------------------
+# Logging — indispensable quand DEBUG=False : sans ça, les erreurs 500/400
+# (exceptions non gérées, Host non autorisé, etc.) ne sont visibles nulle
+# part, la page d'erreur personnalisée s'affiche mais la cause reste invisible.
+# ---------------------------------------------------------------
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'errors.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 Mo
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        # Exceptions non gerees dans une vue (statut 500) et reponses en
+        # erreur cote client (400/403/404) : couvre exactement ce qui
+        # declenche les pages d'erreur personnalisees d'apps/error.
+        'django.request': {
+            'handlers': ['console', 'error_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Host non autorise, CSRF invalide, et autres SuspiciousOperation —
+        # levees avant meme qu'une vue ne soit atteinte (ex. DisallowedHost).
+        'django.security': {
+            'handlers': ['console', 'error_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
+
+# ---------------------------------------------------------------
 # Web Push (VAPID / pywebpush) — voir apps/notification/README.md pour la
 # génération des clés et la configuration complète.
 # ---------------------------------------------------------------
