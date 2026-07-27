@@ -11,6 +11,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 
+from apps.notification.views import service_worker
 
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('DashboardAgentEmpotage/', include('apps.DashboardAgentEmpotage.urls')),
     path('comptabiliteDashboard/', include('apps.comptabiliteDashboard.urls')),
     path('notifications/', include('apps.notification.urls')),
+    path('sw.js', service_worker, name='service-worker'),
 ]
 
 

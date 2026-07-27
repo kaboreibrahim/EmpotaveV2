@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
-from apps.conteneurs.models import Dossier
+from apps.conteneurs.models import Dossier, Flexitanks, ISOTanks
 from apps.conteneurs.services import verifier_paiement
 from apps.DashboardAgentSelection.forms import (
     FlexitankSelectionForm,
@@ -12,6 +12,8 @@ from apps.DashboardAgentSelection.forms import (
 from apps.notification.services import notifier
 
 CREATE_TEMPLATE = 'DashboardAgentSelection/dossier/create.html'
+EDIT_TEMPLATE = 'DashboardAgentSelection/dossier/edit.html'
+SELECT_RELATED = ('dossier', 'dossier__Id_Pays')
 
 # Statuts pendant lesquels un agent de sélection peut encore ajouter des conteneurs.
 STATUTS_OUVERTS_A_LA_SELECTION = ('en_attente', 'selection_en_cours')
@@ -66,6 +68,54 @@ def ajouter_conteneur(request, dossier_id):
 
     return render(request, CREATE_TEMPLATE, {
         'dossier': dossier,
+        'form': form,
+        'est_iso': est_iso,
+    })
+
+
+def _conteneur_modifiable(request, pk):
+    """Récupère le conteneur (ISO Tank ou Flexitank), attribué à l'agent connecté et
+    dont le dossier est encore ouvert à la sélection (mêmes statuts que l'ajout)."""
+    qs_iso = ISOTanks.objects.select_related(*SELECT_RELATED)
+    qs_flexi = Flexitanks.objects.select_related(*SELECT_RELATED)
+    if not request.user.is_superuser:
+        qs_iso = qs_iso.filter(dossier__Id_Agent_selection__user=request.user)
+        qs_flexi = qs_flexi.filter(dossier__Id_Agent_selection__user=request.user)
+
+    conteneur = qs_iso.filter(pk=pk).first()
+    est_iso = True
+    if conteneur is None:
+        conteneur = qs_flexi.filter(pk=pk).first()
+        est_iso = False
+    if conteneur is None:
+        raise Http404("Conteneur introuvable ou non attribué à cet agent.")
+    if conteneur.dossier.statut not in STATUTS_OUVERTS_A_LA_SELECTION:
+        raise Http404("Ce dossier n'est plus ouvert à la modification de ses conteneurs.")
+    return conteneur, est_iso
+
+
+@login_required
+def modifier_conteneur(request, pk):
+    """Modifie un conteneur déjà sélectionné (référence, état, photos) tant que
+    le dossier reste ouvert à la sélection. Contrairement à `ajouter_conteneur`,
+    ne déclenche jamais `dossier.demarrer_selection()` ni la notification qui
+    l'accompagne : ce n'est pas un premier ajout."""
+    conteneur, est_iso = _conteneur_modifiable(request, pk)
+    FormClass = ISOTankSelectionForm if est_iso else FlexitankSelectionForm
+
+    if request.method == 'POST':
+        form = FormClass(request.POST, request.FILES, instance=conteneur)
+
+        if form.is_valid():
+            conteneur = form.save()
+            messages.success(request, f"Conteneur {conteneur.reference} modifié avec succès.")
+            return redirect('DashboardAgentSelection:conteneur-detail', pk=conteneur.pk)
+    else:
+        form = FormClass(instance=conteneur)
+
+    return render(request, EDIT_TEMPLATE, {
+        'dossier': conteneur.dossier,
+        'conteneur': conteneur,
         'form': form,
         'est_iso': est_iso,
     })

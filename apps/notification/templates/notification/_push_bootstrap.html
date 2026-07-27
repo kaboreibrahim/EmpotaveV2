@@ -1,0 +1,13 @@
+{% load static %}
+{% comment %}
+Enregistrement automatique du Service Worker + abonnement Web Push.
+À inclure une fois avant la fermeture de body dans chaque base template des dashboards.
+{% endcomment %}
+<div
+  id="push-notifications-config"
+  hidden
+  data-vapid-public-key="{{ VAPID_PUBLIC_KEY }}"
+  data-subscribe-url="{% url 'notification:push-subscribe' %}"
+  data-csrf-token="{{ csrf_token }}"
+></div>
+<script src="{% static 'notification/js/push-notifications.js' %}" defer></script>

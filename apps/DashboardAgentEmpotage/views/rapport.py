@@ -18,7 +18,7 @@ from apps.audit.models import AuditLog
 from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier, ISOTanks
 from apps.conteneurs.services import verifier_paiement
-from apps.notification.services import notifier, notifier_personnel
+from apps.notification.services import NotificationService
 
 
 RAPPORT_TEMPLATE = 'DashboardAgentEmpotage/rapports/rapport_dossier.html'
@@ -229,23 +229,11 @@ def soumettre_dossier(request, dossier_id):
         messages.error(request, f"Erreur lors de l'envoi de l'email : {exc}")
         return redirect('DashboardAgentEmpotage:dossier-detail', dossier_id=dossier.id)
 
+    ancien_statut = dossier.statut
     dossier.terminer()
     log_action(dossier, AuditLog.ACTION_SUBMIT, extra={'rapport': 'empotage'})
 
-    message_cloture = (
-        f"Le dossier {dossier.TRD} — {dossier.projet} a été empoté et clôturé par "
-        f"{request.user.get_full_name() or request.user.username}."
-    )
-    notifier(
-        [dossier.Id_Agent_selection.user if dossier.Id_Agent_selection else None],
-        message_cloture,
-    )
-    notifier_personnel(message_cloture)
-    notifier(
-        dossier.id_client.user,
-        f"Votre dossier {dossier.TRD} — {dossier.projet} est terminé : "
-        "l'habillage & l'empotage sont achevés. Le rapport est disponible.",
-    )
+    NotificationService.notify_status_changed(dossier, ancien_statut, dossier.statut)
 
     messages.success(request, f"Dossier {dossier.projet} clôturé avec succès.")
     return redirect('DashboardAgentEmpotage:dossier-liste')

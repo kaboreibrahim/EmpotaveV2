@@ -56,7 +56,7 @@
       <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Poids net</span>
       <span class="font-mono-data text-mono-data text-on-surface">{{ conteneur.poids_net|default:"—" }} kg</span>
     </div>
-    <div class="ml-auto flex items-center gap-3">
+    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-3">
       <a href="{% url 'DashboardPersonnel:dossier-detail' conteneur.dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
         <span class="material-symbols-outlined text-sm">arrow_back</span>
         Retour au dossier

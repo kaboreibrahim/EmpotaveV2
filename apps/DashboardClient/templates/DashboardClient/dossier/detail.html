@@ -47,7 +47,7 @@
       <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Paiement</span>
       {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
     </div>
-    <div class="ml-auto flex items-center gap-3">
+    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-3">
       {% if dossier.date_de_selection %}
       <a href="{% url 'DashboardAgentSelection:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport de sélection">
         <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
@@ -71,11 +71,11 @@
       <span class="font-bold text-body-md">Dossier annulé</span>
     </div>
     {% else %}
-    <div class="grid grid-cols-6">
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-y-6">
       {% for etape in etapes_timeline %}
       <div class="relative flex flex-col items-center text-center px-2">
         {% if not forloop.last %}
-        <div class="absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
+        <div class="hidden sm:block absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
         {% endif %}
         <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2
           {% if etape.atteinte %}bg-primary border-primary text-on-primary{% else %}bg-surface-container-lowest border-outline-variant text-on-surface-variant{% endif %}">

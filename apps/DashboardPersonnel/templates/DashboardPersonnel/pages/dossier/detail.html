@@ -49,7 +49,7 @@
       <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Paiement</span>
       {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
     </div>
-    <div class="ml-auto flex items-center gap-3">
+    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-3">
       <a href="{% url 'DashboardAgentSelection:dossier-rapport' dossier.pk %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold" title="Télécharger le rapport de sélection">
         <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
         Rapport sélection
@@ -71,6 +71,11 @@
         <span class="material-symbols-outlined text-sm">undo</span>
         Rétrograder
       </button>
+      {% elif dossier.statut == 'empotage_en_cours' %}
+      <button type="button" id="retour-selection-open" class="flex items-center gap-2 px-4 py-2 bg-error text-on-error hover:opacity-90 transition-opacity rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">undo</span>
+        Retour en sélection
+      </button>
       {% endif %}
     </div>
   </div>
@@ -83,11 +88,11 @@
       <span class="font-bold text-body-md">Dossier annulé</span>
     </div>
     {% else %}
-    <div class="grid grid-cols-6">
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-y-6">
       {% for etape in etapes_timeline %}
       <div class="relative flex flex-col items-center text-center px-2">
         {% if not forloop.last %}
-        <div class="absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
+        <div class="hidden sm:block absolute top-5 left-1/2 w-full h-0.5 {% if etape.atteinte %}bg-primary{% else %}bg-outline-variant{% endif %}"></div>
         {% endif %}
         <div class="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2
           {% if etape.atteinte %}bg-primary border-primary text-on-primary{% else %}bg-surface-container-lowest border-outline-variant text-on-surface-variant{% endif %}">
@@ -435,8 +440,14 @@
       Le dossier repassera au statut « Empotage en cours ». Expliquez la raison de la rétrogradation :
       ce commentaire sera envoyé à l'agent d'empotage.
     </p>
-    <form method="post" action="{% url 'DashboardPersonnel:dossier-retrograder' dossier.id %}">
+    <form method="post" action="{% url 'DashboardPersonnel:dossier-retrograder' dossier.id %}"
+          data-offline-form
+          data-offline-kind="dossier_retrograder"
+          data-ajax-url="{% url 'DashboardPersonnel:dossier-retrograder-ajax' dossier.id %}"
+          data-success-redirect="{% url 'DashboardPersonnel:dossier-detail' dossier.id %}"
+          data-date-modifier="{{ dossier.date_modifier|date:'U' }}">
       {% csrf_token %}
+      <div data-offline-status class="hidden rounded-lg border p-3 mb-3 text-label-sm flex items-start gap-2"></div>
       <label for="id_commentaire" class="block text-label-sm font-bold text-on-surface-variant uppercase mb-1">
         Commentaire <span class="text-error">*</span>
       </label>
@@ -466,6 +477,71 @@
     const modal = document.getElementById('retrogradation-modal');
     const cancelBtn = document.getElementById('retrogradation-cancel');
     const overlay = document.getElementById('retrogradation-overlay');
+    if (!openBtn || !modal) return;
+
+    function open() { modal.classList.remove('hidden'); }
+    function close() { modal.classList.add('hidden'); }
+
+    openBtn.addEventListener('click', open);
+    cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) close();
+    });
+  })();
+</script>
+{% endif %}
+
+{% if dossier.statut == 'empotage_en_cours' %}
+<!-- Popup de retour en selection : commentaire obligatoire, envoye a l'agent de selection -->
+<div id="retour-selection-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+  <div id="retour-selection-overlay" class="absolute inset-0 bg-black/50"></div>
+  <div class="relative bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl w-full max-w-md p-6">
+    <h3 class="text-headline-md font-headline-md text-error mb-1">Retourner le dossier en sélection</h3>
+    <p class="text-body-sm text-on-surface-variant mb-4">
+      Le dossier repassera au statut « Sélection en cours ». Expliquez la raison du retour :
+      ce commentaire sera envoyé à l'agent de sélection.
+    </p>
+    <form method="post" action="{% url 'DashboardPersonnel:dossier-retour-selection' dossier.id %}"
+          data-offline-form
+          data-offline-kind="dossier_retour_selection"
+          data-ajax-url="{% url 'DashboardPersonnel:dossier-retour-selection-ajax' dossier.id %}"
+          data-success-redirect="{% url 'DashboardPersonnel:dossier-detail' dossier.id %}"
+          data-date-modifier="{{ dossier.date_modifier|date:'U' }}">
+      {% csrf_token %}
+      <div data-offline-status class="hidden rounded-lg border p-3 mb-3 text-label-sm flex items-start gap-2"></div>
+      <label for="id_commentaire_retour_selection" class="block text-label-sm font-bold text-on-surface-variant uppercase mb-1">
+        Commentaire <span class="text-error">*</span>
+      </label>
+      <textarea
+        id="id_commentaire_retour_selection"
+        name="commentaire"
+        rows="4"
+        required
+        placeholder="Ex. : le conteneur MSKU1234567 n'a pas l'état attendu, merci de vérifier la sélection."
+        class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+      ></textarea>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button" id="retour-selection-cancel" class="px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+          Annuler
+        </button>
+        <button type="submit" class="flex items-center gap-2 px-6 py-2 bg-error text-on-error font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined">undo</span> Confirmer le retour en sélection
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const openBtn = document.getElementById('retour-selection-open');
+    const modal = document.getElementById('retour-selection-modal');
+    const cancelBtn = document.getElementById('retour-selection-cancel');
+    const overlay = document.getElementById('retour-selection-overlay');
     if (!openBtn || !modal) return;
 
     function open() { modal.classList.remove('hidden'); }

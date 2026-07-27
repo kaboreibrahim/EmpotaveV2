@@ -34,7 +34,7 @@
       <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Paiement</span>
       {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
     </div>
-    <div class="ml-auto flex items-center gap-3">
+    <div class="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-3">
       {% if not dossier.est_paye and peut_valider %}
       <button type="button" id="paiement-open" class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-label-md font-bold">
         <span class="material-symbols-outlined text-sm">payments</span>

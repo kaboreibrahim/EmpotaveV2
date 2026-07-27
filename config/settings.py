@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'apps.conteneurs',
     'apps.documents',
     'apps.notification',
+    'apps.offline_sync',
     'apps.DashboardAgentSelection',
     'apps.DashboardAgentEmpotage',
     'apps.DashboardClient',
@@ -212,6 +213,14 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# ---------------------------------------------------------------
+# Web Push (VAPID / pywebpush) — voir apps/notification/README.md pour la
+# génération des clés et la configuration complète.
+# ---------------------------------------------------------------
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_ADMIN_EMAIL = os.environ.get('VAPID_ADMIN_EMAIL', '')
 
 # ---------------------------------------------------------------
 # Messages Bootstrap

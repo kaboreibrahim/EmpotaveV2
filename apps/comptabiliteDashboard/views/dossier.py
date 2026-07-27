@@ -11,7 +11,7 @@ from django.views.generic import DetailView, ListView
 from apps.audit.models import AuditLog
 from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier
-from apps.notification.services import notifier, notifier_personnel
+from apps.notification.services import NotificationService
 
 from ..mixins import ComptableRequiredMixin, est_comptable
 
@@ -135,18 +135,7 @@ def valider_paiement(request, dossier_id):
     )
     log_action(dossier, AuditLog.ACTION_UPDATE, extra={'evenement': 'paiement_valide'})
 
-    message_deblocage = (
-        f"Le paiement du dossier {dossier.TRD} — {dossier.projet} a été validé : "
-        "le traitement peut démarrer."
-    )
-    notifier(
-        [
-            dossier.Id_Agent_selection.user if dossier.Id_Agent_selection else None,
-            dossier.Id_Agent_empotage.user if dossier.Id_Agent_empotage else None,
-        ],
-        message_deblocage,
-    )
-    notifier_personnel(message_deblocage)
+    NotificationService.notify_payment_validated(dossier)
 
     messages.success(request, f"Paiement du dossier {dossier.projet} validé, le dossier est débloqué.")
     return redirect('comptabiliteDashboard:dossier-detail', pk=dossier.id)

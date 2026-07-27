@@ -36,8 +36,14 @@
     </div>
   {% endif %}
 
-  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-24">
+  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-24"
+        data-offline-form
+        data-offline-kind="empotage_renseigner"
+        data-ajax-url="{% url 'DashboardAgentEmpotage:conteneur-empoter-ajax' conteneur.pk %}"
+        data-success-redirect="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}"
+        data-date-modifier="{{ conteneur.date_modifier|date:'U' }}">
     {% csrf_token %}
+    <div data-offline-status class="hidden rounded-xl border p-4 text-body-sm flex items-start gap-3"></div>
 
     <!-- Poids & Température -->
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">

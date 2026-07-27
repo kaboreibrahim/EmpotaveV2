@@ -18,7 +18,7 @@ from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier, ISOTanks
 from apps.conteneurs.services import verifier_paiement
 from apps.DashboardAgentSelection.forms import PHOTOS_OBLIGATOIRES
-from apps.notification.services import notifier, notifier_personnel
+from apps.notification.services import NotificationService
 
 
 RAPPORT_TEMPLATE = 'DashboardAgentSelection/rapports/rapport_dossier.html'
@@ -180,24 +180,12 @@ def soumettre_dossier(request, dossier_id):
         messages.error(request, f"Erreur lors de l'envoi de l'email : {exc}")
         return redirect('DashboardAgentSelection:dossier-detail', dossier_id=dossier.id)
 
+    ancien_statut = dossier.statut
     dossier.demarrer_empotage()
     dossier.soumettre_rapport(commentaire=commentaire)
     log_action(dossier, AuditLog.ACTION_SUBMIT, extra={'rapport': 'selection'})
 
-    message_soumission = (
-        f"Le dossier {dossier.TRD} — {dossier.projet} a été soumis par "
-        f"{request.user.get_full_name() or request.user.username} et est prêt pour l'habillage & l'empotage."
-    )
-    notifier(
-        [dossier.Id_Agent_empotage.user if dossier.Id_Agent_empotage else None],
-        message_soumission,
-    )
-    notifier_personnel(message_soumission)
-    notifier(
-        dossier.id_client.user,
-        f"La sélection de votre dossier {dossier.TRD} — {dossier.projet} est terminée : "
-        "l'habillage & l'empotage démarrent.",
-    )
+    NotificationService.notify_status_changed(dossier, ancien_statut, dossier.statut)
 
     messages.success(request, f"Dossier {dossier.projet} soumis avec succès.")
     return redirect('DashboardAgentSelection:dossier-liste')

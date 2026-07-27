@@ -62,6 +62,11 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
     ]
 
     statut         = models.CharField(max_length=25, choices=STATUT_CHOICES, default='en_attente')
+    # Horodatage de dernière modification : sert de jeton de concurrence optimiste
+    # pour détecter les conflits lors du rejeu d'une action mise en file d'attente
+    # hors ligne (voir apps/offline_sync) — sans lui, une action rejouée après
+    # coup ne peut pas savoir si le dossier a changé d'état entre-temps.
+    date_modifier  = models.DateTimeField(auto_now=True)
     TRD            = models.CharField(max_length=50, verbose_name="Numéro TRD")
     projet         = models.CharField(max_length=100)
     Booking        = models.CharField(max_length=100)
@@ -240,6 +245,9 @@ class ConteneurCommunMixin(SafeDeleteModel, LifecycleModel, TimestampMixin):
     statut    = models.CharField(max_length=20, choices=STATUT_CHOICES, default='non_empote')
     reference = models.CharField(max_length=50, unique=True)
     etat      = models.CharField(max_length=10, choices=ETAT_CHOICES)
+    # Voir Dossier.date_modifier : même rôle de jeton de concurrence optimiste
+    # pour le rejeu hors ligne des actions d'empotage.
+    date_modifier = models.DateTimeField(auto_now=True)
 
     # Photos (communes)
     #image de empotage

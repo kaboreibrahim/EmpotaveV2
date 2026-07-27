@@ -13,7 +13,10 @@ from .views.dossier.liste import ListeDossier
 from .views.dossier.create import CreerDossier
 from .views.dossier.edit import ModifierDossier
 from .views.dossier.detail import DetailDossier
-from .views.dossier.actions import retrograder_dossier
+from .views.dossier.actions import (
+    retrograder_dossier, retrograder_dossier_ajax,
+    retour_selection_dossier, retour_selection_dossier_ajax,
+)
 from .views.payement import DashboardPaiementView, DetailPaiementView, ListePaiementView
 from .views.conteneur.detail import DetailConteneur
 from .views.conteneur.recherche import RechercheConteneur
@@ -79,6 +82,9 @@ urlpatterns = [
     path('dossiers/modifier/<uuid:pk>/', ModifierDossier.as_view(), name='dossier-update'),
     path('dossiers/<uuid:pk>/', DetailDossier.as_view(), name='dossier-detail'),
     path('dossiers/<uuid:dossier_id>/retrograder/', retrograder_dossier, name='dossier-retrograder'),
+    path('dossiers/<uuid:dossier_id>/retrograder/ajax/', retrograder_dossier_ajax, name='dossier-retrograder-ajax'),
+    path('dossiers/<uuid:dossier_id>/retour-selection/', retour_selection_dossier, name='dossier-retour-selection'),
+    path('dossiers/<uuid:dossier_id>/retour-selection/ajax/', retour_selection_dossier_ajax, name='dossier-retour-selection-ajax'),
 
     #PAIEMENTS (suivi lecture seule, accès restreint via conteneurs.can_voir_paiements)
     path('paiements/accueil/', DashboardPaiementView.as_view(), name='dashboard-paiement'),

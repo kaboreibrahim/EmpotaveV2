@@ -9,6 +9,7 @@ from django.views.generic import CreateView, ListView
 
 from apps.conteneurs.models import Dossier
 from apps.documents.models import Document, TypeDocument
+from apps.notification.services import NotificationService
 
 from .mixins import ActionPermissionRequiredMixin, FormMessageMixin, ModulePermissionRequiredMixin
 
@@ -255,6 +256,7 @@ class DocumentAjouterAjaxView(ActionPermissionRequiredMixin, View):
         document = Document.objects.create(
             dossier=dossier, type_document=type_document, fichier=fichier, ajoute_par=request.user,
         )
+        NotificationService.notify_document_added(document)
         return _row_response(dossier, type_document, document)
 
 

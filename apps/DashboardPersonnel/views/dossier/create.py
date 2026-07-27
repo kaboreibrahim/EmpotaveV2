@@ -11,7 +11,7 @@ from apps.conteneurs.models import Dossier
 from apps.referentiels.models import (
     POD, POL, CompagnieMaritime, Commodite, Pays, SiteEmpotage, SiteSelection,
 )
-from apps.notification.services import notifier
+from apps.notification.services import NotificationService, notifier
 from apps.users.models import Agent_empotage, Agent_selection, Client, Personnel
 
 from ..mixins import FormMessageMixin, ModulePermissionRequiredMixin
@@ -114,13 +114,12 @@ class CreerDossier(ModulePermissionRequiredMixin, DossierOptionsMixin, FormMessa
             dossier.id_client.user,
             f"Votre dossier {dossier.TRD} — {dossier.projet} a été créé et va être traité.",
         )
-        notifier(
-            [
-                dossier.Id_Agent_selection.user if dossier.Id_Agent_selection else None,
-                dossier.Id_Agent_empotage.user if dossier.Id_Agent_empotage else None,
-            ],
-            f"Un nouveau dossier vous a été attribué : {dossier.TRD} — {dossier.projet}.",
-        )
+        NotificationService.notify_dossier_created(dossier)
+        if dossier.Id_Agent_empotage:
+            notifier(
+                dossier.Id_Agent_empotage.user,
+                f"Un nouveau dossier vous a été attribué : {dossier.TRD} — {dossier.projet}.",
+            )
         return response
 
     def _notifier_agent_selection(self, dossier):

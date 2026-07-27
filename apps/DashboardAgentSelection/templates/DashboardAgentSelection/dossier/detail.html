@@ -204,6 +204,13 @@
                  title="Voir le détail" onclick="event.stopPropagation()">
                 <span class="material-symbols-outlined text-xl">visibility</span>
               </a>
+              {% if dossier.statut == 'en_attente' or dossier.statut == 'selection_en_cours' %}
+              <a href="{% url 'DashboardAgentSelection:conteneur-update' ligne.objet.id %}"
+                 class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors"
+                 title="Modifier le conteneur" onclick="event.stopPropagation()">
+                <span class="material-symbols-outlined text-xl">edit</span>
+              </a>
+              {% endif %}
             </td>
           </tr>
           {% empty %}

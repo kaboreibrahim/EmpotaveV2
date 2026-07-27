@@ -6,6 +6,12 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>{% block title %}dashboard - Espace Client{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}" />
+  <link rel="manifest" href="{% static 'manifest.webmanifest' %}" />
+  <meta name="theme-color" content="#00450d" />
+  <link rel="apple-touch-icon" href="{% static 'img/icons/apple-touch-icon.png' %}" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Oils Africa" />
 
   <script>
     // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
@@ -336,7 +342,7 @@
   <main id="shell" class="min-h-screen">
 
     <!-- Top Navigation Bar -->
-    <header class="h-16 bg-surface border-b border-outline-variant flex items-center gap-4 px-margin-desktop sticky top-0 z-40">
+    <header class="h-16 bg-surface border-b border-outline-variant flex items-center gap-2 sm:gap-4 px-3 sm:px-6 lg:px-margin-desktop sticky top-0 z-40">
       <button
         id="sidebar-toggle"
         type="button"
@@ -346,14 +352,14 @@
         <span class="material-symbols-outlined">menu</span>
       </button>
 
-      <div class="flex items-center bg-surface-container-low rounded-full px-4 py-1.5 w-96 max-w-full">
-        <span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
-        <input class="bg-transparent border-none focus:ring-0 text-body-sm w-full" placeholder="Rechercher un dossier, un TRD..." type="text" />
+      <div class="flex items-center bg-surface-container-low rounded-full px-3 sm:px-4 py-1.5 w-96 max-w-full min-w-0">
+        <span class="material-symbols-outlined text-on-surface-variant mr-2 shrink-0">search</span>
+        <input class="bg-transparent border-none focus:ring-0 text-body-sm w-full min-w-0" placeholder="Rechercher un dossier, un TRD..." type="text" />
       </div>
 
       <div class="flex-1"></div>
-      <div class="flex items-center space-y-0 space-x-6">
-        <div class="flex items-center space-x-4">
+      <div class="flex items-center space-y-0 space-x-2 sm:space-x-6">
+        <div class="flex items-center space-x-2 sm:space-x-4">
           <button
             id="theme-toggle"
             type="button"
@@ -396,6 +402,7 @@
                   <button type="submit" class="w-full text-left p-4 flex gap-3 hover:bg-surface-container-low transition-colors {% if not notif.is_read %}bg-primary/5{% endif %}">
                     <span class="w-2 h-2 rounded-full mt-1.5 shrink-0 {% if not notif.is_read %}bg-primary{% endif %}"></span>
                     <span>
+                      {% if notif.titre %}<span class="block text-label-sm font-bold text-on-surface">{{ notif.titre }}</span>{% endif %}
                       <span class="block text-body-sm text-on-surface">{{ notif.message }}</span>
                       <span class="block text-label-sm text-on-surface-variant mt-1">{{ notif.date_created|timesince }}</span>
                     </span>
@@ -411,7 +418,7 @@
             </div>
           </div>
 
-          <span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">help</span>
+          <span class="hidden sm:inline-block material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors shrink-0">help</span>
           <div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container border border-outline-variant cursor-pointer flex items-center justify-center text-on-primary-container">
             {% if user.photo %}
             <img class="w-full h-full object-cover" src="{{ user.photo.url }}" alt="{{ user.get_full_name|default:user.username }}" />
@@ -423,7 +430,7 @@
       </div>
     </header>
 
-    <div class="p-margin-desktop max-w-container-max mx-auto">
+    <div class="p-4 sm:p-5 lg:p-margin-desktop max-w-container-max mx-auto">
       {% block content %}
       {% endblock content %}
     </div>
@@ -532,5 +539,7 @@
       btn.addEventListener('mouseleave', () => btn.classList.remove('scale-95'));
     });
   </script>
+
+  {% include 'notification/_push_bootstrap.html' %}
 </body>
 </html>

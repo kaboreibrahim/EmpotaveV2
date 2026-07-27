@@ -6,6 +6,12 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>{% block title %}Espace Agent Sélection{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}" />
+  <link rel="manifest" href="{% static 'manifest.webmanifest' %}" />
+  <meta name="theme-color" content="#00450d" />
+  <link rel="apple-touch-icon" href="{% static 'img/icons/apple-touch-icon.png' %}" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Oils Africa" />
 
   <script>
     // Apply the saved/system theme before first paint to avoid a flash of the wrong theme.
@@ -397,8 +403,8 @@
   </aside>
 
   <!-- Top Navigation Bar -->
-  <header id="topbar" class="fixed top-0 right-0 h-16 bg-surface dark:bg-background border-b border-outline-variant dark:border-outline z-40 flex justify-between items-center px-margin-desktop">
-    <div class="flex items-center gap-gutter w-1/2">
+  <header id="topbar" class="fixed top-0 right-0 h-16 bg-surface dark:bg-background border-b border-outline-variant dark:border-outline z-40 flex justify-between items-center px-3 sm:px-6 lg:px-margin-desktop">
+    <div class="flex items-center gap-gutter">
       <button
         id="sidebar-toggle"
         type="button"
@@ -407,10 +413,10 @@
       >
         <span class="material-symbols-outlined">menu</span>
       </button>
-       
+
     </div>
-    <div class="flex items-center gap-base">
-      <button class="bg-primary text-on-primary px-4 py-2 rounded-lg text-body-sm font-semibold hover:opacity-90 transition-opacity">New Request</button>
+    <div class="flex items-center gap-1 sm:gap-base">
+      <button class="hidden md:inline-flex bg-primary text-on-primary px-4 py-2 rounded-lg text-body-sm font-semibold hover:opacity-90 transition-opacity">New Request</button>
       <button
         id="theme-toggle"
         type="button"
@@ -452,6 +458,7 @@
               <button type="submit" class="w-full text-left p-4 flex gap-3 hover:bg-surface-container-low transition-colors {% if not notif.is_read %}bg-primary/5{% endif %}">
                 <span class="w-2 h-2 rounded-full mt-1.5 shrink-0 {% if not notif.is_read %}bg-primary{% endif %}"></span>
                 <span>
+                  {% if notif.titre %}<span class="block text-label-sm font-bold text-on-surface">{{ notif.titre }}</span>{% endif %}
                   <span class="block text-body-sm text-on-surface">{{ notif.message }}</span>
                   <span class="block text-label-sm text-on-surface-variant mt-1">{{ notif.date_created|timesince }}</span>
                 </span>
@@ -478,7 +485,7 @@
 
   <!-- Main Content Canvas -->
   <main id="shell" class="pt-16 min-h-screen bg-surface">
-    <div class="max-w-[1440px] mx-auto p-margin-desktop space-y-gutter">
+    <div class="max-w-[1440px] mx-auto p-4 sm:p-5 lg:p-margin-desktop space-y-gutter">
       {% include "partials/_messages.html" %}
       {% block content %}{% endblock content %}
     </div>
@@ -663,5 +670,7 @@
     `;
     document.head.appendChild(rippleStyle);
   </script>
+
+  {% include 'notification/_push_bootstrap.html' %}
 </body>
 </html>
