@@ -1,0 +1,22 @@
+{% extends base_template %}
+
+{% block title %}Messagerie{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-4 lg:pb-24">
+  <div class="flex items-center gap-3 mb-6">
+    <span class="material-symbols-outlined text-primary text-3xl">forum</span>
+    <h1 class="font-headline-lg text-headline-lg text-on-surface">Messagerie</h1>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex h-[calc(100dvh-10rem)] min-h-[420px] lg:h-[75vh]">
+    <div class="flex flex-col w-full lg:w-96 lg:border-r border-outline-variant shrink-0">
+      {% include 'messaging/_conversations_panel.html' %}
+    </div>
+    <div class="hidden lg:flex flex-1 flex-col items-center justify-center text-center gap-3 text-on-surface-variant">
+      <span class="material-symbols-outlined text-5xl opacity-40">chat</span>
+      <p class="text-body-md">Sélectionnez une conversation.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

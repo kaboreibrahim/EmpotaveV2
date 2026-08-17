@@ -1,0 +1,93 @@
+{% load messaging_extras %}
+{% if a_plus_anciens %}
+<div class="flex justify-center mb-2">
+  <a href="?limite={{ limite_suivante }}" class="text-label-sm text-primary font-bold hover:underline">Charger les messages précédents</a>
+</div>
+{% endif %}
+
+{% if not messages_conversation %}
+<div class="flex-1 flex flex-col items-center justify-center text-center py-16 gap-3">
+  <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-40">chat_bubble</span>
+  <p class="text-body-md text-on-surface-variant">Aucun message pour le moment. Écrivez le premier !</p>
+</div>
+{% endif %}
+
+{% for message in messages_conversation %}
+<div class="flex flex-col {% if message.auteur_id == request.user.id %}items-end{% else %}items-start{% endif %} gap-1 max-w-[85%] {% if message.auteur_id == request.user.id %}self-end{% else %}self-start{% endif %}">
+
+  {% if not message.est_supprime and message.reponse_a %}
+  <div class="text-label-sm text-on-surface-variant bg-surface-container-low rounded-lg px-3 py-1.5 border-l-2 border-primary/50 max-w-full truncate">
+    ↪ {{ message.reponse_a.auteur|nom_affichage }} : {{ message.reponse_a.contenu|truncatechars:60 }}
+  </div>
+  {% endif %}
+
+  {% if message.auteur_id != request.user.id %}
+  <span class="text-label-sm font-bold text-on-surface-variant px-1">{{ message.auteur|nom_affichage }}</span>
+  {% endif %}
+
+  {% if message.est_supprime %}
+  <div class="glass-panel rounded-2xl px-4 py-2 italic text-on-surface-variant text-body-sm">Message supprimé</div>
+  {% else %}
+  <div class="{% if message.auteur_id == request.user.id %}bg-primary text-on-primary rounded-2xl rounded-br-sm{% else %}glass-panel rounded-2xl rounded-bl-sm{% endif %} p-2 shadow-sm space-y-2">
+    {% for piece in message.pieces_jointes.all %}
+      {% if piece.type_fichier == 'image' %}
+      <a href="{% url 'messaging:attachment-download' piece.id %}" target="_blank" rel="noopener" class="block">
+        <img src="{% url 'messaging:attachment-download' piece.id %}" alt="{{ piece.nom_original }}" class="rounded-xl max-h-72 w-auto object-cover" loading="lazy" />
+      </a>
+      {% elif piece.type_fichier == 'video' %}
+      <video controls preload="metadata" class="rounded-xl max-h-72 w-full">
+        <source src="{% url 'messaging:attachment-download' piece.id %}" type="{{ piece.type_mime }}" />
+      </video>
+      {% elif piece.type_fichier == 'audio' %}
+      <div class="flex items-center gap-2 min-w-[240px] px-1 py-1">
+        <span class="material-symbols-outlined text-xl shrink-0">mic</span>
+        <audio controls preload="metadata" class="flex-1 h-10">
+          <source src="{% url 'messaging:attachment-download' piece.id %}" type="{{ piece.type_mime }}" />
+        </audio>
+        {% if piece.duree_secondes %}
+        <span class="text-label-sm opacity-70 shrink-0">{{ piece.duree_secondes|duree_mmss }}</span>
+        {% endif %}
+        <a href="{% url 'messaging:attachment-download' piece.id %}" class="shrink-0 opacity-70 hover:opacity-100" title="Télécharger">
+          <span class="material-symbols-outlined text-lg">download</span>
+        </a>
+      </div>
+      {% else %}
+      <a href="{% url 'messaging:attachment-download' piece.id %}" class="flex items-center gap-3 bg-surface-container-lowest/70 rounded-xl px-3 py-2 hover:bg-surface-container-lowest transition-colors">
+        <span class="material-symbols-outlined text-2xl">description</span>
+        <span class="flex-1 min-w-0">
+          <span class="block text-body-sm font-bold truncate">{{ piece.nom_original }}</span>
+          <span class="block text-label-sm opacity-70">{{ piece.taille_octets|filesizeformat }}</span>
+        </span>
+        <span class="material-symbols-outlined">download</span>
+      </a>
+      {% endif %}
+    {% endfor %}
+    {% if message.contenu %}
+    <p class="text-body-md whitespace-pre-wrap break-words px-2 {% if message.pieces_jointes.all %}pb-1{% endif %}">{{ message.contenu }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="flex items-center gap-3 px-1 text-[11px] text-on-surface-variant">
+    <span>{{ message.date_created|date:"H:i" }}</span>
+    {% if not message.est_supprime %}
+    <button type="button" class="msg-reply-btn hover:text-primary font-bold" data-id="{{ message.id }}" data-auteur="{{ message.auteur|nom_affichage }}" data-contenu="{{ message.contenu|truncatechars:60 }}">Répondre</button>
+    {% if message.auteur_id == request.user.id %}
+    <button type="button" class="msg-edit-toggle hover:text-primary font-bold" data-target="edit-{{ message.id }}">Modifier</button>
+    <form method="post" action="{% url 'messaging:message-supprimer' message.id %}" class="msg-delete-form inline">
+      {% csrf_token %}
+      <button type="submit" class="hover:text-error font-bold">Supprimer</button>
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  {% if message.auteur_id == request.user.id and not message.est_supprime %}
+  <form id="edit-{{ message.id }}" class="msg-edit-form hidden w-full flex gap-2 mt-1" method="post" action="{% url 'messaging:message-modifier' message.id %}">
+    {% csrf_token %}
+    <textarea name="contenu" rows="2" class="flex-1 text-body-sm rounded-lg border border-outline-variant p-2 bg-surface-container-lowest">{{ message.contenu }}</textarea>
+    <button type="submit" class="px-3 py-1 bg-primary text-on-primary rounded-lg text-label-sm font-bold self-end">Enregistrer</button>
+  </form>
+  {% endif %}
+</div>
+{% endfor %}

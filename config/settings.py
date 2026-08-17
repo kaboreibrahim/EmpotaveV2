@@ -52,6 +52,10 @@ AUTHENTICATION_BACKENDS = [
 # Apps
 # ---------------------------------------------------------------
 INSTALLED_APPS = [
+    # 'daphne' doit être la toute première app : c'est ce qui fait basculer
+    # `runserver` sur le serveur de développement ASGI de Channels (sinon
+    # WSGI classique, qui ne sait pas gérer /ws/...).
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,14 +64,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party
+    'channels',
     # 'django_lifecycle',
     # 'safedelete',
     # Local apps
     'apps.users',
+    'apps.companies',
     'apps.audit',
     'apps.referentiels',
     'apps.conteneurs',
     'apps.documents',
+    'apps.messaging',
     'apps.notification',
     'apps.offline_sync',
     'apps.DashboardAgentSelection',
@@ -133,6 +140,31 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# ---------------------------------------------------------------
+# Channels — WebSocket temps reel (apps.messaging).
+# Utilise Redis comme channel layer si REDIS_URL est configure (requis des
+# qu'on tourne avec plusieurs workers/process, ex. Daphne en production) ;
+# sinon repli sur la couche en memoire (mono-process uniquement — parfaite
+# pour le developpement local, insuffisante pour la prod). Meme logique que
+# la base de donnees : Redis si disponible, sinon on continue avec ce qu'on a.
+# ---------------------------------------------------------------
+REDIS_URL = os.environ.get('REDIS_URL', '')
+
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 # ---------------------------------------------------------------
 # Base de données
@@ -196,7 +228,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------------------------------------------
 # Auth URLs
 # ---------------------------------------------------------------
-LOGIN_URL = 'login'
+LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'login'
 
@@ -263,6 +295,15 @@ LOGGING = {
         },
     },
 }
+
+# ---------------------------------------------------------------
+# Messagerie — pieces jointes (voir apps.messaging.attachments pour les
+# limites precises par type ; la plus grande, video, fixe le plafond global
+# ci-dessous — Django rejetterait sinon la requete avant meme d'atteindre la
+# vue et son message d'erreur exploitable).
+# ---------------------------------------------------------------
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 Mo
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024    # au-dela : fichier temporaire sur disque, pas en memoire
 
 # ---------------------------------------------------------------
 # Web Push (VAPID / pywebpush) — voir apps/notification/README.md pour la

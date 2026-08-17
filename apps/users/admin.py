@@ -20,6 +20,7 @@ class UsersAdmin(UserAdmin):
         "first_name",
         "last_name",
         "user_type",
+        "entreprise",
         "is_verified",
         "is_online",
         "is_staff",
@@ -27,6 +28,7 @@ class UsersAdmin(UserAdmin):
     )
     list_filter = (
         "user_type",
+        "entreprise",
         "is_verified",
         "is_online",
         "is_staff",
@@ -36,7 +38,7 @@ class UsersAdmin(UserAdmin):
     search_fields = ("username", "email", "first_name", "last_name", "numero")
     ordering = ("username",)
     readonly_fields = ("date_created", "last_login", "date_joined")
-    autocomplete_fields = ("pays",)
+    autocomplete_fields = ("pays", "entreprise")
     fieldsets = UserAdmin.fieldsets + (
         (
             "Informations metier",
@@ -45,6 +47,7 @@ class UsersAdmin(UserAdmin):
                     "numero",
                     "photo",
                     "user_type",
+                    "entreprise",
                     "pays",
                     "is_verified",
                     "is_online",
@@ -62,6 +65,7 @@ class UsersAdmin(UserAdmin):
                     "numero",
                     "photo",
                     "user_type",
+                    "entreprise",
                     "pays",
                     "is_verified",
                 )

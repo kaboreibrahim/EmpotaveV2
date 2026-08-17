@@ -124,6 +124,14 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
         return f"Dossier {self.TRD} — {self.projet} ({pays_nom})"
 
     @property
+    def conversation_principale(self):
+        """La conversation de messagerie de ce dossier (creee automatiquement,
+        voir apps.messaging.signals). None si la messagerie n'a pas encore ete
+        deployee sur cet environnement ou pas encore rattrapee (voir la
+        commande backfill_dossier_conversations)."""
+        return self.conversations.filter(type_conversation='dossier').first()
+
+    @property
     def nature_conteneurs(self):
         has_iso = self.isotanks.exists()
         has_flexitank = self.flexitanks.exists()

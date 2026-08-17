@@ -1,0 +1,70 @@
+{% extends base_template %}
+{% load messaging_extras %}
+
+{% block title %}Nouveau message{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-4 lg:pb-24">
+  <div class="flex items-center gap-3 mb-6">
+    <span class="material-symbols-outlined text-primary text-3xl">forum</span>
+    <h1 class="font-headline-lg text-headline-lg text-on-surface">Messagerie</h1>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex h-[calc(100dvh-10rem)] min-h-[420px] lg:h-[75vh]">
+    <div class="hidden lg:flex flex-col w-96 border-r border-outline-variant shrink-0">
+      {% include 'messaging/_conversations_panel.html' %}
+    </div>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="glass-panel px-4 lg:px-6 py-3 border-b border-outline-variant shrink-0 flex items-center gap-3">
+        <a href="{% url 'messaging:conversation-list' %}" class="p-2 -ml-2 text-on-surface-variant hover:bg-surface-container-low rounded-full" aria-label="Retour aux conversations">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <h2 class="text-body-md font-bold text-on-surface">Nouveau message</h2>
+      </div>
+
+      <div class="p-4 lg:p-6 border-b border-outline-variant shrink-0">
+        <form method="get" class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input
+            type="text" name="q" value="{{ q_utilisateur }}" autofocus
+            class="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-lg border border-outline-variant text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            placeholder="Rechercher un utilisateur (nom, identifiant, email)…"
+          />
+        </form>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-2">
+        {% if not utilisateurs %}
+        <div class="flex flex-col items-center justify-center text-center py-16 gap-3 px-4">
+          <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-40">person_search</span>
+          <p class="text-body-sm text-on-surface-variant">
+            {% if q_utilisateur %}Aucun utilisateur ne correspond à « {{ q_utilisateur }} ».{% else %}Aucun utilisateur disponible.{% endif %}
+          </p>
+        </div>
+        {% endif %}
+
+        {% for utilisateur in utilisateurs %}
+        <form method="post" action="{% url 'messaging:demarrer-conversation-privee' utilisateur.id %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-colors text-left">
+            {% if utilisateur.photo %}
+            <img src="{{ utilisateur.photo.url }}" alt="" class="w-10 h-10 rounded-full object-cover shrink-0">
+            {% else %}
+            <span class="material-symbols-outlined text-4xl text-primary shrink-0">account_circle</span>
+            {% endif %}
+            <span class="flex-1 min-w-0">
+              <span class="block text-body-sm font-bold text-on-surface truncate">{{ utilisateur|nom_affichage }}</span>
+              <span class="block text-label-sm text-on-surface-variant truncate">
+                {{ utilisateur.get_user_type_display }}{% if utilisateur.entreprise %} · {{ utilisateur.entreprise.nom }}{% endif %}
+              </span>
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant shrink-0">chat</span>
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

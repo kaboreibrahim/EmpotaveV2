@@ -26,6 +26,7 @@ urlpatterns = [
     path('DashboardAgentEmpotage/', include('apps.DashboardAgentEmpotage.urls')),
     path('comptabiliteDashboard/', include('apps.comptabiliteDashboard.urls')),
     path('notifications/', include('apps.notification.urls')),
+    path('messaging/', include('apps.messaging.urls')),
     path('sw.js', service_worker, name='service-worker'),
 ]
 
@@ -37,8 +38,13 @@ urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 # Sert les médias (photos uploadées, etc.) même quand DEBUG=False :
 # static() ne génère aucune route hors DEBUG, mais cet hébergement
 # ne dispose pas d'un serveur web séparé pour /medias/.
+# Exclusion de medias/messaging/ : les pièces jointes de messagerie ne sont
+# jamais servies en direct (fichiers non authentifiés, potentiellement privés
+# entre deux utilisateurs ou un dossier restreint) — elles passent uniquement
+# par AttachmentDownloadView (apps.messaging), qui vérifie l'appartenance à
+# la conversation avant de streamer le fichier.
 urlpatterns += [
-    re_path(r'^medias/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^medias/(?!messaging/)(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
 

@@ -1,0 +1,73 @@
+{% load messaging_extras %}
+<div class="p-3 border-b border-outline-variant/50 shrink-0 flex items-center gap-2">
+  <form method="get" action="{% url 'messaging:conversation-list' %}" class="relative flex-1 min-w-0 flex items-center">
+    <span class="material-symbols-outlined absolute left-3 text-outline text-xl">search</span>
+    <input
+      type="text" name="q" value="{{ q }}"
+      class="w-full min-w-0 pl-10 pr-4 py-2 bg-surface-container-low rounded-lg border border-outline-variant text-body-sm placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+      placeholder="Rechercher une conversation"
+    />
+  </form>
+  <a href="{% url 'messaging:nouveau-groupe' %}" title="Nouveau groupe"
+     class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors">
+    <span class="material-symbols-outlined">group_add</span>
+  </a>
+  <a href="{% url 'messaging:nouvelle-conversation' %}" title="Nouveau message"
+     class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-primary text-on-primary hover:opacity-90 transition-opacity">
+    <span class="material-symbols-outlined">edit_square</span>
+  </a>
+</div>
+
+<div class="flex-1 overflow-y-auto custom-scrollbar p-2">
+  {% if not conversations_privee and not conversations_groupe and not conversations_dossier %}
+  <div class="flex flex-col items-center justify-center text-center py-16 gap-3 px-4">
+    <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-40">forum</span>
+    <p class="text-body-sm text-on-surface-variant">
+      {% if q %}Aucune conversation ne correspond à « {{ q }} ».{% else %}Aucune conversation pour l'instant.{% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {% for groupe_titre, liste in groupes %}
+  {% if liste %}
+  <div class="mb-4">
+    <h3 class="px-3 py-2 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">{{ groupe_titre }}</h3>
+    {% for conversation in liste %}
+    <a href="{% url 'messaging:conversation-detail' conversation.id %}"
+       class="flex items-center gap-3 p-3 rounded-xl transition-colors mb-1 {% if conversation.id == conversation_active_id %}bg-primary/10{% else %}hover:bg-surface-container-low{% endif %}">
+      {% with autre=conversation|autre_utilisateur:request.user %}
+      {% if autre.photo %}
+      <img src="{{ autre.photo.url }}" alt="" class="w-10 h-10 rounded-full object-cover shrink-0">
+      {% elif conversation.type_conversation == 'groupe' and conversation.groupe.photo %}
+      <img src="{{ conversation.groupe.photo.url }}" alt="" class="w-10 h-10 rounded-full object-cover shrink-0">
+      {% else %}
+      <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0
+        {% if conversation.type_conversation == 'dossier' %}bg-primary/10 text-primary
+        {% elif conversation.type_conversation == 'groupe' %}bg-secondary/10 text-secondary
+        {% else %}bg-surface-container-highest text-primary{% endif %}">
+        <span class="material-symbols-outlined text-xl">
+          {% if conversation.type_conversation == 'dossier' %}folder{% elif conversation.type_conversation == 'groupe' %}groups{% else %}person{% endif %}
+        </span>
+      </div>
+      {% endif %}
+      {% endwith %}
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-baseline gap-2">
+          <h4 class="text-body-sm font-bold text-on-surface truncate">{{ conversation|titre_affichage:request.user }}</h4>
+          <span class="text-[11px] text-on-surface-variant shrink-0">{{ conversation.date_modifier|horodatage_court }}</span>
+        </div>
+        <p class="text-label-sm text-on-surface-variant truncate">
+          {% if conversation.dernier_message_contenu %}{{ conversation.dernier_message_contenu|truncatechars:40 }}
+          {% elif conversation.dernier_message_type == 'image' %}📷 Photo
+          {% elif conversation.dernier_message_type == 'video' %}🎥 Vidéo
+          {% elif conversation.dernier_message_type == 'document' %}📄 Document
+          {% elif conversation.dernier_message_type == 'audio' %}🎙️ Message vocal
+          {% else %}Aucun message pour l'instant{% endif %}
+        </p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>

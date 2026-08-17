@@ -9,7 +9,7 @@ class NotificationAdmin(admin.ModelAdmin):
     list_filter = ("is_read", "categorie", "type_notification", "date_created")
     search_fields = ("user__username", "user__email", "titre", "message", "dossier__TRD", "dossier__projet")
     readonly_fields = ("id", "date_created")
-    autocomplete_fields = ("user", "dossier")
+    autocomplete_fields = ("user", "dossier", "conversation")
     date_hierarchy = "date_created"
     ordering = ("-date_created",)
 

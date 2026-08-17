@@ -47,6 +47,12 @@
         Modifier le paiement
       </button>
       {% endif %}
+      {% if dossier.conversation_principale %}
+      <a href="{% url 'messaging:conversation-detail' dossier.conversation_principale.id %}" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg text-label-md font-bold">
+        <span class="material-symbols-outlined text-sm">forum</span>
+        Conversation
+      </a>
+      {% endif %}
     </div>
   </div>
 

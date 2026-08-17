@@ -29,6 +29,9 @@ class Notification(SafeDeleteModel, LifecycleModel, TimestampMixin):
     TYPE_DOCUMENT_AJOUTE = 'document_ajoute'
     TYPE_RETOUR_SELECTION = 'retour_selection'
     TYPE_RETOUR_EMPOTAGE = 'retour_empotage'
+    TYPE_NOUVEAU_MESSAGE = 'nouveau_message'
+    TYPE_AJOUT_GROUPE = 'ajout_groupe'
+    TYPE_AJOUT_CONVERSATION = 'ajout_conversation'
     TYPE_AUTRE = 'autre'
     TYPE_NOTIFICATION_CHOICES = [
         (TYPE_DOSSIER_CREE, 'Dossier créé'),
@@ -37,12 +40,19 @@ class Notification(SafeDeleteModel, LifecycleModel, TimestampMixin):
         (TYPE_DOCUMENT_AJOUTE, 'Document ajouté'),
         (TYPE_RETOUR_SELECTION, 'Retour en sélection'),
         (TYPE_RETOUR_EMPOTAGE, 'Retour en empotage'),
+        (TYPE_NOUVEAU_MESSAGE, 'Nouveau message'),
+        (TYPE_AJOUT_GROUPE, 'Ajout à un groupe'),
+        (TYPE_AJOUT_CONVERSATION, 'Ajout à une conversation'),
         (TYPE_AUTRE, 'Autre'),
     ]
 
     user      = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='notifications')
     dossier   = models.ForeignKey(
         'conteneurs.Dossier', on_delete=models.CASCADE, related_name='notifications',
+        null=True, blank=True,
+    )
+    conversation = models.ForeignKey(
+        'messaging.Conversation', on_delete=models.CASCADE, related_name='notifications',
         null=True, blank=True,
     )
     titre     = models.CharField(max_length=255, blank=True, default='')

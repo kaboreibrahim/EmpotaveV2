@@ -59,6 +59,13 @@ class Users(AbstractUser, SafeDeleteModel):
         blank=True,
         related_name='users',
     )
+    entreprise   = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+    )
     is_online    = models.BooleanField(default=False)
 
     groups = models.ManyToManyField(

@@ -320,6 +320,10 @@
         <span class="material-symbols-outlined mr-3">directions_boat</span>
         <span class="font-body-md">Dossiers</span>
       </a>
+      <a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-all duration-200" href="{% url 'messaging:conversation-list' %}">
+        <span class="material-symbols-outlined mr-3">forum</span>
+        <span class="font-body-md">Messages</span>
+      </a>
       <a class="flex items-center px-6 py-3 {% if request.resolver_match.url_name == 'document-liste' %}nav-active{% else %}text-on-surface-variant hover:bg-surface-container-high hover:text-primary{% endif %} transition-all duration-200" href="{% url 'DashboardClient:document-liste' %}">
         <span class="material-symbols-outlined mr-3">description</span>
         <span class="font-body-md">Documents</span>

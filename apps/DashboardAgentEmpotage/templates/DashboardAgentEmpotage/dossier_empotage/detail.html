@@ -39,6 +39,12 @@
          title="Télécharger le rapport PDF">
         <span class="material-symbols-outlined">picture_as_pdf</span> Exporter PDF
       </a>
+      {% if dossier.conversation_principale %}
+      <a href="{% url 'messaging:conversation-detail' dossier.conversation_principale.id %}"
+         class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+        <span class="material-symbols-outlined">forum</span> Conversation
+      </a>
+      {% endif %}
       {% if dossier.statut == 'empotage_en_cours' %}
         <button type="button" id="cloture-open" class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
           <span class="material-symbols-outlined">check_circle</span> Clôturer le dossier

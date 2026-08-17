@@ -1,0 +1,241 @@
+{% extends base_template %}
+{% load static messaging_extras %}
+
+{% block title %}{{ conversation|titre_affichage:request.user }}{% endblock %}
+
+{% block content %}
+<div class="max-w-container-max mx-auto pb-4 lg:pb-24">
+  <div class="flex items-center gap-3 mb-6">
+    <span class="material-symbols-outlined text-primary text-3xl">forum</span>
+    <h1 class="font-headline-lg text-headline-lg text-on-surface">Messagerie</h1>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex h-[calc(100dvh-10rem)] min-h-[420px] lg:h-[75vh]">
+    <!-- Panneau des conversations (masque sur mobile pendant la discussion) -->
+    <div class="hidden lg:flex flex-col w-96 border-r border-outline-variant shrink-0">
+      {% include 'messaging/_conversations_panel.html' %}
+    </div>
+
+    <!-- Discussion -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="glass-panel px-4 lg:px-6 py-3 border-b border-outline-variant shrink-0">
+        <div class="flex items-center gap-3">
+          <a href="{% url 'messaging:conversation-list' %}" class="lg:hidden p-2 -ml-2 text-on-surface-variant hover:bg-surface-container-low rounded-full" aria-label="Retour aux conversations">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </a>
+          {% with autre=conversation|autre_utilisateur:request.user %}
+          {% if autre.photo %}
+          <img src="{{ autre.photo.url }}" alt="" class="w-10 h-10 rounded-full object-cover shrink-0">
+          {% elif conversation.type_conversation == 'groupe' and conversation.groupe.photo %}
+          <img src="{{ conversation.groupe.photo.url }}" alt="" class="w-10 h-10 rounded-full object-cover shrink-0">
+          {% else %}
+          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            {% if conversation.type_conversation == 'dossier' %}
+            <span class="material-symbols-outlined text-primary">folder</span>
+            {% elif conversation.type_conversation == 'groupe' %}
+            <span class="material-symbols-outlined text-primary">groups</span>
+            {% else %}
+            <span class="material-symbols-outlined text-primary">person</span>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% endwith %}
+          <div class="min-w-0 flex-1">
+            <h2 class="text-body-md font-bold text-on-surface truncate">{{ conversation|titre_affichage:request.user }}</h2>
+            <details class="text-label-sm text-on-surface-variant">
+              <summary class="cursor-pointer inline">{{ membres|length }} membre{{ membres|length|pluralize }} · {{ conversation.get_type_conversation_display }}</summary>
+              <div class="flex flex-wrap gap-2 mt-2">
+                {% for membre in membres %}
+                <div class="flex items-center gap-2 bg-surface-container-low border border-outline-variant rounded-full pl-1 pr-3 py-1">
+                  {% if membre.user.photo %}
+                  <img src="{{ membre.user.photo.url }}" alt="" class="w-6 h-6 rounded-full object-cover">
+                  {% else %}
+                  <span class="material-symbols-outlined text-lg text-primary">account_circle</span>
+                  {% endif %}
+                  <span class="text-label-sm text-on-surface">{{ membre.user|nom_affichage }}</span>
+                  {% if membre.role == 'admin' %}
+                  <span class="text-label-sm text-primary">· Admin</span>
+                  {% elif membre.user.entreprise %}
+                  <span class="text-label-sm text-on-surface-variant">· {{ membre.user.entreprise.nom }}</span>
+                  {% endif %}
+                  {% if conversation.type_conversation == 'groupe' and est_admin_groupe and membre.user_id != request.user.id %}
+                  <form method="post" action="{% url 'messaging:groupe-retirer-membre' conversation.id membre.user_id %}" class="inline" onsubmit="return confirm('Retirer {{ membre.user|nom_affichage }} du groupe ?');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-error hover:opacity-70" title="Retirer du groupe">
+                      <span class="material-symbols-outlined text-sm align-middle">close</span>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% if conversation.type_conversation == 'groupe' %}
+              <div class="flex items-center gap-4 mt-3">
+                {% if est_admin_groupe %}
+                <a href="{% url 'messaging:groupe-ajouter-membres' conversation.id %}" class="text-primary font-bold hover:underline">+ Ajouter des membres</a>
+                {% endif %}
+                <form method="post" action="{% url 'messaging:groupe-quitter' conversation.id %}" onsubmit="return confirm('Quitter ce groupe ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="text-error font-bold hover:underline">Quitter le groupe</button>
+                </form>
+              </div>
+              {% endif %}
+            </details>
+          </div>
+          <span id="realtime-status" class="w-2 h-2 rounded-full bg-outline-variant shrink-0" title="Connexion en cours…"></span>
+        </div>
+
+        {% if fichiers_partages.image or fichiers_partages.video or fichiers_partages.document or fichiers_partages.audio %}
+        <details class="mt-3 pt-3 border-t border-outline-variant">
+          <summary class="cursor-pointer text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Fichiers partagés</summary>
+          <div class="mt-3 space-y-4">
+            {% if fichiers_partages.image %}
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-2">📷 Images</p>
+              <div class="flex flex-wrap gap-2">
+                {% for piece in fichiers_partages.image %}
+                <a href="{% url 'messaging:attachment-download' piece.id %}" target="_blank" rel="noopener">
+                  <img src="{% url 'messaging:attachment-download' piece.id %}?miniature=1" alt="{{ piece.nom_original }}" class="w-16 h-16 rounded-lg object-cover border border-outline-variant" loading="lazy" />
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% if fichiers_partages.video %}
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-2">🎥 Vidéos</p>
+              <div class="space-y-1">
+                {% for piece in fichiers_partages.video %}
+                <a href="{% url 'messaging:attachment-download' piece.id %}" target="_blank" rel="noopener" class="flex items-center gap-2 text-body-sm text-on-surface hover:text-primary">
+                  <span class="material-symbols-outlined text-lg">movie</span>{{ piece.nom_original }}
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% if fichiers_partages.document %}
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-2">📄 Documents</p>
+              <div class="space-y-1">
+                {% for piece in fichiers_partages.document %}
+                <a href="{% url 'messaging:attachment-download' piece.id %}" class="flex items-center gap-2 text-body-sm text-on-surface hover:text-primary">
+                  <span class="material-symbols-outlined text-lg">description</span>{{ piece.nom_original }}
+                  <span class="text-label-sm text-on-surface-variant">({{ piece.taille_octets|filesizeformat }})</span>
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% if fichiers_partages.audio %}
+            <div>
+              <p class="text-label-sm text-on-surface-variant mb-2">🎙️ Vocaux</p>
+              <div class="space-y-1">
+                {% for piece in fichiers_partages.audio %}
+                <a href="{% url 'messaging:attachment-download' piece.id %}" class="flex items-center gap-2 text-body-sm text-on-surface hover:text-primary">
+                  <span class="material-symbols-outlined text-lg">mic</span>
+                  {{ piece.message.auteur|nom_affichage }} — {{ piece.date_created|date:"d/m H:i" }}
+                  {% if piece.duree_secondes %}<span class="text-label-sm text-on-surface-variant">({{ piece.duree_secondes|duree_mmss }})</span>{% endif %}
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </details>
+        {% endif %}
+      </div>
+
+      <div
+        id="messages-canvas"
+        class="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 flex flex-col gap-3"
+        data-fragment-url="{% url 'messaging:messages-fragment' conversation.id %}"
+        data-ws-url="{{ ws_url }}"
+      >{% include 'messaging/_messages_canvas.html' %}</div>
+
+      <div id="typing-indicator" class="hidden px-4 lg:px-6 pb-1 text-label-sm text-on-surface-variant italic shrink-0"></div>
+
+      <!-- Bandeau "reponse a" (rempli par JS au clic sur Repondre) -->
+      <div id="reponse-banner" class="hidden px-4 py-2 border-t border-outline-variant flex items-center justify-between gap-3 shrink-0 bg-surface-container-low">
+        <p class="text-label-sm text-on-surface-variant truncate">
+          Réponse à <span id="reponse-banner-auteur" class="font-bold"></span> : <span id="reponse-banner-contenu"></span>
+        </p>
+        <button type="button" id="reponse-banner-annuler" class="text-on-surface-variant hover:text-error" aria-label="Annuler la réponse">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <!-- File d'attente d'upload (pieces jointes en cours d'envoi) -->
+      <div id="upload-queue" class="hidden px-3 lg:px-4 pt-3 space-y-2 shrink-0"></div>
+
+      <!-- Enregistrement vocal en cours -->
+      <div id="voice-recorder" class="hidden px-3 lg:px-4 pt-3 shrink-0">
+        <div class="flex items-center gap-3 bg-error/10 rounded-2xl p-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse shrink-0"></span>
+          <span id="voice-timer" class="font-mono-data text-body-sm text-on-surface font-bold shrink-0">0:00</span>
+          <span class="flex-1 text-label-sm text-on-surface-variant">Enregistrement en cours…</span>
+          <button type="button" id="voice-cancel" class="w-9 h-9 rounded-full flex items-center justify-center text-error hover:bg-error/10 transition-colors" aria-label="Annuler l'enregistrement">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+          <button type="button" id="voice-stop" class="w-9 h-9 rounded-full flex items-center justify-center bg-primary text-on-primary hover:opacity-90 transition-opacity" aria-label="Arrêter l'enregistrement">
+            <span class="material-symbols-outlined">stop</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Apercu du vocal enregistre, avant envoi -->
+      <div id="voice-preview" class="hidden px-3 lg:px-4 pt-3 shrink-0">
+        <div class="flex items-center gap-3 bg-surface-container-low rounded-2xl p-3">
+          <audio id="voice-preview-player" controls class="flex-1 h-10"></audio>
+          <button type="button" id="voice-preview-discard" class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors" aria-label="Supprimer l'enregistrement">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+          <button type="button" id="voice-preview-send" class="w-9 h-9 rounded-full flex items-center justify-center bg-primary text-on-primary hover:opacity-90 transition-opacity" aria-label="Envoyer le vocal">
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </div>
+        <p id="voice-preview-erreur" class="hidden text-label-sm text-error mt-1 px-1"></p>
+      </div>
+
+      <!-- Composeur -->
+      <form
+        id="composer-form" method="post" action="{% url 'messaging:message-envoyer' conversation.id %}"
+        class="p-3 lg:p-4 border-t border-outline-variant shrink-0 relative"
+        data-upload-url="{% url 'messaging:message-envoyer-fichier' conversation.id %}"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="reponse_a" id="reponse_a_input" value="" />
+        <input type="file" id="attachment-input" class="hidden" multiple
+               accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
+
+        <!-- Selecteur d'emoji : Unicode natif, aucune ressource externe (voir realtime.js) -->
+        <div id="emoji-picker" class="hidden absolute bottom-full left-3 mb-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg overflow-hidden z-10">
+          <div id="emoji-picker-tabs" class="flex border-b border-outline-variant shrink-0"></div>
+          <div id="emoji-picker-grid" class="grid grid-cols-8 gap-0.5 p-2 overflow-y-auto custom-scrollbar" style="max-height: 200px;"></div>
+        </div>
+
+        <div id="composer-row" class="flex items-center gap-2 bg-surface-container-low rounded-2xl border border-outline-variant p-2 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
+          <button type="button" id="attachment-trigger" title="Joindre une image, une vidéo ou un document" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined">add</span>
+          </button>
+          <input
+            type="text" name="contenu" id="composer-input" autocomplete="off" required
+            placeholder="Écrire un message…"
+            class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-body-sm placeholder:text-on-surface-variant"
+          />
+          <button type="button" id="emoji-trigger" title="Insérer un emoji" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined">mood</span>
+          </button>
+          <button type="button" id="mic-button" title="Message vocal" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined">mic</span>
+          </button>
+          <button type="submit" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined text-[20px]">send</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'messaging/js/realtime.js' %}" defer></script>
+{% endblock %}
