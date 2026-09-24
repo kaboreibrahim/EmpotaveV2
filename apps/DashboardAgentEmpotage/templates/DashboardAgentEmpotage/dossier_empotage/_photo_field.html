@@ -1,21 +1,61 @@
 {% comment %}
-Champ photo avec aperçu : miniature de la photo déjà enregistrée (si présente),
-remplacée en direct par un aperçu du nouveau fichier dès qu'il est sélectionné.
+Champ photo en tuile cliquable : aperçu de la photo déjà enregistrée (si
+présente) avec un badge "Photo enregistrée", remplacé en direct par un aperçu
+du nouveau fichier dès qu'il est sélectionné (JS dans create.html, cible
+input[type="file"] + #preview-<id_du_champ> — inchangé, voir ces ids ci-dessous).
 Attend dans le contexte : `field` (BoundField du ModelForm) et `label`.
-Optionnel : `current` (FieldFile déjà enregistré sur l'instance, pour la miniature initiale).
+Optionnel : `current` (FieldFile déjà enregistré sur l'instance).
 {% endcomment %}
 <div class="space-y-1">
   <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">{{ label }}</label>
-  <div class="flex items-center gap-3">
+  <div class="relative aspect-square w-40 mx-auto sm:w-full sm:mx-0 rounded-xl border border-outline-variant bg-surface-container-high overflow-hidden group">
     <img
       id="preview-{{ field.id_for_label }}"
       src="{% if current %}{{ current.url }}{% endif %}"
-      class="w-16 h-16 rounded-lg object-cover border border-outline-variant bg-surface-container-high shrink-0 {% if not current %}hidden{% endif %}"
+      class="absolute inset-0 w-full h-full object-cover {% if not current %}hidden{% endif %}"
       alt="Aperçu"
     >
-    <div class="flex-1">
+    <div class="photo-field-placeholder absolute inset-0 flex flex-col items-center justify-center gap-1 text-on-surface-variant text-center px-2 {% if current %}hidden{% endif %}">
+      <span class="material-symbols-outlined text-2xl opacity-50">add_a_photo</span>
+      <span class="text-label-sm opacity-70">Ajouter une photo</span>
+    </div>
+    {% if current %}
+    <div class="absolute bottom-0 inset-x-0 flex items-center justify-center gap-1 px-2 py-1.5 bg-primary/90 text-on-primary text-label-sm font-bold">
+      <span class="material-symbols-outlined text-[16px]">check_circle</span> Photo enregistrée
+    </div>
+    <button type="button"
+            data-lightbox-src="{{ current.url }}" data-lightbox-label="{{ label }}"
+            class="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-surface-container-lowest/90 text-on-surface-variant hover:text-primary transition-colors"
+            title="Voir la photo">
+      <span class="material-symbols-outlined text-[16px]">visibility</span>
+    </button>
+    {% endif %}
+    <div class="absolute top-2 right-2 p-1.5 rounded-full bg-surface-container-lowest/90 text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+      <span class="material-symbols-outlined text-[16px]">edit</span>
+    </div>
+    <div class="photo-field-input absolute inset-0">
       {{ field }}
-      {% if field.errors %}<p class="text-label-sm text-error mt-1">{{ field.errors.0 }}</p>{% endif %}
     </div>
   </div>
+  {% if field.errors %}<p class="text-label-sm text-error mt-1">{{ field.errors.0 }}</p>{% endif %}
 </div>
+<style>
+  /* Le JS existant (create.html) ne fait que retirer .hidden de l'aperçu
+     quand un fichier est choisi — l'état vide se masque tout seul dès que
+     l'aperçu redevient visible, sans dépendre de ce JS. */
+  img:not(.hidden) ~ .photo-field-placeholder {
+    display: none;
+  }
+  /* La tuile entière ouvre le sélecteur de fichier : l'input réel (avec ses
+     classes Tailwind file:... héritées du widget) est étiré et rendu
+     invisible par-dessus la tuile plutôt que redessiné en JS. */
+  .photo-field-input input[type="file"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+  }
+</style>

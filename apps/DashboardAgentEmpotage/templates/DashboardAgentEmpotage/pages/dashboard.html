@@ -62,7 +62,7 @@
       <!-- Dossiers a traiter -->
       <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
-          <h3 class="font-headline-md text-headline-md text-primary">Dossiers à empoter</h3>
+          {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="inventory_2" titre="Dossiers à empoter" pas_de_marge=True %}
           <span class="text-label-sm px-2 py-1 bg-secondary-container/20 text-secondary rounded">{{ a_traiter|length }}</span>
         </div>
         <div class="divide-y divide-outline-variant">
@@ -86,7 +86,7 @@
       <!-- Dossiers recents -->
       <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
         <div class="flex items-center justify-between p-gutter border-b border-outline-variant">
-          <h3 class="font-headline-md text-headline-md text-primary">Dossiers récents</h3>
+          {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="history" titre="Dossiers récents" pas_de_marge=True %}
         </div>
         <div class="divide-y divide-outline-variant">
           {% for dossier in recents %}
@@ -110,7 +110,7 @@
     <div class="space-y-gutter">
       <!-- Repartition ISO / Flexitank -->
       <section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-gutter space-y-4">
-        <h3 class="font-headline-md text-headline-md text-primary">Répartition des conteneurs</h3>
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="pie_chart" titre="Répartition des conteneurs" pas_de_marge=True %}
         {% if total_conteneurs %}
         <div class="w-full h-3 rounded-full overflow-hidden flex bg-surface-container-low">
           <div class="h-full bg-primary" style="width: {{ pct_iso }}%"></div>
@@ -135,7 +135,7 @@
 
       <!-- Statuts -->
       <section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-gutter space-y-3">
-        <h3 class="font-headline-md text-headline-md text-primary mb-1">Vue d'ensemble des statuts</h3>
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="analytics" titre="Vue d'ensemble des statuts" pas_de_marge=True %}
         <div class="flex justify-between text-body-sm">
           <span class="text-on-surface-variant">Empotage en cours</span>
           <span class="font-bold">{{ total_empotage_en_cours }}</span>

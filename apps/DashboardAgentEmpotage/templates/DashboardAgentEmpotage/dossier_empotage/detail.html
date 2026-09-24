@@ -5,14 +5,14 @@
 {% block content %}
 
   <!-- Header & Actions -->
-  <section class="flex justify-between items-end flex-wrap gap-4">
-    <div>
+  <section class="flex flex-col sm:flex-row sm:justify-between sm:items-end flex-wrap gap-4">
+    <div class="min-w-0">
       <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
         <a class="hover:text-primary" href="{% url 'DashboardAgentEmpotage:dossier-liste' %}">Dossiers</a>
         <span class="material-symbols-outlined text-[14px]">chevron_right</span>
         <span class="text-on-surface font-bold">{{ dossier.TRD }}</span>
       </nav>
-      <h2 class="font-headline-lg text-headline-lg text-primary">Empotage — {{ dossier.projet }}</h2>
+      <h2 class="font-headline-lg-mobile sm:font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-primary break-words">Empotage — {{ dossier.projet }}</h2>
       <div class="flex items-center gap-2 mt-2">
         <span class="flex items-center gap-1 text-on-surface-variant text-body-sm">
           <span class="material-symbols-outlined text-[16px]">location_on</span>{{ dossier.Id_Pays.nom }}
@@ -33,20 +33,20 @@
         {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
       </div>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
       <a href="{% url 'DashboardAgentEmpotage:dossier-rapport' dossier.id %}"
-         class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors"
+         class="flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors"
          title="Télécharger le rapport PDF">
         <span class="material-symbols-outlined">picture_as_pdf</span> Exporter PDF
       </a>
       {% if dossier.conversation_principale %}
       <a href="{% url 'messaging:conversation-detail' dossier.conversation_principale.id %}"
-         class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
+         class="flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant font-label-md rounded-lg hover:bg-surface-container-high transition-colors">
         <span class="material-symbols-outlined">forum</span> Conversation
       </a>
       {% endif %}
       {% if dossier.statut == 'empotage_en_cours' %}
-        <button type="button" id="cloture-open" class="flex items-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+        <button type="button" id="cloture-open" class="flex items-center justify-center gap-2 px-6 py-2 bg-primary text-on-primary font-label-md rounded-lg shadow-sm hover:opacity-90 transition-opacity">
           <span class="material-symbols-outlined">check_circle</span> Clôturer le dossier
         </button>
       {% endif %}
@@ -87,7 +87,7 @@
     </div>
 
     <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant">
-      <h4 class="text-label-md font-label-md text-primary uppercase font-bold mb-4">Répartition par statut</h4>
+      {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="bar_chart" titre="Répartition par statut" %}
       <div class="space-y-4">
         {% for ligne in repartition_statut %}
         <div>
@@ -138,7 +138,53 @@
       </div>
     </form>
 
-    <div class="overflow-x-auto">
+    <!-- Vue cartes (mobile uniquement) : mêmes données/actions que le tableau,
+         sans scroll horizontal sur un petit écran. -->
+    <div class="sm:hidden divide-y divide-outline-variant">
+      {% for ligne in conteneurs %}
+      <div class="p-gutter space-y-2" onclick="window.location='{% url 'DashboardAgentEmpotage:conteneur-detail' ligne.objet.id %}'">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-mono-data text-body-md text-primary font-bold">{{ ligne.objet.reference }}</span>
+          {% if ligne.objet.statut == 'empote' %}
+            <span class="shrink-0 px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed text-label-sm font-bold uppercase">{{ ligne.objet.get_statut_display }}</span>
+          {% else %}
+            <span class="shrink-0 px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-label-sm font-bold uppercase">{{ ligne.objet.get_statut_display }}</span>
+          {% endif %}
+        </div>
+        <div class="flex items-center justify-between text-body-sm">
+          {% if ligne.nature == 'ISO Tank' %}
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-label-sm font-bold uppercase bg-primary/10 text-primary">
+              <span class="material-symbols-outlined text-[14px]">propane_tank</span>{{ ligne.nature }}
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-label-sm font-bold uppercase bg-secondary/10 text-secondary">
+              <span class="material-symbols-outlined text-[14px]">water_drop</span>{{ ligne.nature }}
+            </span>
+          {% endif %}
+          <span class="font-mono-data text-on-surface-variant">{{ ligne.objet.poids_net|default:"—" }} kg</span>
+        </div>
+        <div class="flex gap-2 pt-1" onclick="event.stopPropagation()">
+          {% if dossier.statut == 'empotage_en_cours' %}
+            <a href="{% url 'DashboardAgentEmpotage:conteneur-empoter' ligne.objet.id %}"
+               class="flex-1 text-center px-3 py-1.5 bg-secondary text-on-secondary text-body-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
+              Empoter
+            </a>
+          {% endif %}
+          <a href="{% url 'DashboardAgentEmpotage:conteneur-detail' ligne.objet.id %}"
+             class="{% if dossier.statut != 'empotage_en_cours' %}flex-1{% endif %} flex items-center justify-center gap-1 px-3 py-1.5 border border-outline-variant text-primary text-body-sm rounded-lg hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-sm">visibility</span> Détail
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="px-gutter py-12 text-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">inventory_2</span>
+        Aucun conteneur ne correspond à ces critères.
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="hidden sm:block overflow-x-auto">
       <table class="w-full text-left border-collapse">
         <thead class="bg-surface-container-low border-b border-outline-variant">
           <tr>

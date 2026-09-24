@@ -84,6 +84,24 @@ class ISOTankEmpotageForm(_ConteneurEmpotageFormMixin, forms.ModelForm):
 class FlexitankEmpotageForm(_ConteneurEmpotageFormMixin, forms.ModelForm):
     """Complète l'empotage d'un Flexitank : poids, température, photos, plombs, heating pad."""
 
+    def __init__(self, *args, choix_numero_flextank=None, choix_numero_heatingpad=None, **kwargs):
+        """`choix_numero_flextank`/`choix_numero_heatingpad` (listes de numéros de
+        série, ou None) viennent du brouillon oils-stock-api du dossier — voir
+        views/dossier_empotage/create.py. Quand fournis, remplacent le champ
+        texte libre par un select ; sinon (dossier non lié ou API injoignable),
+        le champ reste un texte libre comme avant l'intégration."""
+        super().__init__(*args, **kwargs)
+        if choix_numero_flextank:
+            self.fields['numeroFlextank'].widget = forms.Select(
+                choices=[('', '---------')] + [(v, v) for v in choix_numero_flextank],
+                attrs={'class': TEXT_INPUT_CLASSES},
+            )
+        if choix_numero_heatingpad:
+            self.fields['Numeroheatingpad'].widget = forms.Select(
+                choices=[('', '---------')] + [(v, v) for v in choix_numero_heatingpad],
+                attrs={'class': TEXT_INPUT_CLASSES},
+            )
+
     class Meta:
         model = Flexitanks
         fields = CONTENEUR_COMMON_FIELDS + [

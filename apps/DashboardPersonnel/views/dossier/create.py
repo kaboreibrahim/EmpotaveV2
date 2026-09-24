@@ -5,9 +5,11 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView
 
 from apps.conteneurs.models import Dossier
+from apps.conteneurs.stock_client import StockServiceIndisponible, creer_sortie_brouillon
 from apps.referentiels.models import (
     POD, POL, CompagnieMaritime, Commodite, Pays, SiteEmpotage, SiteSelection,
 )
@@ -109,6 +111,7 @@ class CreerDossier(ModulePermissionRequiredMixin, DossierOptionsMixin, FormMessa
         form.instance.Id_Personnel = getattr(self.request.user, 'personel', None)
         response = super().form_valid(form)
         dossier = self.object
+        self._creer_brouillon_stock(dossier)
         self._notifier_agent_selection(dossier)
         notifier(
             dossier.id_client.user,
@@ -121,6 +124,37 @@ class CreerDossier(ModulePermissionRequiredMixin, DossierOptionsMixin, FormMessa
                 f"Un nouveau dossier vous a été attribué : {dossier.TRD} — {dossier.projet}.",
             )
         return response
+
+    def _creer_brouillon_stock(self, dossier):
+        """Cree le brouillon de sortie cote oils-stock-api (option a du dossier
+        d'integration : ne bloque jamais la creation du Dossier — une panne
+        reseau se rattrape plus tard via `retry_sorties_brouillons`).
+
+        La societe cliente n'est plus choisie sur le formulaire : elle est
+        deduite automatiquement depuis le Client (compte de suivi empotage)
+        deja selectionne, voir Client.resoudre_client_entreprise()."""
+        client_entreprise = dossier.id_client.resoudre_client_entreprise()
+        if not client_entreprise or not client_entreprise.stock_client_id:
+            return
+        dossier.Id_ClientEntreprise = client_entreprise
+        try:
+            sortie = creer_sortie_brouillon(
+                client_id=client_entreprise.stock_client_id,
+                projet=dossier.projet,
+                trd=dossier.TRD,
+                date_sortie=timezone.now().date(),
+            )
+        except StockServiceIndisponible as exc:
+            dossier.save(update_fields=['Id_ClientEntreprise'])
+            messages.warning(
+                self.request,
+                f"Le dossier a été créé, mais le brouillon de sortie stock n'a pas pu être créé : {exc}. "
+                "Il sera créé automatiquement plus tard.",
+            )
+            return
+        dossier.sortie_stock_id = sortie['id']
+        dossier.sortie_stock_reference = sortie['reference']
+        dossier.save(update_fields=['Id_ClientEntreprise', 'sortie_stock_id', 'sortie_stock_reference'])
 
     def _notifier_agent_selection(self, dossier):
         agent = dossier.Id_Agent_selection

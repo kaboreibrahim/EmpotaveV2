@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from itertools import chain
 from pathlib import Path
@@ -18,7 +19,10 @@ from apps.audit.models import AuditLog
 from apps.audit.services import log_action
 from apps.conteneurs.models import Dossier, ISOTanks
 from apps.conteneurs.services import verifier_paiement
-from apps.notification.services import NotificationService
+from apps.conteneurs.stock_client import StockServiceIndisponible, valider_sortie
+from apps.notification.services import NotificationService, notifier_personnel
+
+logger = logging.getLogger(__name__)
 
 
 RAPPORT_TEMPLATE = 'DashboardAgentEmpotage/rapports/rapport_dossier.html'
@@ -231,6 +235,25 @@ def soumettre_dossier(request, dossier_id):
 
     ancien_statut = dossier.statut
     dossier.terminer()
+    if dossier.sortie_stock_id:
+        try:
+            valider_sortie(dossier.sortie_stock_id)
+        except StockServiceIndisponible as exc:
+            logger.error(
+                "Validation de la sortie stock %s impossible pour le dossier %s : %s",
+                dossier.sortie_stock_id, dossier.TRD, exc,
+            )
+            notifier_personnel(
+                f"La sortie stock du dossier {dossier.TRD} — {dossier.projet} n'a pas pu être validée "
+                f"automatiquement ({exc}). Merci de valider manuellement la sortie "
+                f"{dossier.sortie_stock_reference or dossier.sortie_stock_id} côté oils-stock-api."
+            )
+        else:
+            notifier_personnel(
+                f"La sortie stock {dossier.sortie_stock_reference or dossier.sortie_stock_id} du dossier "
+                f"{dossier.TRD} — {dossier.projet} a été validée avec succès : les unités sont passées "
+                "au statut « Sorti » côté oils-stock-api."
+            )
     log_action(dossier, AuditLog.ACTION_SUBMIT, extra={'rapport': 'empotage'})
 
     NotificationService.notify_status_changed(dossier, ancien_statut, dossier.statut)

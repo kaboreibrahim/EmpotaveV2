@@ -39,6 +39,13 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ---------------------------------------------------------------
+# Intégration oils-stock-api (voir apps.conteneurs.stock_client)
+# ---------------------------------------------------------------
+STOCK_API_BASE_URL = os.environ.get('STOCK_API_BASE_URL', 'http://127.0.0.1:8001/api/v1')
+STOCK_API_KEY = os.environ.get('STOCK_API_KEY', '')
+STOCK_API_TIMEOUT = float(os.environ.get('STOCK_API_TIMEOUT', '15'))
+
+# ---------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------
 AUTH_USER_MODEL = 'users.Users'

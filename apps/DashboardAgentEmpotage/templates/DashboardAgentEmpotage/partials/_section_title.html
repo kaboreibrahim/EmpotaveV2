@@ -1,0 +1,21 @@
+{% comment %}
+Titre de section a badge circulaire colore, devant chaque carte de contenu.
+Contexte attendu : `titre` (obligatoire), et soit `numero` (etape numerotee,
+ex. formulaire en plusieurs sections) soit `icone` (nom d'icone Material
+Symbols, pour une section non numerotee). `couleur` optionnel :
+primary (defaut) / secondary / tertiary. `pas_de_marge` optionnel : omet la
+marge basse (ex. utilise dans une barre d'en-tete flex avec un badge a droite,
+plutot qu'en haut d'une carte).
+{% endcomment %}
+<div class="flex items-center gap-3 {% if not pas_de_marge %}mb-6{% endif %}">
+  {% if couleur == 'secondary' %}
+  <div class="w-9 h-9 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold shrink-0">
+  {% elif couleur == 'tertiary' %}
+  <div class="w-9 h-9 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center font-bold shrink-0">
+  {% else %}
+  <div class="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+  {% endif %}
+    {% if numero %}{{ numero }}{% else %}<span class="material-symbols-outlined text-[20px]">{{ icone }}</span>{% endif %}
+  </div>
+  <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight text-on-surface">{{ titre }}</h3>
+</div>

@@ -157,19 +157,66 @@ class Client(SafeDeleteModel, LifecycleModel, TimestampMixin):
     _safedelete_policy = SOFT_DELETE_CASCADE
 
     user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='client')
+    # Société cliente côté oils-stock-api (voir ClientEntreprise ci-dessous) —
+    # déduite automatiquement par correspondance de nom (voir
+    # resoudre_client_entreprise) plutôt que choisie à chaque dossier ;
+    # corrigeable à la main dans l'admin si la déduction se trompe.
+    client_entreprise = models.ForeignKey(
+        'ClientEntreprise', on_delete=models.SET_NULL, null=True, blank=True, related_name='clients',
+    )
 
-    
     class Meta:
         verbose_name        = "Client"
         verbose_name_plural = "Clients"
-        
+
     def __str__(self):
         return str(self.user)
 
+    def resoudre_client_entreprise(self):
+        """Retourne la ClientEntreprise liee a ce compte client. Si aucun lien
+        explicite n'existe encore, tente une correspondance par nom exact
+        (insensible a la casse) sur le nom complet/identifiant du compte, et
+        persiste la deduction pour ne pas la refaire a chaque dossier. Ne
+        renvoie rien si aucune correspondance n'est trouvee (dossier cree
+        quand meme, sans lien stock — voir stock_client._creer_brouillon_stock)."""
+        if self.client_entreprise_id:
+            return self.client_entreprise
+        nom = (self.user.get_full_name() or self.user.username).strip()
+        if not nom:
+            return None
+        correspondance = ClientEntreprise.objects.filter(nom__iexact=nom, actif=True).first()
+        if correspondance:
+            self.client_entreprise = correspondance
+            self.save(update_fields=['client_entreprise'])
+        return correspondance
 
 
 # =============================================================================
-# AGENTS   
+# CLIENT ENTREPRISE (référentiel société, distinct du compte de connexion
+# Client ci-dessus) — relie un Dossier au bon client côté oils-stock-api
+# (voir apps.conteneurs.stock_client). Synchronisable depuis oils-stock-api
+# (management command sync_clients_stock) ou créable localement.
+# =============================================================================
+
+class ClientEntreprise(SafeDeleteModel, LifecycleModel, TimestampMixin):
+    _safedelete_policy = SOFT_DELETE_CASCADE
+
+    nom             = models.CharField(max_length=200)
+    code            = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    stock_client_id = models.UUIDField(null=True, blank=True, unique=True)
+    actif           = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name        = "Société cliente"
+        verbose_name_plural = "Sociétés clientes"
+        ordering            = ['nom']
+
+    def __str__(self):
+        return self.nom
+
+
+# =============================================================================
+# AGENTS
 # =============================================================================
 
 class Agent_selection(SafeDeleteModel, LifecycleModel, TimestampMixin):

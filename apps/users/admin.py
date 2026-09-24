@@ -5,6 +5,7 @@ from .models import (
     Agent_empotage,
     Agent_selection,
     Client,
+    ClientEntreprise,
     CodeVerication,
     Personnel,
     PersonnelComptable,
@@ -97,7 +98,16 @@ class PersonnelAdmin(UserWrapperAdmin):
 
 @admin.register(Client)
 class ClientAdmin(UserWrapperAdmin):
-    pass
+    list_display = ("user", "client_entreprise", "date_created")
+    autocomplete_fields = ("user", "client_entreprise")
+
+
+@admin.register(ClientEntreprise)
+class ClientEntrepriseAdmin(admin.ModelAdmin):
+    list_display = ("nom", "code", "stock_client_id", "actif", "date_created")
+    list_filter = ("actif",)
+    search_fields = ("nom", "code")
+    readonly_fields = ("id", "date_created")
 
 
 @admin.register(Agent_selection)

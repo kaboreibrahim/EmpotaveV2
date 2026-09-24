@@ -469,13 +469,19 @@
           <div id="offline-outbox-list" class="max-h-96 overflow-y-auto custom-scrollbar divide-y divide-outline-variant"></div>
         </div>
       </div>
-      <div class="ml-2 w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container-low flex items-center justify-center text-on-surface-variant">
-        {% if user.photo %}
-          <img class="w-full h-full object-cover" src="{{ user.photo.url }}" alt="{{ user.get_full_name|default:user.username }}" />
-        {% else %}
-          <span class="material-symbols-outlined">account_circle</span>
-        {% endif %}
-      </div>
+      <button class="ml-2 flex items-center gap-2 p-1 pl-2 hover:bg-surface-container-low rounded-lg transition-colors border border-transparent hover:border-outline-variant">
+        <div class="text-right hidden sm:block">
+          <p class="text-label-md font-bold text-on-surface">{{ user.get_full_name|default:user.username }}</p>
+          <p class="text-label-sm text-on-surface-variant">{{ user.get_user_type_display|default:"Agent Empotage" }}</p>
+        </div>
+        <div class="w-9 h-9 rounded-full overflow-hidden border border-outline-variant bg-surface-container-low flex items-center justify-center text-on-surface-variant shrink-0">
+          {% if user.photo %}
+            <img class="w-full h-full object-cover" src="{{ user.photo.url }}" alt="{{ user.get_full_name|default:user.username }}" />
+          {% else %}
+            <span class="material-symbols-outlined">account_circle</span>
+          {% endif %}
+        </div>
+      </button>
     </div>
   </header>
 
@@ -486,6 +492,29 @@
       {% block content %}{% endblock content %}
     </div>
   </main>
+
+  <!-- Visionneuse d'image : rotation + telechargement, ouverte au clic sur
+       tout element portant data-lightbox-src (voir _photo_tile.html /
+       dossier_empotage/_photo_field.html). -->
+  <div id="lightbox" class="hidden fixed inset-0 z-[90] bg-black/90 flex flex-col">
+    <div class="flex items-center justify-between gap-3 p-4 text-white">
+      <span id="lightbox-titre" class="text-body-sm truncate"></span>
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" id="lightbox-rotate" class="p-2 hover:bg-white/10 rounded-full transition-colors" title="Pivoter">
+          <span class="material-symbols-outlined">rotate_right</span>
+        </button>
+        <button type="button" id="lightbox-download" class="p-2 hover:bg-white/10 rounded-full transition-colors" title="Télécharger">
+          <span class="material-symbols-outlined">download</span>
+        </button>
+        <button type="button" id="lightbox-close" class="p-2 hover:bg-white/10 rounded-full transition-colors" title="Fermer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 flex items-center justify-center overflow-hidden p-4" id="lightbox-backdrop">
+      <img id="lightbox-image" src="" alt="" class="max-w-full max-h-full object-contain transition-transform duration-200" style="transform: rotate(0deg);">
+    </div>
+  </div>
 
   <script>
     // Sidebar show/hide toggle (mobile: temporary overlay drawer; desktop: persisted preference)
@@ -580,6 +609,105 @@
       document.addEventListener('click', closePanel);
       document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') closePanel();
+      });
+    })();
+
+    // Visionneuse d'image : ouverte au clic sur tout element portant
+    // data-lightbox-src. Rotation par 90° (purement visuelle, CSS) ;
+    // telechargement qui reconstruit l'image via un canvas pour que le
+    // fichier telecharge reflete la rotation appliquee a l'ecran.
+    (function () {
+      const lightbox = document.getElementById('lightbox');
+      if (!lightbox) return;
+      const image = document.getElementById('lightbox-image');
+      const titre = document.getElementById('lightbox-titre');
+      const backdrop = document.getElementById('lightbox-backdrop');
+      const rotateBtn = document.getElementById('lightbox-rotate');
+      const downloadBtn = document.getElementById('lightbox-download');
+      const closeBtn = document.getElementById('lightbox-close');
+      let rotation = 0;
+      let srcCourant = '';
+      let nomCourant = 'photo.jpg';
+
+      function ouvrir(src, label) {
+        rotation = 0;
+        srcCourant = src;
+        nomCourant = (label || 'photo').replace(/[^a-z0-9-]+/gi, '_') + '.jpg';
+        image.src = src;
+        image.style.transform = 'rotate(0deg)';
+        titre.textContent = label || '';
+        lightbox.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function fermer() {
+        lightbox.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+
+      function pivoter() {
+        rotation = (rotation + 90) % 360;
+        image.style.transform = 'rotate(' + rotation + 'deg)';
+      }
+
+      function telechargerDirect() {
+        const lien = document.createElement('a');
+        lien.href = srcCourant;
+        lien.download = nomCourant;
+        document.body.appendChild(lien);
+        lien.click();
+        lien.remove();
+      }
+
+      function telecharger() {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+          try {
+            const canvas = document.createElement('canvas');
+            const enPortrait = rotation % 180 !== 0;
+            canvas.width = enPortrait ? img.naturalHeight : img.naturalWidth;
+            canvas.height = enPortrait ? img.naturalWidth : img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            canvas.toBlob(function (blob) {
+              if (!blob) { telechargerDirect(); return; }
+              const url = URL.createObjectURL(blob);
+              const lien = document.createElement('a');
+              lien.href = url;
+              lien.download = nomCourant;
+              document.body.appendChild(lien);
+              lien.click();
+              lien.remove();
+              URL.revokeObjectURL(url);
+            }, 'image/jpeg', 0.92);
+          } catch (erreur) {
+            // Canvas "tainted" (image hors origine sans CORS) : repli sur le
+            // telechargement direct, sans la rotation appliquee.
+            telechargerDirect();
+          }
+        };
+        img.onerror = telechargerDirect;
+        img.src = srcCourant;
+      }
+
+      document.addEventListener('click', function (event) {
+        const declencheur = event.target.closest('[data-lightbox-src]');
+        if (!declencheur) return;
+        event.preventDefault();
+        ouvrir(declencheur.dataset.lightboxSrc, declencheur.dataset.lightboxLabel);
+      });
+
+      rotateBtn.addEventListener('click', pivoter);
+      downloadBtn.addEventListener('click', telecharger);
+      closeBtn.addEventListener('click', fermer);
+      backdrop.addEventListener('click', function (event) {
+        if (event.target === backdrop) fermer();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !lightbox.classList.contains('hidden')) fermer();
       });
     })();
 

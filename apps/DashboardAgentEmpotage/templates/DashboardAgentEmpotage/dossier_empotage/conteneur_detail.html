@@ -88,11 +88,55 @@
         <p class="text-body-sm opacity-80">{{ conteneur.dossier.projet }}</p>
       </a>
 
+      <!-- Identifiants & plombs -->
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="tag" titre="Identifiants & plombs" %}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {% if est_iso %}
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plomb amateur 1</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.plombAmateur1|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plomb amateur 2</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.plombAmateur2|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plomb amateur 3</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.plombAmateur3|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plombs Oils 1</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.Plombs_oils1|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plombs Oils 2</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.Plombs_oils2|default:"—" }}</span>
+            </div>
+          {% else %}
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Numéro Flexitank</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.numeroFlextank|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Numéro heating pad</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.Numeroheatingpad|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plombs amateur</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.plombs_amateur|default:"—" }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Plombs Oils</span>
+              <span class="font-mono-data text-on-surface">{{ conteneur.Plombs_oils|default:"—" }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
       <!-- Galerie photos : empotage -->
       <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
-        <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
-          <span class="material-symbols-outlined text-lg text-primary">inventory_2</span>Photos d'empotage
-        </h3>
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="inventory_2" titre="Photos d'empotage" %}
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {% for label, photo in photos_empotage %}
           <div class="space-y-1">
@@ -104,9 +148,7 @@
 
       <!-- Galerie photos : sélection -->
       <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter">
-        <h3 class="flex items-center gap-2 text-headline-sm font-headline-sm text-on-surface mb-4">
-          <span class="material-symbols-outlined text-lg text-primary">fact_check</span>Photos de sélection
-        </h3>
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with icone="fact_check" titre="Photos de sélection" %}
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {% for label, photo in photos_selection %}
           <div class="space-y-1">

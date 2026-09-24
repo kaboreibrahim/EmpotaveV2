@@ -36,7 +36,7 @@
     </div>
   {% endif %}
 
-  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-24"
+  <form method="post" enctype="multipart/form-data" class="space-y-gutter pb-28"
         data-offline-form
         data-offline-kind="empotage_renseigner"
         data-ajax-url="{% url 'DashboardAgentEmpotage:conteneur-empoter-ajax' conteneur.pk %}"
@@ -47,10 +47,7 @@
 
     <!-- Poids & Température -->
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-      <div class="flex items-center gap-2 mb-6 text-primary">
-        <span class="material-symbols-outlined">scale</span>
-        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">1. Poids &amp; température</h3>
-      </div>
+      {% include 'DashboardAgentEmpotage/partials/_section_title.html' with numero=1 titre="Poids & température" %}
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-1">
           <label class="text-label-sm font-label-sm text-on-surface-variant ml-1">Poids net (kg) <span class="text-error">*</span></label>
@@ -86,10 +83,7 @@
 
     <!-- Photos d'empotage -->
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-      <div class="flex items-center gap-2 mb-2 text-primary">
-        <span class="material-symbols-outlined">photo_camera</span>
-        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">2. Photos d'empotage</h3>
-      </div>
+      {% include 'DashboardAgentEmpotage/partials/_section_title.html' with numero=2 titre="Photos d'empotage" %}
       <p class="text-body-sm text-on-surface-variant mb-6">
         Photos du chargement, prises au début, pendant et à la fin de l'empotage.
       </p>
@@ -102,10 +96,11 @@
 
     <!-- Plombs -->
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
-      <div class="flex items-center gap-2 mb-6 text-primary">
-        <span class="material-symbols-outlined">lock</span>
-        <h3 class="text-headline-sm font-headline-sm uppercase tracking-tight">3. Plombs {% if not est_iso %}&amp; équipements{% endif %}</h3>
-      </div>
+      {% if est_iso %}
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with numero=3 titre="Plombs" %}
+      {% else %}
+        {% include 'DashboardAgentEmpotage/partials/_section_title.html' with numero=3 titre="Plombs & équipements" %}
+      {% endif %}
 
       {% if est_iso %}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,20 +164,23 @@
     </section>
 
     <!-- Actions -->
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center justify-between gap-4">
-      <p class="text-body-sm text-on-surface-variant flex items-center gap-2">
-        <span class="material-symbols-outlined text-[18px] text-primary">info</span>
-        Une fois le poids net renseigné, le conteneur passe au statut « Empoté ».
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <p class="text-body-sm text-on-surface-variant flex items-start gap-2">
+        <span class="material-symbols-outlined text-[18px] text-primary shrink-0">info</span>
+        <span>Une fois le poids net renseigné, le conteneur passe au statut « Empoté ».</span>
       </p>
-      <div class="flex gap-3">
-        <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="px-6 py-2 rounded-lg border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors">
-          Annuler
-        </a>
-        <button type="submit" class="flex items-center gap-2 px-6 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:opacity-90 transition-opacity shadow-sm">
-          <span class="material-symbols-outlined">save</span> Enregistrer l'empotage
-        </button>
-      </div>
+      <a href="{% url 'DashboardAgentEmpotage:dossier-detail' dossier.id %}" class="self-start px-6 py-2 rounded-lg border border-outline-variant text-on-surface font-label-md hover:bg-surface-container transition-colors">
+        Annuler
+      </a>
     </div>
+
+    <!-- Bouton d'enregistrement flottant : toujours atteignable au pouce sur
+         mobile, reste dans le formulaire (le JS de offline-outbox.js le
+         retrouve via form.querySelector('button[type="submit"]') et gère
+         déjà la désactivation anti-double-clic + l'animation de chargement). -->
+    <button type="submit" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-auto z-40 flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-primary text-on-primary font-label-md font-bold shadow-xl hover:opacity-90 active:scale-95 transition-all">
+      <span class="material-symbols-outlined">save</span> Enregistrer l'empotage
+    </button>
   </form>
 
   <script>

@@ -33,8 +33,8 @@ from apps.referentiels.models import (
     SiteSelection, SiteEmpotage,
     
 )
-from apps.users.models import (Personnel, Agent_selection, 
-    Agent_empotage, Client,
+from apps.users.models import (Personnel, Agent_selection,
+    Agent_empotage, Client, ClientEntreprise,
 
 )
 
@@ -95,6 +95,13 @@ class Dossier(SafeDeleteModel, LifecycleModel, TimestampMixin):
     id_client          = models.ForeignKey(Client,          on_delete=models.CASCADE,                         related_name='dossiers')
     Id_Personnel        = models.ForeignKey(Personnel,        on_delete=models.SET_NULL, null=True, blank=True, related_name='dossiers_crees')
     Id_Agent_operationel=models.ForeignKey(Personnel, on_delete=models.SET_NULL, null=True, blank=True, related_name='dossiers_operationnel')
+
+    # Intégration oils-stock-api (voir apps.conteneurs.stock_client) : société
+    # cliente référencée côté stock (optionnelle — un dossier peut exister sans
+    # être encore lié), puis brouillon de sortie créé pour ce dossier.
+    Id_ClientEntreprise   = models.ForeignKey(ClientEntreprise, on_delete=models.SET_NULL, null=True, blank=True, related_name='dossiers')
+    sortie_stock_id        = models.UUIDField(null=True, blank=True)
+    sortie_stock_reference = models.CharField(max_length=50, null=True, blank=True)
 
     # Paiement (verrou avant traitement par les agents)
     est_paye             = models.BooleanField(default=False)

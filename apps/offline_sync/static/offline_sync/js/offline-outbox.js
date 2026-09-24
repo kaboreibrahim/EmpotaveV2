@@ -74,14 +74,33 @@
     });
   }
 
+  // Empeche le double-clic/double-tap (le bouton est desactive des le premier
+  // clic) et rend l'envoi visible via un spinner — sans quoi, sur mobile, rien
+  // ne montre que l'appui a bien ete pris en compte le temps du fetch().
+  function definirChargement(bouton, enCours) {
+    if (!bouton) return;
+    if (enCours) {
+      bouton.dataset.libelleOriginal = bouton.innerHTML;
+      bouton.disabled = true;
+      bouton.classList.add('opacity-70', 'cursor-wait');
+      bouton.innerHTML =
+        '<span class="material-symbols-outlined animate-spin">progress_activity</span> Enregistrement…';
+    } else {
+      bouton.disabled = false;
+      bouton.classList.remove('opacity-70', 'cursor-wait');
+      if (bouton.dataset.libelleOriginal) bouton.innerHTML = bouton.dataset.libelleOriginal;
+    }
+  }
+
   function attacherFormulaire(form) {
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       const boutonEnvoi = form.querySelector('button[type="submit"]');
+      if (boutonEnvoi && boutonEnvoi.disabled) return; // deja en cours d'envoi
       const formData = new FormData(form);
       formData.set('client_action_id', genererClientActionId());
       formData.set('client_date_modifier', form.dataset.dateModifier || '');
-      if (boutonEnvoi) boutonEnvoi.disabled = true;
+      definirChargement(boutonEnvoi, true);
 
       fetch(form.dataset.ajaxUrl, { method: 'POST', body: formData })
         .then(function (reponse) {
@@ -101,14 +120,14 @@
               form, 'conflict',
               "Cet enregistrement a été modifié entretemps. Rechargez la page pour voir l'état actuel avant de recommencer."
             );
-            if (boutonEnvoi) boutonEnvoi.disabled = false;
+            definirChargement(boutonEnvoi, false);
             return;
           }
           afficherStatutFormulaire(
             form, 'error',
             "Le formulaire contient des erreurs ou l'action n'a pas pu être appliquée. Vérifiez les champs et réessayez."
           );
-          if (boutonEnvoi) boutonEnvoi.disabled = false;
+          definirChargement(boutonEnvoi, false);
         })
         .catch(function () {
           mettreEnFileDattente(form, formData).then(function () {
@@ -116,6 +135,7 @@
               form, 'queued',
               "Hors ligne — cette action a été mise en file d'attente et sera envoyée automatiquement dès que la connexion revient."
             );
+            definirChargement(boutonEnvoi, false);
             rafraichirBadge();
           });
         });

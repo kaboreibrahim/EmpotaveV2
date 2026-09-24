@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 
 from apps.conteneurs.models import Flexitanks, ISOTanks
 from apps.conteneurs.services import verifier_paiement
+from apps.conteneurs.stock_client import StockServiceIndisponible, lister_lignes_sortie
 from apps.DashboardAgentEmpotage.forms import FlexitankEmpotageForm, ISOTankEmpotageForm
 from apps.notification.services import NotificationService
 from apps.offline_sync.utils import (
@@ -20,6 +21,50 @@ SELECT_RELATED = ('dossier', 'dossier__Id_Pays')
 
 # Statut du dossier pendant lequel l'agent d'empotage peut encore renseigner les conteneurs.
 STATUTS_OUVERTS_A_L_EMPOTAGE = ('empotage_en_cours',)
+
+
+def _choix_numeros_disponibles(conteneur):
+    """Numeros de serie flexitank/heating pad du brouillon oils-stock-api du
+    dossier, pour peupler les select de FlexitankEmpotageForm : exclut ceux
+    deja utilises par les AUTRES conteneurs du dossier, reinclut toujours la
+    valeur deja choisie par CE conteneur (sinon elle disparaitrait du select
+    en edition). Retourne (None, None) si le dossier n'est pas lie a un
+    brouillon ou si oils-stock-api est injoignable — l'appelant degrade alors
+    vers le texte libre historique."""
+    dossier = conteneur.dossier
+    if not dossier.sortie_stock_id:
+        return None, None
+    try:
+        lignes = lister_lignes_sortie(dossier.sortie_stock_id)
+    except StockServiceIndisponible:
+        return None, None
+
+    deja_pris = set()
+    autres = Flexitanks.objects.filter(dossier=dossier).exclude(pk=conteneur.pk)
+    for numero_flextank, numero_heatingpad in autres.values_list('numeroFlextank', 'Numeroheatingpad'):
+        if numero_flextank:
+            deja_pris.add(numero_flextank)
+        if numero_heatingpad:
+            deja_pris.add(numero_heatingpad)
+
+    choix_flextank = [l['numero_serie'] for l in lignes if l['type_article'] == 'FLEXITANK' and l['numero_serie'] not in deja_pris]
+    choix_heatingpad = [l['numero_serie'] for l in lignes if l['type_article'] == 'HEATING_PAD' and l['numero_serie'] not in deja_pris]
+
+    if conteneur.numeroFlextank and conteneur.numeroFlextank not in choix_flextank:
+        choix_flextank.append(conteneur.numeroFlextank)
+    if conteneur.Numeroheatingpad and conteneur.Numeroheatingpad not in choix_heatingpad:
+        choix_heatingpad.append(conteneur.Numeroheatingpad)
+
+    return choix_flextank, choix_heatingpad
+
+
+def _kwargs_choix_formulaire(conteneur, est_iso):
+    """Kwargs supplementaires pour FormClass(...) : uniquement pour les
+    Flexitanks (ISOTankEmpotageForm n'accepte pas choix_numero_*)."""
+    if est_iso:
+        return {}
+    choix_flextank, choix_heatingpad = _choix_numeros_disponibles(conteneur)
+    return {'choix_numero_flextank': choix_flextank, 'choix_numero_heatingpad': choix_heatingpad}
 
 
 def _conteneur_ouvert_a_l_empotage(request, pk):
@@ -55,9 +100,10 @@ def renseigner_empotage(request, pk):
     """
     conteneur, est_iso = _conteneur_ouvert_a_l_empotage(request, pk)
     FormClass = ISOTankEmpotageForm if est_iso else FlexitankEmpotageForm
+    kwargs_choix = _kwargs_choix_formulaire(conteneur, est_iso)
 
     if request.method == 'POST':
-        form = FormClass(request.POST, request.FILES, instance=conteneur)
+        form = FormClass(request.POST, request.FILES, instance=conteneur, **kwargs_choix)
 
         if form.is_valid():
             conteneur = form.save(commit=False)
@@ -71,7 +117,7 @@ def renseigner_empotage(request, pk):
             messages.success(request, f"Empotage du conteneur {conteneur.reference} enregistré.")
             return redirect('DashboardAgentEmpotage:dossier-detail', dossier_id=conteneur.dossier_id)
     else:
-        form = FormClass(instance=conteneur)
+        form = FormClass(instance=conteneur, **kwargs_choix)
 
     return render(request, CREATE_TEMPLATE, {
         'dossier': conteneur.dossier,
@@ -136,7 +182,7 @@ def renseigner_empotage_ajax(request, pk):
         return _signaler_conflit()
 
     FormClass = ISOTankEmpotageForm if est_iso else FlexitankEmpotageForm
-    form = FormClass(request.POST, request.FILES, instance=conteneur)
+    form = FormClass(request.POST, request.FILES, instance=conteneur, **_kwargs_choix_formulaire(conteneur, est_iso))
     if not form.is_valid():
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
