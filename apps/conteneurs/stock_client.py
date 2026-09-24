@@ -62,6 +62,11 @@ def valider_sortie(sortie_id) -> dict:
     return reponse.json()
 
 
+def creer_client_stock(nom, code) -> dict:
+    reponse = _requete("POST", "clients/", json={"nom": nom, "code": code})
+    return reponse.json()
+
+
 def lister_clients(actif=True) -> list:
     resultats = []
     chemin = "clients/"
