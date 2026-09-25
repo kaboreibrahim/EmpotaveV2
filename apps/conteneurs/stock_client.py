@@ -79,3 +79,35 @@ def lister_clients(actif=True) -> list:
         suivant = corps.get("next") if isinstance(corps, dict) else None
         chemin = suivant
     return resultats
+
+
+# --- Dashboard "Appro Stock" (apps.dashboard côté oils-stock-api) ----------
+
+def stock_seuils_reappro() -> list:
+    """Stock actuel + seuil effectif par (fournisseur, type d'article). Non paginé."""
+    return _requete("GET", "dashboard/seuils-reappro/").json()
+
+
+def stock_previsions() -> list:
+    """Comme seuils_reappro, plus consommation/jour et jours avant rupture,
+    trié par urgence. Non paginé."""
+    return _requete("GET", "dashboard/previsions/").json()
+
+
+def stock_sorties_mensuelles() -> dict:
+    """12 mois glissants, séries flexitank/heating_pad + moyenne mobile 3 mois."""
+    return _requete("GET", "dashboard/sorties-mensuelles/").json()
+
+
+def stock_dormant(seuil_jours=90) -> list:
+    """Unités EN_STOCK inactives depuis plus de `seuil_jours` jours. Paginé."""
+    resultats = []
+    chemin = "dashboard/stock-dormant/"
+    params = {"seuil_jours": seuil_jours}
+    while chemin:
+        reponse = _requete("GET", chemin, params=params)
+        params = None
+        corps = reponse.json()
+        resultats.extend(corps.get("results", corps if isinstance(corps, list) else []))
+        chemin = corps.get("next") if isinstance(corps, dict) else None
+    return resultats

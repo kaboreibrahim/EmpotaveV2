@@ -1,0 +1,259 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Appro Stock{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- En-tete -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Appro Stock</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Stock flexitanks/heating pads géré par oils-stock-api — lecture seule.</p>
+    </div>
+  </div>
+
+  {% if stock_indisponible %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-error/10 border border-error text-error text-body-sm">
+    <span class="material-symbols-outlined">cloud_off</span>
+    <span>oils-stock-api est actuellement injoignable — les données ci-dessous ne peuvent pas être affichées. Réessayez plus tard.</span>
+  </div>
+  {% else %}
+
+  <!-- KPI -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">water_drop</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Flexitanks en stock</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_flexitank }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">mode_heat</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Heating pads en stock</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ total_heating_pad }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-error/10 text-error flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">warning</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Couples en alerte</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ nb_en_alerte }}</p>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-center gap-3 shadow-sm">
+      <div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">inventory</span>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest truncate">Valeur stock dormant</p>
+        <p class="text-headline-md font-headline-md font-bold text-on-surface">{{ valeur_dormante_totale|floatformat:0 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Seuils de reappro -->
+    <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+      <div class="p-gutter border-b border-outline-variant">
+        <h3 class="font-headline-md text-headline-md text-primary">Seuils de réapprovisionnement</h3>
+        <p class="text-body-sm text-on-surface-variant mt-1">Stock actuel par fournisseur et type d'article.</p>
+      </div>
+      <div class="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low border-b border-outline-variant sticky top-0">
+            <tr>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Fournisseur</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Type</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Stock</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Seuil</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for ligne in seuils %}
+            <tr class="{% if ligne.en_alerte %}bg-error/5{% endif %}">
+              <td class="px-4 py-2 text-body-sm">{{ ligne.fournisseur.nom }}</td>
+              <td class="px-4 py-2 text-body-sm">{{ ligne.type_article }}</td>
+              <td class="px-4 py-2 text-body-sm text-right font-mono-data {% if ligne.en_alerte %}text-error font-bold{% endif %}">{{ ligne.stock_actuel }}</td>
+              <td class="px-4 py-2 text-body-sm text-right font-mono-data text-on-surface-variant">{{ ligne.seuil|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant text-body-sm">Aucune donnée.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Previsions de rupture -->
+    <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+      <div class="p-gutter border-b border-outline-variant">
+        <h3 class="font-headline-md text-headline-md text-primary">Prévisions de rupture</h3>
+        <p class="text-body-sm text-on-surface-variant mt-1">Triées par urgence (jours avant rupture).</p>
+      </div>
+      <div class="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-surface-container-low border-b border-outline-variant sticky top-0">
+            <tr>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Fournisseur</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Type</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Jours avant rupture</th>
+              <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Commande recommandée</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant">
+            {% for ligne in previsions %}
+            <tr>
+              <td class="px-4 py-2 text-body-sm">{{ ligne.fournisseur.nom }}</td>
+              <td class="px-4 py-2 text-body-sm">{{ ligne.type_article }}</td>
+              <td class="px-4 py-2 text-body-sm text-right font-mono-data {% if ligne.jours_avant_rupture is not None and ligne.jours_avant_rupture < 14 %}text-error font-bold{% endif %}">
+                {{ ligne.jours_avant_rupture|default:"—" }}
+              </td>
+              <td class="px-4 py-2 text-body-sm text-right font-mono-data text-on-surface-variant">{{ ligne.date_commande_recommandee|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant text-body-sm">Aucune donnée.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tendance des sorties -->
+  <section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-gutter">
+    <h3 class="font-headline-md text-headline-md text-primary mb-1">Sorties mensuelles</h3>
+    <p class="text-body-sm text-on-surface-variant mb-4">12 derniers mois, avec moyenne mobile sur 3 mois.</p>
+    {% if labels_mois %}
+    <div class="h-80"><canvas id="chart-sorties-mensuelles"></canvas></div>
+    {% else %}
+    <p class="text-body-sm text-on-surface-variant text-center py-16">Aucune donnée disponible.</p>
+    {% endif %}
+  </section>
+
+  <!-- Stock dormant -->
+  <section class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+    <div class="p-gutter border-b border-outline-variant">
+      <h3 class="font-headline-md text-headline-md text-primary">Stock dormant</h3>
+      <p class="text-body-sm text-on-surface-variant mt-1">Unités en stock sans activité depuis plus de 90 jours.</p>
+    </div>
+    <div class="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant sticky top-0">
+          <tr>
+            <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Numéro de série</th>
+            <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Type</th>
+            <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold">Fournisseur</th>
+            <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Jours écoulés</th>
+            <th class="px-4 py-2 text-label-sm text-on-surface-variant uppercase font-bold text-right">Valeur immobilisée</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          {% for unite in dormant %}
+          <tr>
+            <td class="px-4 py-2 text-body-sm font-mono-data">{{ unite.numero_serie }}</td>
+            <td class="px-4 py-2 text-body-sm">{{ unite.type_article }}</td>
+            <td class="px-4 py-2 text-body-sm">{{ unite.fournisseur.nom }}</td>
+            <td class="px-4 py-2 text-body-sm text-right font-mono-data">{{ unite.jours_ecoules }}</td>
+            <td class="px-4 py-2 text-body-sm text-right font-mono-data text-on-surface-variant">{{ unite.valeur_immobilisee|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant text-body-sm">Aucun stock dormant.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {{ labels_mois|json_script:"data-labels-mois" }}
+  {{ flexitank_mois|json_script:"data-flexitank-mois" }}
+  {{ heating_pad_mois|json_script:"data-heating-pad-mois" }}
+  {{ flexitank_moyenne|json_script:"data-flexitank-moyenne" }}
+  {{ heating_pad_moyenne|json_script:"data-heating-pad-moyenne" }}
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById('chart-sorties-mensuelles');
+      if (!canvas) return;
+
+      const labels = JSON.parse(document.getElementById('data-labels-mois').textContent);
+      const flexitank = JSON.parse(document.getElementById('data-flexitank-mois').textContent);
+      const heatingPad = JSON.parse(document.getElementById('data-heating-pad-mois').textContent);
+      const flexitankMoyenne = JSON.parse(document.getElementById('data-flexitank-moyenne').textContent);
+      const heatingPadMoyenne = JSON.parse(document.getElementById('data-heating-pad-moyenne').textContent);
+
+      // Palette categorielle validee (voir skill dataviz) : bleu/orange, 2 series.
+      const COULEUR_FLEXITANK = '#2a78d6';
+      const COULEUR_HEATING_PAD = '#eb6834';
+
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Flexitank',
+              data: flexitank,
+              borderColor: COULEUR_FLEXITANK,
+              backgroundColor: COULEUR_FLEXITANK,
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.2,
+            },
+            {
+              label: 'Flexitank (moyenne mobile 3 mois)',
+              data: flexitankMoyenne,
+              borderColor: COULEUR_FLEXITANK,
+              borderDash: [6, 4],
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.2,
+            },
+            {
+              label: 'Heating pad',
+              data: heatingPad,
+              borderColor: COULEUR_HEATING_PAD,
+              backgroundColor: COULEUR_HEATING_PAD,
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.2,
+            },
+            {
+              label: 'Heating pad (moyenne mobile 3 mois)',
+              data: heatingPadMoyenne,
+              borderColor: COULEUR_HEATING_PAD,
+              borderDash: [6, 4],
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { mode: 'index', intersect: false },
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#e1e0d9' } },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+    })();
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 from django.urls import path
 from .views.accueil import DashboardPersonnel
+from .views.stock import DashboardStock
 from .views.referentiels.pays import CreatePays, ListePays, ModifierPays
 from .views.referentiels.commodite import CreerCommodite, DeleteCommodite, ListeCommodites, ModifierCommodite
 from .views.referentiels.pol import CreerPOL, DeletePOL, ListePOL, ModifierPOL
@@ -28,6 +29,7 @@ app_name = 'DashboardPersonnel'
 
 urlpatterns = [
     path('accueil/', DashboardPersonnel, name='dashboard-personnel'),
+    path('stock/', DashboardStock, name='dashboard-stock'),
 
     #PAYS
     path('pays/liste/', ListePays.as_view(), name='pays-liste'),
