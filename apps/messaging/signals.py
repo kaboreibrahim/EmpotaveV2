@@ -37,11 +37,22 @@ def utilisateurs_autorises(dossier):
 
 @receiver(post_save, sender=Dossier)
 def synchroniser_conversation_dossier(sender, instance, created, **kwargs):
-    conversation, _ = Conversation.objects.get_or_create(
-        dossier=instance,
-        type_conversation=Conversation.TYPE_DOSSIER,
-        defaults={'titre': f"Dossier {instance.TRD}"},
-    )
+    # On passe par `all_objects` (et pas `objects`) pour retrouver une
+    # conversation deja existante meme si elle a ete soft-supprimee : la
+    # contrainte d'unicite en base ne distingue pas les lignes soft-
+    # supprimees, donc un get_or_create() classique (qui ne les voit pas)
+    # tenterait de recreer la ligne et leverait un IntegrityError.
+    conversation = Conversation.all_objects.filter(
+        dossier=instance, type_conversation=Conversation.TYPE_DOSSIER,
+    ).first()
+    if conversation is None:
+        conversation = Conversation.objects.create(
+            dossier=instance,
+            type_conversation=Conversation.TYPE_DOSSIER,
+            titre=f"Dossier {instance.TRD}",
+        )
+    elif conversation.deleted:
+        conversation.undelete()
     deja_membres = set(
         conversation.membres_conversation.values_list('user_id', flat=True)
     )
