@@ -460,6 +460,7 @@
         <span class="material-symbols-outlined" data-icon="folder">folder</span>
         <span class="text-label-md">Dossiers</span>
       </a>
+      
       <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'messaging:conversation-list' %}">
         <span class="material-symbols-outlined" data-icon="forum">forum</span>
         <span class="text-label-md">Messages</span>
@@ -467,6 +468,10 @@
       <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'DashboardPersonnel:conteneur-recherche' %}">
         <span class="material-symbols-outlined" data-icon="search">search</span>
         <span class="text-label-md">Recherche Conteneur</span>
+      </a>
+      <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'facturation:liste' %}">
+        <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        <span class="text-label-md">Facturation</span>
       </a>
         {% comment %} <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="#">
           <span class="material-symbols-outlined" data-icon="check_box">check_box</span>
@@ -503,6 +508,8 @@
           <span class="material-symbols-outlined text-base transition-transform duration-300" id="referentiels-chevron" data-icon="expand_more">expand_more</span>
         </button>
         <div id="referentiels-submenu" class="hidden pl-8 space-y-1 mt-1">
+          <a class="block text-on-primary/60 hover:text-on-primary px-4 py-2 rounded-lg text-label-md transition-all duration-300" href="{% url 'DashboardPersonnel:banque-liste' %}">Banque </a>
+          <a class="block text-on-primary/60 hover:text-on-primary px-4 py-2 rounded-lg text-label-md transition-all duration-300" href="{% url 'facturation:incoterm_liste' %}">Incoterm </a>
           <a class="block text-on-primary/60 hover:text-on-primary px-4 py-2 rounded-lg text-label-md transition-all duration-300" href="{% url 'DashboardPersonnel:pays-liste' %}">Pays</a>
           <a class="block text-on-primary/60 hover:text-on-primary px-4 py-2 rounded-lg text-label-md transition-all duration-300" href="{% url 'DashboardPersonnel:commodites-liste' %}">Commodité</a>
           <a class="block text-on-primary/60 hover:text-on-primary px-4 py-2 rounded-lg text-label-md transition-all duration-300" href="{% url 'DashboardPersonnel:pol-liste' %}">POL</a>

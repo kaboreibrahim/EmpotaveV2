@@ -1,0 +1,98 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Gestion des Factures{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <span class="text-primary font-bold">Facture</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Gestion des factures</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Suivez les factures d'exportation.</p>
+    </div>
+    <a href="{% url 'facturation:creer' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span class="font-label-md text-label-md uppercase">Nouvelle facture</span>
+    </a>
+  </div>
+
+  <!-- Recherche -->
+  <form method="get" class="flex gap-3 max-w-xl">
+    <div class="relative flex-1">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="N° facture, réf. client, dossier, client…"
+             class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest pl-11 pr-3 py-2.5 text-body-md text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+    </div>
+    <button type="submit" class="px-5 py-2.5 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Rechercher</button>
+    {% if q %}<a href="{% url 'facturation:liste' %}" class="px-4 py-2.5 text-on-surface-variant hover:text-primary">Effacer</a>{% endif %}
+  </form>
+
+  <!-- Tableau -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-x-auto">
+    <table class="w-full text-left">
+      <thead class="bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+        <tr>
+          <th class="px-4 py-3">N° facture</th>
+          <th class="px-4 py-3">Réf. client</th>
+          <th class="px-4 py-3">Client</th>
+          <th class="px-4 py-3">Date</th>
+          <th class="px-4 py-3">Échéance</th>
+          <th class="px-4 py-3 text-right">Total TTC (FCFA)</th>
+          <th class="px-4 py-3 text-right">Total TTC (EUR)</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-body-md text-on-surface">
+        {% for f in factures %}
+        <tr class="border-t border-outline-variant hover:bg-surface-container-low/60">
+          <td class="px-4 py-3 font-bold text-primary whitespace-nowrap">
+            <a href="{% url 'facturation:detail' f.pk %}" class="hover:underline">{{ f.numero }}</a>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ f.ref_client }}</td>
+          <td class="px-4 py-3">{{ f.client }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ f.date_facturation|date:"d/m/Y" }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ f.date_echeance|date:"d/m/Y" }}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">{{ f.total_ttc_fcfa|floatformat:"0g" }}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">{{ f.total_ttc_eur|floatformat:"2g" }}</td>
+          <td class="px-4 py-3">
+            <div class="flex justify-end gap-1">
+              <a href="{% url 'facturation:detail' f.pk %}" title="Voir" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">visibility</span></a>
+              <a href="{% url 'facturation:pdf' f.pk %}" target="_blank" title="Ouvrir le PDF" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">picture_as_pdf</span></a>
+              <a href="{% url 'facturation:modifier' f.pk %}" title="Modifier" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">edit</span></a>
+              <a href="{% url 'facturation:supprimer' f.pk %}" title="Supprimer" class="p-2 rounded-lg text-error hover:bg-surface-container-low"><span class="material-symbols-outlined">delete</span></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="px-4 py-16 text-center text-on-surface-variant">
+            {% if q %}Aucune facture ne correspond à « {{ q }} ».{% else %}Aucune facture pour le moment. Créez la première avec « Nouvelle facture ».{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="flex items-center justify-between text-body-md text-on-surface-variant">
+    <span>Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} facture{{ paginator.count|pluralize }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-low">Précédent</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-low">Suivant</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

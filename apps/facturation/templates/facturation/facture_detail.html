@@ -1,0 +1,129 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Facture {{ facture.numero }}{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <a href="{% url 'facturation:liste' %}" class="hover:text-primary">Facture</a>
+        <span class="material-symbols-outlined text-base">chevron_right</span>
+        <span class="text-primary font-bold">{{ facture.numero }}</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Facture {{ facture.numero }}</h1>
+      <p class="text-body-md text-on-surface-variant">{{ facture.client }} — réf. client {{ facture.ref_client }}</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <a href="{% url 'facturation:pdf' facture.pk %}" target="_blank" class="flex items-center gap-2 px-5 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95">
+        <span class="material-symbols-outlined">picture_as_pdf</span> Ouvrir le PDF
+      </a>
+      <a href="{% url 'facturation:pdf' facture.pk %}?download=1" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">download</span> Télécharger
+      </a>
+      <a href="{% url 'facturation:envoyer_email' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">send</span> Envoyer par email
+      </a>
+      <a href="{% url 'facturation:modifier' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">edit</span> Modifier
+      </a>
+      <a href="{% url 'facturation:supprimer' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">delete</span> Supprimer
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Infos facture -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h2 class="text-title-md font-bold text-on-surface">Facture</h2>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body-md">
+        <dt class="text-on-surface-variant">N°</dt><dd class="text-on-surface font-bold">{{ facture.numero }}</dd>
+        <dt class="text-on-surface-variant">Réf. client</dt><dd class="text-on-surface">{{ facture.ref_client }}</dd>
+        <dt class="text-on-surface-variant">Réf. dossier</dt><dd class="text-on-surface">{{ facture.ref_dossier|default:"—" }}</dd>
+        <dt class="text-on-surface-variant">Facturation</dt><dd class="text-on-surface">{{ facture.date_facturation|date:"d/m/Y" }}</dd>
+        <dt class="text-on-surface-variant">Échéance</dt><dd class="text-on-surface">{{ facture.date_echeance|date:"d/m/Y" }}</dd>
+        <dt class="text-on-surface-variant">Règlement</dt><dd class="text-on-surface">{{ facture.conditions_reglement }}</dd>
+      </dl>
+    </section>
+
+    <!-- Client -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h2 class="text-title-md font-bold text-on-surface">Adressé à</h2>
+      <div class="text-body-md text-on-surface space-y-1">
+        <p class="font-bold">{{ facture.client.user.get_full_name }}</p>
+            <div class="encadre">
+               
+                <p style="white-space: pre-line; margin-top: 5px;">
+                    {{ facture.client.adresse }}
+                </p>
+            </div>
+        </td>
+
+
+        
+      </div>
+    </section>
+
+    <!-- Banque -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
+      <h2 class="text-title-md font-bold text-on-surface">Règlement par virement</h2>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body-md">
+        {% for libelle, valeur in facture.banque.bloc_pied_page %}
+        <dt class="text-on-surface-variant">{{ libelle }}</dt><dd class="text-on-surface break-all">{{ valeur }}</dd>
+        {% endfor %}
+      </dl>
+    </section>
+  </div>
+
+  <!-- Ligne Incoterm -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-2">
+    <h2 class="text-title-md font-bold text-on-surface">Incoterm</h2>
+    <p class="text-body-md text-on-surface">{{ facture.texte_incoterm }}</p>
+  </section>
+
+  <!-- Lignes + totaux -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+          <tr>
+            <th class="px-4 py-3">Désignation</th>
+            <th class="px-4 py-3 text-right">TVA</th>
+            <th class="px-4 py-3 text-right">P.U. HT</th>
+            <th class="px-4 py-3 text-right">Qté</th>
+            <th class="px-4 py-3 text-right">Total HT</th>
+          </tr>
+        </thead>
+        <tbody class="text-body-md text-on-surface">
+          {% for l in facture.lignes.all %}
+          <tr class="border-t border-outline-variant">
+            <td class="px-4 py-3">{{ l.designation }}</td>
+            <td class="px-4 py-3 text-right">{{ l.tva_taux|floatformat:"-2" }} %</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">{{ l.pu_ht|floatformat:"0g" }}</td>
+            <td class="px-4 py-3 text-right">{{ l.quantite|floatformat:"-2" }}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">{{ l.total_ht|floatformat:"0g" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Aucune ligne.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="border-t border-outline-variant p-6 flex justify-end">
+      <dl class="grid grid-cols-[auto_auto] gap-x-10 gap-y-2 text-body-md text-on-surface">
+        <dt class="font-bold">Total HT</dt><dd class="text-right font-bold">{{ facture.total_ht_fcfa|floatformat:"0g" }} FCFA</dd>
+        <dt class="font-bold">Total TTC</dt><dd class="text-right font-bold">{{ facture.total_ttc_fcfa|floatformat:"0g" }} FCFA</dd>
+        <dt class="text-on-surface-variant">Total HT (EUR)</dt><dd class="text-right text-on-surface-variant">{{ facture.total_ht_eur|floatformat:"2g" }} EUR</dd>
+        <dt class="text-on-surface-variant">Total TTC (EUR)</dt><dd class="text-right text-on-surface-variant">{{ facture.total_ttc_eur|floatformat:"2g" }} EUR</dd>
+        <dt class="text-label-md text-on-surface-variant">Taux</dt><dd class="text-right text-label-md text-on-surface-variant">1 EUR = {{ facture.taux_change|floatformat:"-3" }} FCFA</dd>
+      </dl>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

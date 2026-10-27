@@ -1,0 +1,8 @@
+<div class="space-y-1">
+  <label for="{{ field.id_for_label }}" class="block text-label-md font-label-md text-on-surface-variant">
+    {{ field.label }}{% if field.field.required %} *{% endif %}
+  </label>
+  {{ field }}
+  {% if field.help_text %}<p class="text-label-md text-on-surface-variant">{{ field.help_text }}</p>{% endif %}
+  {% for e in field.errors %}<p class="text-label-md text-error">{{ e }}</p>{% endfor %}
+</div>

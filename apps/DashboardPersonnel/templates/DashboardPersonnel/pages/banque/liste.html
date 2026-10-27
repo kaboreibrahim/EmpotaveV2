@@ -1,0 +1,96 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Gestion des Banques{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Gestion des banques</h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">Comptes bancaires affichés en pied de facture pour le règlement par virement.</p>
+    </div>
+    <a href="{% url 'DashboardPersonnel:creer' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span class="font-label-md text-label-md uppercase">Nouvelle banque</span>
+    </a>
+  </div>
+
+  <form method="get" class="flex flex-col sm:flex-row gap-3 max-w-3xl">
+    <div class="relative flex-1">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="Banque, titulaire, n° de compte, IBAN…"
+             class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest pl-11 pr-3 py-2.5 text-body-md text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+    </div>
+    <select name="statut" class="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 text-body-md text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+      <option value="">Toutes</option>
+      <option value="actives" {% if statut == 'actives' %}selected{% endif %}>Actives</option>
+      <option value="inactives" {% if statut == 'inactives' %}selected{% endif %}>Inactives</option>
+    </select>
+    <button type="submit" class="px-5 py-2.5 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Filtrer</button>
+    {% if q or statut %}<a href="{% url 'DashboardPersonnel:banque-liste' %}" class="px-4 py-2.5 text-on-surface-variant hover:text-primary">Effacer</a>{% endif %}
+  </form>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-x-auto">
+    <table class="w-full text-left">
+      <thead class="bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+        <tr>
+          <th class="px-4 py-3">Banque</th>
+          <th class="px-4 py-3">N° de compte</th>
+          <th class="px-4 py-3">Titulaire</th>
+          <th class="px-4 py-3">BIC/SWIFT</th>
+          <th class="px-4 py-3">Statut</th>
+          <th class="px-4 py-3 text-right">Factures</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-body-md text-on-surface">
+        {% for b in banques %}
+        <tr class="border-t border-outline-variant hover:bg-surface-container-low/60">
+          <td class="px-4 py-3 font-bold text-primary whitespace-nowrap">
+            <a href="{% url 'DashboardPersonnel:detail' b.pk %}" class="hover:underline">{{ b.nom }}</a>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ b.numero_compte }}</td>
+          <td class="px-4 py-3">{{ b.titulaire }}</td>
+          <td class="px-4 py-3 whitespace-nowrap">{{ b.bic_swift }}</td>
+          <td class="px-4 py-3">
+            {% if b.actif %}
+            <span class="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-label-md font-bold">Active</span>
+            {% else %}
+            <span class="inline-block px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-md font-bold">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">{{ b.nb_factures }}</td>
+          <td class="px-4 py-3">
+            <div class="flex justify-end gap-1">
+              <a href="{% url 'DashboardPersonnel:detail' b.pk %}" title="Voir" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">visibility</span></a>
+              <a href="{% url 'DashboardPersonnel:modifier' b.pk %}" title="Modifier" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">edit</span></a>
+              <a href="{% url 'DashboardPersonnel:supprimer' b.pk %}" title="Supprimer" class="p-2 rounded-lg text-error hover:bg-surface-container-low"><span class="material-symbols-outlined">delete</span></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-16 text-center text-on-surface-variant">
+            {% if q or statut %}Aucune banque ne correspond à votre recherche.{% else %}Aucune banque. Ajoutez-en une avec « Nouvelle banque ».{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div class="flex items-center justify-between text-body-md text-on-surface-variant">
+    <span>Page {{ page_obj.number }} sur {{ paginator.num_pages }} — {{ paginator.count }} banque{{ paginator.count|pluralize }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if statut %}&statut={{ statut }}{% endif %}" class="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-low">Précédent</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if statut %}&statut={{ statut }}{% endif %}" class="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-low">Suivant</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

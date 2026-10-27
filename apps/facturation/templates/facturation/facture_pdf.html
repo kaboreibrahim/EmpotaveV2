@@ -1,0 +1,144 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Facture {{ facture.numero }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 1.5cm 1.5cm 3cm 1.5cm;
+    @frame footer_frame {
+      -pdf-frame-content: footer_content;
+      left: 1.5cm; width: 18cm; top: 26.9cm; height: 2cm;
+    }
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1a2a4a; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { vertical-align: top; }
+  .titre { font-size: 15pt; font-weight: bold; }
+  .droite { text-align: right; }
+  .petit { font-size: 8pt; }
+  .encadre { border: 1px solid #333; padding: 8px; }
+  .lignes th { border: 1px solid #333; padding: 4px; text-align: left; background-color: #f0f0f0; }
+  .lignes td { border-left: 1px solid #333; border-right: 1px solid #333; padding: 4px; }
+  .lignes tr.derniere td { border-bottom: 1px solid #333; }
+  .totaux td { padding: 3px 4px; }
+  .banque { font-size: 7.5pt; }
+</style>
+</head>
+<body>
+
+<!-- En-tête -->
+<table>
+  <tr>
+    <td width="50%"><img src="{% static 'img/logo.png' %}" width="110"></td>
+    <td width="50%" class="droite">
+      <span class="titre">Facture {{ facture.numero }}</span><br/>
+      <span class="petit">
+        Réf. client : {{ facture.ref_client }}<br/>
+        Date facturation : {{ facture.date_facturation|date:"d/m/Y" }}<br/>
+        Date échéance : {{ facture.date_echeance|date:"d/m/Y" }}<br/>
+        Code client : {{ facture.client.code_client }}
+      </span>
+    </td>
+  </tr>
+</table>
+
+<br/><br/>
+
+<!-- Émetteur / Adressé à -->
+<table>
+  <tr>
+    <td width="45%">
+      <b>Émetteur</b><br/><br/>
+      <b style="font-size:11pt;">OILS OF AFRICA</b><br/>
+      Abidjan<br/>Côte d'Ivoire<br/><br/>
+      Tél. : 27 21 7 33926<br/>
+      Email : infos@oils-of-africa.com
+    </td>
+    <td width="55%">
+        <b>Adressé à</b><br/><br/>
+        <div class="encadre">
+            <b style="font-size:11pt;">
+                {{ facture.client.user.get_full_name }}
+            </b>
+            <p style="white-space: pre-line; margin-top: 5px;">
+                {{ facture.client.adresse }}
+            </p>
+        </div>
+    </td>
+
+  </tr>
+</table>
+
+<br/>
+
+<!-- Ligne Incoterm -->
+<p><b>{{ facture.texte_incoterm }}</b></p>
+<p class="droite petit">Montants exprimés en Francs CFA BCEAO</p>
+
+<!-- Tableau des lignes -->
+<table class="lignes">
+  <tr>
+    <th width="46%">Désignation</th>
+    <th width="9%" class="droite">TVA</th>
+    <th width="17%" class="droite">P.U. HT</th>
+    <th width="9%" class="droite">Qté</th>
+    <th width="19%" class="droite">Total HT</th>
+  </tr>
+  {% for l in lignes %}
+  <tr{% if forloop.last %} class="derniere"{% endif %}>
+    <td>{{ l.designation }}</td>
+    <td class="droite">{{ l.tva }}</td>
+    <td class="droite">{{ l.pu_ht }}</td>
+    <td class="droite">{{ l.quantite }}</td>
+    <td class="droite">{{ l.total_ht }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<!-- Totaux FCFA + EUR -->
+<table class="totaux">
+  <tr>
+    <td width="55%"></td>
+    <td width="20%"><b>Total HT</b></td>
+    <td width="25%" class="droite"><b>{{ total_ht_fcfa }} FCFA</b></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><b>Total TTC</b></td>
+    <td class="droite"><b>{{ total_ttc_fcfa }} FCFA</b></td>
+  </tr>
+  <tr>
+    <td class="petit">Taux : 1 EUR = {{ taux_change }} FCFA</td>
+    <td>Total HT (EUR)</td>
+    <td class="droite">{{ total_ht_eur }} EUR</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>Total TTC (EUR)</td>
+    <td class="droite">{{ total_ttc_eur }} EUR</td>
+  </tr>
+</table>
+
+<br/>
+
+<!-- Règlement + banque -->
+<p><b>Conditions de règlement :</b> {{ facture.conditions_reglement }}</p>
+<div class="banque">
+  <b>Règlement par virement sur le compte bancaire suivant :</b><br/>
+  {% for libelle, valeur in facture.banque.bloc_pied_page %}
+    <b>{{ libelle }} :</b> {{ valeur }}<br/>
+  {% endfor %}
+</div>
+
+<!-- Pied de page fixe -->
+<div id="footer_content" class="petit" style="text-align:center;">
+  Tél : +225 0566002282 / 0716046608, Email : infos@oils-of-africa.com,
+  N°CC : 2401675M / RCCM : CI-ABJ-03-2024-b13-045335<br/>
+  Capital de 1 000 000 XOF<br/>
+  Page <pdf:pagenumber/> / <pdf:pagecount/>
+</div>
+
+</body>
+</html>

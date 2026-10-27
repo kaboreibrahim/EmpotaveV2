@@ -20,6 +20,7 @@ urlpatterns = [
     path('',        include('apps.users.urls')),
     path('conteneurs/',   include('apps.conteneurs.urls')),
     path('documents/',    include('apps.documents.urls')),
+    path('facturation/',    include('apps.facturation.urls')),
     path('DashboardPersonnel/', include('apps.DashboardPersonnel.urls')),
     path('DashboardClient/', include('apps.DashboardClient.urls')),
     path('DashboardAgentSelection/', include('apps.DashboardAgentSelection.urls')),

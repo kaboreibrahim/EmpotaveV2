@@ -141,3 +141,38 @@ class SiteEmpotage(SafeDeleteModel, LifecycleModel, TimestampMixin):
     def __str__(self):
         return self.nom
 
+
+
+# =============================================================================
+# BANQUES
+# =============================================================================
+
+
+
+
+class Banque(SafeDeleteModel, LifecycleModel, TimestampMixin):
+    nom = models.CharField(max_length=100)                    # CORIS BANK
+    numero_compte = models.CharField(max_length=34)           # 009756324101
+    titulaire = models.CharField(max_length=150)              # OILS OF AFRICA
+    iban = models.CharField(max_length=34)                    # Code IBAN
+    bic_swift = models.CharField(max_length=11)               # CORICIAB
+    actif = models.BooleanField(default=True)                 # masque la banque dans la liste
+
+    class Meta:
+        ordering = ["nom"]
+        verbose_name = "Banque"
+        verbose_name_plural = "Banques"
+
+    def __str__(self):
+        return f"{self.nom} — {self.numero_compte}"
+
+    @property
+    def bloc_pied_page(self):
+        """Lignes affichées sous « Règlement par virement sur le compte bancaire suivant »."""
+        return [
+            ("Banque", self.nom),
+            ("Numéro de compte", self.numero_compte),
+            ("Nom du propriétaire du compte", self.titulaire),
+            ("Code IBAN", self.iban),
+            ("Code BIC/SWIFT", self.bic_swift),
+        ]

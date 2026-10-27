@@ -165,12 +165,15 @@ class Client(SafeDeleteModel, LifecycleModel, TimestampMixin):
         'ClientEntreprise', on_delete=models.SET_NULL, null=True, blank=True, related_name='clients',
     )
 
+    code_client = models.CharField(max_length=100, blank=True, null=True)
+    adresse = models.TextField(blank=True, null=True)
+    
     class Meta:
         verbose_name        = "Client"
         verbose_name_plural = "Clients"
 
     def __str__(self):
-        return str(self.user)
+        return str(self.user.first_name + " " + self.user.last_name)
 
     def resoudre_client_entreprise(self):
         """Retourne la ClientEntreprise liee a ce compte client. Si aucun lien

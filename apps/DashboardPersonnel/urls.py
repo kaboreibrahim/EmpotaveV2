@@ -25,6 +25,8 @@ from .views.document import (
     DocumentAjouterAjaxView, DocumentChangerStatutAjaxView, DocumentCreateView,
     DocumentListeView, DocumentRemplacerAjaxView, DocumentSupprimerAjaxView,
 )
+
+from .views.referentiels.banque import BanqueListView, BanqueCreateView, BanqueDetailView, BanqueUpdateView, BanqueToggleActifView, BanqueDeleteView
 app_name = 'DashboardPersonnel'
 
 urlpatterns = [
@@ -110,4 +112,12 @@ urlpatterns = [
     path('documents/<uuid:pk>/remplacer/ajax/', DocumentRemplacerAjaxView.as_view(), name='document-remplacer-ajax'),
     path('documents/<uuid:pk>/supprimer/ajax/', DocumentSupprimerAjaxView.as_view(), name='document-supprimer-ajax'),
     path('documents/<uuid:pk>/statut/ajax/', DocumentChangerStatutAjaxView.as_view(), name='document-statut-ajax'),
+
+    #BANQUE
+    path("banque/liste", BanqueListView.as_view(), name="banque-liste"),
+    path("banque/nouvelle", BanqueCreateView.as_view(), name="creer"),
+    path("banque/<uuid:pk>/", BanqueDetailView.as_view(), name="detail"),
+    path("banque/<uuid:pk>/modifier", BanqueUpdateView.as_view(), name="modifier"),
+    path("banque/<uuid:pk>/activer", BanqueToggleActifView.as_view(), name="basculer_actif"),
+    path("banque/<uuid:pk>/supprimer", BanqueDeleteView.as_view(), name="supprimer"),
 ]

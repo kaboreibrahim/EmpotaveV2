@@ -98,7 +98,7 @@ class PersonnelAdmin(UserWrapperAdmin):
 
 @admin.register(Client)
 class ClientAdmin(UserWrapperAdmin):
-    list_display = ("user", "client_entreprise", "date_created")
+    list_display = ("user", "code_client", "client_entreprise", "date_created")
     autocomplete_fields = ("user", "client_entreprise")
 
 

@@ -68,3 +68,20 @@ class SiteSelectionAdmin(SiteAdmin):
 @admin.register(SiteEmpotage)
 class SiteEmpotageAdmin(SiteAdmin):
     pass
+
+
+from django.contrib import admin
+from safedelete.admin import SafeDeleteAdmin, SafeDeleteAdminFilter, highlight_deleted
+
+from .models import Banque
+
+
+@admin.register(Banque)
+class BanqueAdmin(SafeDeleteAdmin):
+    list_display = (highlight_deleted, "nom", "numero_compte", "titulaire", "bic_swift", "actif")
+    list_filter = (SafeDeleteAdminFilter, "actif")
+    search_fields = ("nom", "numero_compte", "titulaire", "iban", "bic_swift")
+    fieldsets = (
+        ("Banque", {"fields": ("nom", "titulaire", "actif")}),
+        ("Coordonnées bancaires", {"fields": ("numero_compte", "iban", "bic_swift")}),
+    )

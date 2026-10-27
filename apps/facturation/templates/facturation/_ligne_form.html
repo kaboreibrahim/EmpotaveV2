@@ -1,0 +1,20 @@
+<tr class="ligne-row border-b border-outline-variant align-top">
+  <td class="p-2">
+    {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+    {{ form.designation }}
+    {% for e in form.designation.errors %}<p class="text-label-md text-error">{{ e }}</p>{% endfor %}
+  </td>
+  <td class="p-2 w-28">{{ form.tva_taux }}
+    {% for e in form.tva_taux.errors %}<p class="text-label-md text-error">{{ e }}</p>{% endfor %}</td>
+  <td class="p-2 w-40">{{ form.pu_ht }}
+    {% for e in form.pu_ht.errors %}<p class="text-label-md text-error">{{ e }}</p>{% endfor %}</td>
+  <td class="p-2 w-28">{{ form.quantite }}
+    {% for e in form.quantite.errors %}<p class="text-label-md text-error">{{ e }}</p>{% endfor %}</td>
+  <td class="p-2 w-36 text-right whitespace-nowrap text-body-md text-on-surface pt-4 ligne-total">0</td>
+  <td class="p-2 w-12 text-center">
+    <span class="hidden">{{ form.DELETE }}</span>
+    <button type="button" class="btn-suppr p-2 rounded-lg text-error hover:bg-surface-container-low" title="Supprimer la ligne">
+      <span class="material-symbols-outlined">delete</span>
+    </button>
+  </td>
+</tr>

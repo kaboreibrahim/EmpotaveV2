@@ -89,7 +89,8 @@ INSTALLED_APPS = [
     'apps.DashboardClient',
     'apps.DashboardPersonnel',
     'apps.comptabiliteDashboard',
-    'apps.error'
+    'apps.error',
+    'apps.facturation',
 
 ]
 

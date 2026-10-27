@@ -1,0 +1,23 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Supprimer la banque {{ object.nom }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl space-y-6">
+  <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Supprimer {{ object.nom }} ?</h1>
+  {% if nb_factures %}
+  <p class="text-body-md text-error">
+    Suppression impossible : {{ nb_factures }} facture{{ nb_factures|pluralize }} utilis{{ nb_factures|pluralize:"e,ent" }} cette banque.
+  </p>
+  <p class="text-body-md text-on-surface-variant">Vous pouvez la désactiver à la place : elle ne sera plus proposée pour les nouvelles factures.</p>
+  <a href="{% url 'DashboardPersonnel:detail' object.pk %}" class="inline-block px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Retour</a>
+  {% else %}
+  <p class="text-body-md text-on-surface-variant">Compte n° {{ object.numero_compte }} ({{ object.titulaire }}). Cette banque ne sera plus disponible.</p>
+  <form method="post" class="flex gap-3">
+    {% csrf_token %}
+    <a href="{% url 'DashboardPersonnel:detail' object.pk %}" class="px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Annuler</a>
+    <button type="submit" class="px-6 py-3 bg-error text-on-error font-bold rounded-lg hover:opacity-90 active:scale-95">Supprimer</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

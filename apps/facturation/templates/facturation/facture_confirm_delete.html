@@ -1,0 +1,17 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Supprimer la facture {{ object.numero }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl space-y-6">
+  <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Supprimer la facture {{ object.numero }} ?</h1>
+  <p class="text-body-md text-on-surface-variant">
+    Facture de {{ object.client }} du {{ object.date_facturation|date:"d/m/Y" }}. Elle ne sera plus visible dans la liste.
+  </p>
+  <form method="post" class="flex gap-3">
+    {% csrf_token %}
+    <a href="{% url 'facturation:detail' object.pk %}" class="px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Annuler</a>
+    <button type="submit" class="px-6 py-3 bg-error text-on-error font-bold rounded-lg hover:opacity-90 active:scale-95">Supprimer la facture</button>
+  </form>
+</div>
+{% endblock %}

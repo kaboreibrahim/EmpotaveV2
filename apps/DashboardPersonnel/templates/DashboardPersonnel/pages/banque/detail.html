@@ -1,0 +1,99 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Banque {{ banque.nom }}{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <a href="{% url 'DashboardPersonnel:banque-liste' %}" class="hover:text-primary">Banques</a>
+        <span class="material-symbols-outlined text-base">chevron_right</span>
+        <span class="text-primary font-bold">{{ banque.nom }}</span>
+      </nav>
+      <div class="flex items-center gap-3">
+        <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">{{ banque.nom }}</h1>
+        {% if banque.actif %}
+        <span class="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-label-md font-bold">Active</span>
+        {% else %}
+        <span class="inline-block px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-md font-bold">Inactive</span>
+        {% endif %}
+      </div>
+      <p class="text-body-md text-on-surface-variant">{{ banque.titulaire }}</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <form method="post" action="{% url 'DashboardPersonnel:basculer_actif' banque.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+          <span class="material-symbols-outlined">{% if banque.actif %}toggle_off{% else %}toggle_on{% endif %}</span>
+          {% if banque.actif %}Désactiver{% else %}Activer{% endif %}
+        </button>
+      </form>
+      <a href="{% url 'DashboardPersonnel:modifier' banque.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">edit</span> Modifier
+      </a>
+      <a href="{% url 'DashboardPersonnel:supprimer' banque.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">delete</span> Supprimer
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Aperçu du pied de facture -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+      <h2 class="text-title-md font-bold text-on-surface">Aperçu en pied de facture</h2>
+      <p class="text-label-md text-on-surface-variant">Règlement par virement sur le compte bancaire suivant :</p>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body-md">
+        {% for libelle, valeur in banque.bloc_pied_page %}
+        <dt class="text-on-surface-variant">{{ libelle }}</dt><dd class="text-on-surface font-bold break-all">{{ valeur }}</dd>
+        {% endfor %}
+      </dl>
+    </section>
+
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+      <h2 class="text-title-md font-bold text-on-surface">Utilisation</h2>
+      <p class="text-body-md text-on-surface">
+        <span class="text-headline-xl font-headline-xl text-primary">{{ nb_factures }}</span>
+        <span class="text-on-surface-variant"> facture{{ nb_factures|pluralize }} utilis{{ nb_factures|pluralize:"e,ent" }} cette banque.</span>
+      </p>
+      {% if not banque.actif %}
+      <p class="text-label-md text-on-surface-variant">Cette banque est inactive : elle n'est plus proposée lors de la création d'une facture, mais reste affichée sur les factures existantes.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-outline-variant">
+      <h2 class="text-title-md font-bold text-on-surface">Dernières factures</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+          <tr>
+            <th class="px-4 py-3">N° facture</th>
+            <th class="px-4 py-3">Client</th>
+            <th class="px-4 py-3">Date</th>
+            <th class="px-4 py-3 text-right">Total TTC (FCFA)</th>
+          </tr>
+        </thead>
+        <tbody class="text-body-md text-on-surface">
+          {% for f in factures %}
+          <tr class="border-t border-outline-variant">
+            <td class="px-4 py-3 font-bold text-primary"><a href="{% url 'facturation:detail' f.pk %}" class="hover:underline">{{ f.numero }}</a></td>
+            <td class="px-4 py-3">{{ f.client }}</td>
+            <td class="px-4 py-3">{{ f.date_facturation|date:"d/m/Y" }}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">{{ f.total_ttc_fcfa|floatformat:"0g" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Aucune facture n'utilise encore cette banque.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}Incoterm {{ incoterm.code }}{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <a href="{% url 'facturation:incoterm_liste' %}" class="hover:text-primary">Incoterms</a>
+        <span class="material-symbols-outlined text-base">chevron_right</span>
+        <span class="text-primary font-bold">{{ incoterm.code }}</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">{{ incoterm.code }}</h1>
+      <p class="text-body-md text-on-surface-variant">{{ incoterm.libelle }}</p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'facturation:incoterm_modifier' incoterm.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">edit</span> Modifier
+      </a>
+      <a href="{% url 'facturation:incoterm_supprimer' incoterm.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">delete</span> Supprimer
+      </a>
+    </div>
+  </div>
+
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 max-w-xl">
+    <dl class="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-body-md">
+      <dt class="text-on-surface-variant">Code</dt><dd class="font-bold text-on-surface">{{ incoterm.code }}</dd>
+      <dt class="text-on-surface-variant">Libellé</dt><dd class="text-on-surface">{{ incoterm.libelle }}</dd>
+      <dt class="text-on-surface-variant">Factures liées</dt><dd class="text-on-surface">{{ nb_factures }}</dd>
+    </dl>
+  </section>
+
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-outline-variant">
+      <h2 class="text-title-md font-bold text-on-surface">Dernières factures avec cet incoterm</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-surface-container-low text-label-md font-label-md text-on-surface-variant">
+          <tr>
+            <th class="px-4 py-3">N° facture</th>
+            <th class="px-4 py-3">Client</th>
+            <th class="px-4 py-3">Date</th>
+            <th class="px-4 py-3 text-right">Total TTC (FCFA)</th>
+          </tr>
+        </thead>
+        <tbody class="text-body-md text-on-surface">
+          {% for f in factures %}
+          <tr class="border-t border-outline-variant">
+            <td class="px-4 py-3 font-bold text-primary"><a href="{% url 'facturation:detail' f.pk %}" class="hover:underline">{{ f.numero }}</a></td>
+            <td class="px-4 py-3">{{ f.client }}</td>
+            <td class="px-4 py-3">{{ f.date_facturation|date:"d/m/Y" }}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">{{ f.total_ttc_fcfa|floatformat:"0g" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Aucune facture n'utilise encore cet incoterm.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

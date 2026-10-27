@@ -1,0 +1,167 @@
+{% extends 'DashboardPersonnel/base_personnel.html' %}
+
+{% block title %}{% if object %}Modifier la facture {{ object.numero }}{% else %}Nouvelle facture{% endif %}{% endblock %}
+
+{% block content %}
+
+<form method="post" class="space-y-8" id="facture-form" novalidate>
+  {% csrf_token %}
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="space-y-2">
+      <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
+        <a href="{% url 'facturation:liste' %}" class="hover:text-primary">Facture</a>
+        <span class="material-symbols-outlined text-base">chevron_right</span>
+        <span class="text-primary font-bold">{% if object %}Modifier{% else %}Nouvelle facture{% endif %}</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">
+        {% if object %}Facture {{ object.numero }}{% else %}Nouvelle facture{% endif %}
+      </h1>
+      <p class="text-body-md text-on-surface-variant max-w-2xl">
+        {% if object %}Modifiez les informations puis enregistrez.{% else %}Le numéro de facture est attribué à l'enregistrement. L'échéance est fixée à 15 jours après la date de facturation.{% endif %}
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% if object %}{% url 'facturation:detail' object.pk %}{% else %}{% url 'facturation:liste' %}{% endif %}" class="px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">Annuler</a>
+      <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
+        <span class="material-symbols-outlined">save</span>
+        <span class="font-label-md text-label-md uppercase">Enregistrer</span>
+      </button>
+    </div>
+  </div>
+
+  {% if form.non_field_errors or formset.non_form_errors %}
+  <div class="rounded-lg border border-error bg-surface-container-lowest p-4 text-error text-body-md">
+    {{ form.non_field_errors }}{{ formset.non_form_errors }}
+  </div>
+  {% endif %}
+
+  <!-- En-tête -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-5">
+    <h2 class="text-title-md font-bold text-on-surface">Client et règlement</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {% include "facturation/_champ.html" with field=form.client %}
+      {% include "facturation/_champ.html" with field=form.ref_client %}
+      {% include "facturation/_champ.html" with field=form.date_facturation %}
+      {% include "facturation/_champ.html" with field=form.banque %}
+      {% include "facturation/_champ.html" with field=form.conditions_reglement %}
+    </div>
+  </section>
+
+  <!-- Incoterm -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-5">
+    <h2 class="text-title-md font-bold text-on-surface">Incoterm et expédition</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {% include "facturation/_champ.html" with field=form.incoterm %}
+      {% include "facturation/_champ.html" with field=form.quantite_unites %}
+      {% include "facturation/_champ.html" with field=form.conditionnement %}
+      {% include "facturation/_champ.html" with field=form.produit %}
+      {% include "facturation/_champ.html" with field=form.usine %}
+      {% include "facturation/_champ.html" with field=form.pu_fcfa_unite %}
+      {% include "facturation/_champ.html" with field=form.port_livraison %}
+      {% include "facturation/_champ.html" with field=form.destination %}
+      {% include "facturation/_champ.html" with field=form.ref_dossier %}
+    </div>
+  </section>
+
+  <!-- Lignes -->
+  <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-title-md font-bold text-on-surface">Récapitulatif de la facture</h2>
+      <button type="button" id="add-ligne" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-primary hover:bg-surface-container-low">
+        <span class="material-symbols-outlined">add</span> Ajouter une ligne
+      </button>
+    </div>
+
+    {{ formset.management_form }}
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="text-label-md font-label-md text-on-surface-variant">
+          <tr class="border-b border-outline-variant">
+            <th class="p-2">Désignation</th>
+            <th class="p-2">TVA (%)</th>
+            <th class="p-2">P.U. HT (FCFA)</th>
+            <th class="p-2">Qté</th>
+            <th class="p-2 text-right">Total HT</th>
+            <th class="p-2"></th>
+          </tr>
+        </thead>
+        <tbody id="lignes-body">
+          {% for lf in formset %}{% include "facturation/_ligne_form.html" with form=lf %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totaux en direct -->
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 pt-4">
+      <div class="max-w-xs w-full">
+        {% include "facturation/_champ.html" with field=form.taux_change %}
+      </div>
+      <dl class="grid grid-cols-[auto_auto] gap-x-10 gap-y-2 text-body-md text-on-surface">
+        <dt class="font-bold">Total HT</dt><dd class="text-right font-bold" id="tot-ht-fcfa">0 FCFA</dd>
+        <dt class="font-bold">Total TTC</dt><dd class="text-right font-bold" id="tot-ttc-fcfa">0 FCFA</dd>
+        <dt class="text-on-surface-variant">Total HT (EUR)</dt><dd class="text-right text-on-surface-variant" id="tot-ht-eur">0,00 EUR</dd>
+        <dt class="text-on-surface-variant">Total TTC (EUR)</dt><dd class="text-right text-on-surface-variant" id="tot-ttc-eur">0,00 EUR</dd>
+      </dl>
+    </div>
+  </section>
+</form>
+
+<template id="empty-row">{% include "facturation/_ligne_form.html" with form=formset.empty_form %}</template>
+
+<script>
+(function () {
+  const body  = document.getElementById('lignes-body');
+  const total = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+  const tpl   = document.getElementById('empty-row').innerHTML;
+  const taux  = document.getElementById('id_taux_change');
+
+  const num = v => { const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+  const fmt = (n, d) => n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const set = (id, txt) => { document.getElementById(id).textContent = txt; };
+
+  function recalc() {
+    let ht = 0, ttc = 0;
+    body.querySelectorAll('.ligne-row').forEach(row => {
+      if (row.classList.contains('is-deleted')) return;
+      const pu  = num(row.querySelector('[name$="-pu_ht"]').value);
+      const qte = num(row.querySelector('[name$="-quantite"]').value);
+      const tva = num(row.querySelector('[name$="-tva_taux"]').value);
+      const l = pu * qte;
+      row.querySelector('.ligne-total').textContent = fmt(l, 0);
+      ht += l; ttc += l * (1 + tva / 100);
+    });
+    const t = num(taux.value) || 655.957;
+    set('tot-ht-fcfa',  fmt(ht, 0)  + ' FCFA');
+    set('tot-ttc-fcfa', fmt(ttc, 0) + ' FCFA');
+    set('tot-ht-eur',   fmt(ht / t, 2)  + ' EUR');
+    set('tot-ttc-eur',  fmt(ttc / t, 2) + ' EUR');
+  }
+
+  document.getElementById('add-ligne').addEventListener('click', () => {
+    const idx = parseInt(total.value, 10);
+    body.insertAdjacentHTML('beforeend', tpl.replace(/__prefix__/g, idx));
+    total.value = idx + 1;
+    recalc();
+  });
+
+  body.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-suppr');
+    if (!btn) return;
+    const row = btn.closest('.ligne-row');
+    const cb  = row.querySelector('input[type=checkbox][name$="-DELETE"]');
+    const on  = !row.classList.contains('is-deleted');
+    row.classList.toggle('is-deleted', on);
+    row.classList.toggle('opacity-40', on);
+    if (cb) cb.checked = on;
+    recalc();
+  });
+
+  body.addEventListener('input', recalc);
+  taux.addEventListener('input', recalc);
+  recalc();
+})();
+</script>
+
+{% endblock %}
