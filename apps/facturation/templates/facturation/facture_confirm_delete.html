@@ -1,12 +1,12 @@
 {% extends 'DashboardPersonnel/base_personnel.html' %}
 
-{% block title %}Supprimer la facture {{ object.numero }}{% endblock %}
+{% block title %}Supprimer la proforma {{ object.reference }}{% endblock %}
 
 {% block content %}
 <div class="max-w-xl space-y-6">
-  <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Supprimer la facture {{ object.numero }} ?</h1>
+  <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Supprimer la proforma {{ object.reference }} ?</h1>
   <p class="text-body-md text-on-surface-variant">
-    Facture de {{ object.client }} du {{ object.date_facturation|date:"d/m/Y" }}. Elle ne sera plus visible dans la liste.
+    Proforma de {{ object.client }} du {{ object.date_facturation|date:"d/m/Y" }}. Elle ne sera plus visible dans la liste.
   </p>
   <form method="post" class="flex gap-3">
     {% csrf_token %}

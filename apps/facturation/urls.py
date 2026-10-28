@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.facturation.views.facture import FactureListView, FactureCreateView, FactureDetailView, FactureUpdateView, FactureDeleteView, facture_pdf, envoyer_facture_email
+from apps.facturation.views.facture import FactureListView, FactureCreateView, FactureDetailView, FactureUpdateView, FactureDeleteView, facture_pdf, envoyer_facture_email, valider_facture
 from apps.facturation.views.icoterm import IncotermListView, IncotermCreateView, IncotermDetailView, IncotermUpdateView, IncotermDeleteView
 
 app_name = "facturation"
@@ -11,6 +11,7 @@ urlpatterns = [
     path("<uuid:pk>/", FactureDetailView.as_view(), name="detail"),
     path("<uuid:pk>/modifier/", FactureUpdateView.as_view(), name="modifier"),
     path("<uuid:pk>/supprimer/", FactureDeleteView.as_view(), name="supprimer"),
+    path("<uuid:pk>/valider/", valider_facture, name="valider"),
     path("<uuid:pk>/pdf/", facture_pdf, name="pdf"),
     path("<uuid:pk>/envoyer-email/", envoyer_facture_email, name="envoyer_email"),
 

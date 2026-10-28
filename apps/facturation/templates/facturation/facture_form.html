@@ -1,6 +1,6 @@
 {% extends 'DashboardPersonnel/base_personnel.html' %}
 
-{% block title %}{% if object %}Modifier la facture {{ object.numero }}{% else %}Nouvelle facture{% endif %}{% endblock %}
+{% block title %}{% if object %}Modifier la proforma {{ object.reference }}{% else %}Nouvelle proforma{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -12,10 +12,10 @@
       <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
         <a href="{% url 'facturation:liste' %}" class="hover:text-primary">Facture</a>
         <span class="material-symbols-outlined text-base">chevron_right</span>
-        <span class="text-primary font-bold">{% if object %}Modifier{% else %}Nouvelle facture{% endif %}</span>
+        <span class="text-primary font-bold">{% if object %}Modifier{% else %}Nouvelle proforma{% endif %}</span>
       </nav>
       <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">
-        {% if object %}Facture {{ object.numero }}{% else %}Nouvelle facture{% endif %}
+        {% if object %}Proforma {{ object.reference }}{% else %}Nouvelle proforma{% endif %}
       </h1>
       <p class="text-body-md text-on-surface-variant max-w-2xl">
         {% if object %}Modifiez les informations puis enregistrez.{% else %}Le numéro de facture est attribué à l'enregistrement. L'échéance est fixée à 15 jours après la date de facturation.{% endif %}

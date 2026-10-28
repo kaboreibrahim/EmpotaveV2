@@ -81,7 +81,7 @@
         <tbody class="text-body-md text-on-surface">
           {% for f in factures %}
           <tr class="border-t border-outline-variant">
-            <td class="px-4 py-3 font-bold text-primary"><a href="{% url 'facturation:detail' f.pk %}" class="hover:underline">{{ f.numero }}</a></td>
+            <td class="px-4 py-3 font-bold text-primary"><a href="{% url 'facturation:detail' f.pk %}" class="hover:underline">{{ f.reference }}</a></td>
             <td class="px-4 py-3">{{ f.client }}</td>
             <td class="px-4 py-3">{{ f.date_facturation|date:"d/m/Y" }}</td>
             <td class="px-4 py-3 text-right whitespace-nowrap">{{ f.total_ttc_fcfa|floatformat:"0g" }}</td>

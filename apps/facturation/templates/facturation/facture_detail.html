@@ -1,6 +1,6 @@
 {% extends 'DashboardPersonnel/base_personnel.html' %}
 
-{% block title %}Facture {{ facture.numero }}{% endblock %}
+{% block title %}{{ facture.get_statut_display }} {{ facture.reference }}{% endblock %}
 
 {% block content %}
 
@@ -11,9 +11,16 @@
       <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant">
         <a href="{% url 'facturation:liste' %}" class="hover:text-primary">Facture</a>
         <span class="material-symbols-outlined text-base">chevron_right</span>
-        <span class="text-primary font-bold">{{ facture.numero }}</span>
+        <span class="text-primary font-bold">{{ facture.reference }}</span>
       </nav>
-      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Facture {{ facture.numero }}</h1>
+      <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">
+        {{ facture.get_statut_display }} {{ facture.reference }}
+        {% if facture.est_proforma %}
+        <span class="align-middle ml-2 px-3 py-1 rounded-full text-label-md bg-surface-container-low text-on-surface-variant border border-outline-variant">En attente de validation client</span>
+        {% else %}
+        <span class="align-middle ml-2 px-3 py-1 rounded-full text-label-md bg-primary/10 text-primary border border-primary/30">Validée</span>
+        {% endif %}
+      </h1>
       <p class="text-body-md text-on-surface-variant">{{ facture.client }} — réf. client {{ facture.ref_client }}</p>
     </div>
     <div class="flex flex-wrap gap-3">
@@ -26,12 +33,21 @@
       <a href="{% url 'facturation:envoyer_email' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">send</span> Envoyer par email
       </a>
+      {% if facture.est_proforma %}
+      <form method="post" action="{% url 'facturation:valider' facture.pk %}"
+            onsubmit="return confirm('Le client a validé la proforma {{ facture.reference }} ? Elle deviendra une facture définitive, datée d\'aujourd\'hui, et ne sera plus modifiable.');">
+        {% csrf_token %}
+        <button type="submit" class="flex items-center gap-2 px-5 py-3 bg-primary text-on-primary font-bold rounded-lg hover:opacity-90 active:scale-95">
+          <span class="material-symbols-outlined">task_alt</span> Valider (client)
+        </button>
+      </form>
       <a href="{% url 'facturation:modifier' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">edit</span> Modifier
       </a>
       <a href="{% url 'facturation:supprimer' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
         <span class="material-symbols-outlined">delete</span> Supprimer
       </a>
+      {% endif %}
     </div>
   </div>
 
@@ -39,9 +55,17 @@
 
     <!-- Infos facture -->
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
-      <h2 class="text-title-md font-bold text-on-surface">Facture</h2>
+      <h2 class="text-title-md font-bold text-on-surface">{{ facture.get_statut_display }}</h2>
       <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body-md">
-        <dt class="text-on-surface-variant">N°</dt><dd class="text-on-surface font-bold">{{ facture.numero }}</dd>
+        {% if facture.numero %}
+        <dt class="text-on-surface-variant">N° facture</dt><dd class="text-on-surface font-bold">{{ facture.numero }}</dd>
+        {% endif %}
+        {% if facture.numero_proforma %}
+        <dt class="text-on-surface-variant">N° proforma</dt><dd class="text-on-surface{% if facture.est_proforma %} font-bold{% endif %}">{{ facture.numero_proforma }}</dd>
+        {% endif %}
+        {% if facture.date_validation %}
+        <dt class="text-on-surface-variant">Validée le</dt><dd class="text-on-surface">{{ facture.date_validation|date:"d/m/Y H:i" }}</dd>
+        {% endif %}
         <dt class="text-on-surface-variant">Réf. client</dt><dd class="text-on-surface">{{ facture.ref_client }}</dd>
         <dt class="text-on-surface-variant">Réf. dossier</dt><dd class="text-on-surface">{{ facture.ref_dossier|default:"—" }}</dd>
         <dt class="text-on-surface-variant">Facturation</dt><dd class="text-on-surface">{{ facture.date_facturation|date:"d/m/Y" }}</dd>
@@ -54,11 +78,11 @@
     <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-3">
       <h2 class="text-title-md font-bold text-on-surface">Adressé à</h2>
       <div class="text-body-md text-on-surface space-y-1">
-        <p class="font-bold">{{ facture.client.user.get_full_name }}</p>
+        <p class="font-bold">{{ facture.client.user.get_full_name|default:"N/A" }}</p>
             <div class="encadre">
-               
+
                 <p style="white-space: pre-line; margin-top: 5px;">
-                    {{ facture.client.adresse }}
+                    {{ facture.client.adresse|default:"N/A" }}
                 </p>
             </div>
         </td>

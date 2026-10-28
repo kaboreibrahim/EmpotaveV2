@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Facture {{ facture.numero }}</title>
+<title>{{ facture.get_statut_display }} {{ facture.reference }}</title>
 <style>
   @page {
     size: A4;
@@ -33,12 +33,13 @@
   <tr>
     <td width="50%"><img src="{% static 'img/logo.png' %}" width="110"></td>
     <td width="50%" class="droite">
-      <span class="titre">Facture {{ facture.numero }}</span><br/>
+      <span class="titre">{% if facture.est_proforma %}Facture proforma{% else %}Facture{% endif %} {{ facture.reference }}</span><br/>
       <span class="petit">
-        Réf. client : {{ facture.ref_client }}<br/>
-        Date facturation : {{ facture.date_facturation|date:"d/m/Y" }}<br/>
+        {% if not facture.est_proforma and facture.numero_proforma %}Réf. proforma : {{ facture.numero_proforma }}<br/>{% endif %}
+        Réf. client : {{ facture.ref_client|default:"N/A" }}<br/>
+        Date {% if facture.est_proforma %}proforma{% else %}facturation{% endif %} : {{ facture.date_facturation|date:"d/m/Y" }}<br/>
         Date échéance : {{ facture.date_echeance|date:"d/m/Y" }}<br/>
-        Code client : {{ facture.client.code_client }}
+        Code client : {{ facture.client.code_client|default:"N/A" }}
       </span>
     </td>
   </tr>
@@ -60,10 +61,10 @@
         <b>Adressé à</b><br/><br/>
         <div class="encadre">
             <b style="font-size:11pt;">
-                {{ facture.client.user.get_full_name }}
+                {{ facture.client.user.get_full_name|default:"N/A" }}
             </b>
             <p style="white-space: pre-line; margin-top: 5px;">
-                {{ facture.client.adresse }}
+                {{ facture.client.adresse|default:"N/A" }}
             </p>
         </div>
     </td>

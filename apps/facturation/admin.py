@@ -26,21 +26,23 @@ class IncotermAdmin(SafeDeleteAdmin):
 @admin.register(Facture)
 class FactureAdmin(SafeDeleteAdmin):
     list_display = (
-        highlight_deleted, "numero", "ref_client", "client", "date_facturation",
-        "date_echeance", "total_ttc_fcfa_affiche", "total_ttc_eur_affiche",
+        highlight_deleted, "numero", "numero_proforma", "statut", "ref_client", "client",
+        "date_facturation", "date_echeance", "total_ttc_fcfa_affiche", "total_ttc_eur_affiche",
     )
-    list_filter = (SafeDeleteAdminFilter, "date_facturation", "incoterm", "banque")
-    search_fields = ("numero", "ref_client", "ref_dossier", "client__nom")
+    list_filter = (SafeDeleteAdminFilter, "statut", "date_facturation", "incoterm", "banque")
+    search_fields = ("numero", "numero_proforma", "ref_client", "ref_dossier")
     date_hierarchy = "date_facturation"
     inlines = [LigneFactureInline]
+    actions = ["valider_proformas"]
     readonly_fields = (
-        "numero", "date_echeance", "texte_incoterm",
+        "numero", "numero_proforma", "statut", "date_validation", "date_echeance", "texte_incoterm",
         "total_ht_fcfa_affiche", "total_ttc_fcfa_affiche",
         "total_ht_eur_affiche", "total_ttc_eur_affiche",
     )
     fieldsets = (
         ("En-tête", {"fields": (
-            "numero", "ref_client", "client", "date_facturation", "date_echeance",
+            "statut", "numero_proforma", "numero", "date_validation",
+            "ref_client", "client", "date_facturation", "date_echeance",
         )}),
         ("Ligne Incoterm", {"fields": (
             "incoterm", "quantite_unites", "conditionnement", "produit", "usine",
@@ -54,6 +56,13 @@ class FactureAdmin(SafeDeleteAdmin):
             "total_ht_eur_affiche", "total_ttc_eur_affiche",
         )}),
     )
+
+    @admin.action(description="Valider (client) les proformas sélectionnées")
+    def valider_proformas(self, request, queryset):
+        proformas = queryset.filter(statut=Facture.Statut.PROFORMA)
+        for facture in proformas:
+            facture.valider()
+        self.message_user(request, f"{len(proformas)} proforma(s) validée(s).")
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
@@ -78,9 +87,9 @@ class FactureAdmin(SafeDeleteAdmin):
 
 
 @admin.register(CompteurFacture)
-class CompteurFactureAdmin(SafeDeleteAdmin):
+class CompteurFactureAdmin(admin.ModelAdmin):
     """Lecture seule : le compteur est géré automatiquement."""
-    list_display = (highlight_deleted, "cle", "dernier_numero")
+    list_display = ("cle", "dernier_numero")
     readonly_fields = ("cle", "dernier_numero")
 
     def has_add_permission(self, request):
