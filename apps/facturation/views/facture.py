@@ -108,12 +108,12 @@ class _FactureFormMixin(LoginRequiredMixin):
 
 
 class _ProformaSeulementMixin:
-    """Une facture validée n'est plus modifiable ni supprimable : seules les proformas le sont."""
+    """Une facture validée n'est plus supprimable (son n° IN… doit rester dans la séquence)."""
 
     def dispatch(self, request, *args, **kwargs):
         facture = get_object_or_404(Facture, pk=kwargs["pk"])
         if not facture.est_proforma:
-            messages.error(request, f"La facture {facture.reference} est validée : elle n'est plus modifiable.")
+            messages.error(request, f"La facture {facture.reference} est validée : elle ne peut pas être supprimée.")
             return redirect("facturation:detail", pk=facture.pk)
         return super().dispatch(request, *args, **kwargs)
 
@@ -122,8 +122,8 @@ class FactureCreateView(_FactureFormMixin, CreateView):
     pass
 
 
-class FactureUpdateView(_FactureFormMixin, _ProformaSeulementMixin, UpdateView):
-    pass
+class FactureUpdateView(_FactureFormMixin, UpdateView):
+    """Proformas et factures validées sont modifiables ; le n° et le statut ne changent pas."""
 
 
 # --------------------------------------------------------------------------- #

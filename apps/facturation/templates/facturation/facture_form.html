@@ -1,6 +1,6 @@
 {% extends 'DashboardPersonnel/base_personnel.html' %}
 
-{% block title %}{% if object %}Modifier la proforma {{ object.reference }}{% else %}Nouvelle proforma{% endif %}{% endblock %}
+{% block title %}{% if object %}Modifier {{ object.get_statut_display|lower }} {{ object.reference }}{% else %}Nouvelle proforma{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -15,8 +15,14 @@
         <span class="text-primary font-bold">{% if object %}Modifier{% else %}Nouvelle proforma{% endif %}</span>
       </nav>
       <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">
-        {% if object %}Proforma {{ object.reference }}{% else %}Nouvelle proforma{% endif %}
+        {% if object %}{{ object.get_statut_display }} {{ object.reference }}{% else %}Nouvelle proforma{% endif %}
       </h1>
+      {% if object and not object.est_proforma %}
+      <p class="flex items-center gap-2 px-4 py-3 rounded-lg border border-error/40 bg-error/10 text-error text-body-md max-w-2xl">
+        <span class="material-symbols-outlined">warning</span>
+        Facture déjà validée par le client : le n° {{ object.numero }} est conservé, pensez à renvoyer la facture corrigée.
+      </p>
+      {% endif %}
       <p class="text-body-md text-on-surface-variant max-w-2xl">
         {% if object %}Modifiez les informations puis enregistrez.{% else %}Le numéro de facture est attribué à l'enregistrement. L'échéance est fixée à 15 jours après la date de facturation.{% endif %}
       </p>

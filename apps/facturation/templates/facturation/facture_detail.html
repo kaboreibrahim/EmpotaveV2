@@ -41,9 +41,11 @@
           <span class="material-symbols-outlined">task_alt</span> Valider (client)
         </button>
       </form>
+      {% endif %}
       <a href="{% url 'facturation:modifier' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">edit</span> Modifier
       </a>
+      {% if facture.est_proforma %}
       <a href="{% url 'facturation:supprimer' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
         <span class="material-symbols-outlined">delete</span> Supprimer
       </a>

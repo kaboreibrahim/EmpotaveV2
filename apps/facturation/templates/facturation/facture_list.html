@@ -76,8 +76,8 @@
             <div class="flex justify-end gap-1">
               <a href="{% url 'facturation:detail' f.pk %}" title="Voir" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">visibility</span></a>
               <a href="{% url 'facturation:pdf' f.pk %}" target="_blank" title="Ouvrir le PDF" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">picture_as_pdf</span></a>
-              {% if f.est_proforma %}
               <a href="{% url 'facturation:modifier' f.pk %}" title="Modifier" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">edit</span></a>
+              {% if f.est_proforma %}
               <a href="{% url 'facturation:supprimer' f.pk %}" title="Supprimer" class="p-2 rounded-lg text-error hover:bg-surface-container-low"><span class="material-symbols-outlined">delete</span></a>
               {% endif %}
             </div>
