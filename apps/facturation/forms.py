@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import Facture, LigneFacture, Incoterm
+from .models import CHAMPS_HORS_EXW, OPTIONS_EXW, TEXTES_INCOTERM, UNITES, Facture, LigneFacture
 
 # Classes Tailwind (si build Tailwind : ajouter apps/**/forms.py aux chemins `content`)
 CHAMP = (
@@ -45,12 +45,36 @@ class FactureForm(forms.ModelForm):
         for champ in self.fields.values():
             champ.widget.attrs["class"] = CHAMP
         self.fields["banque"].queryset = self.fields["banque"].queryset.filter(actif=True)
+        # Optionnels en base (vides en SS1 / SS2) mais obligatoires pour SS3 à SS5
+        for nom in ("ref_client", "produit", "port_livraison", "destination"):
+            self.fields[nom].required = self._incoterm() not in OPTIONS_EXW
+        # lu par le JS du formulaire (aperçu du texte, champs masqués en SS1 / SS2)
+        self.textes_incoterm = {
+            "textes": {str(code): texte for code, texte in TEXTES_INCOTERM.items()},
+            "unites": UNITES,
+            "options_exw": [str(code) for code in OPTIONS_EXW],
+            "champs_hors_exw": CHAMPS_HORS_EXW,
+        }
+
+    def _incoterm(self):
+        if self.is_bound:
+            return self.data.get(self.add_prefix("incoterm"))
+        return self.initial.get("incoterm", self.instance.incoterm)
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("incoterm") in OPTIONS_EXW:
+            # départ entrepôt : on n'enregistre pas d'anciennes valeurs restées masquées
+            for nom in CHAMPS_HORS_EXW:
+                cleaned[nom] = "" if nom.startswith("ref_") else None
+        return cleaned
 
 
 class LigneFactureForm(forms.ModelForm):
     class Meta:
         model = LigneFacture
-        fields = ["designation", "tva_taux", "pu_ht", "quantite"]
+        fields = ["designation", "tva_taux", "pu_ht", "quantite", "ordre"]
+        widgets = {"ordre": forms.HiddenInput()}  # renseigné par le JS du formulaire
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,6 +82,17 @@ class LigneFactureForm(forms.ModelForm):
             champ.widget.attrs["class"] = CHAMP
         self.fields["quantite"].widget.attrs["step"] = "0.01"
         self.fields["tva_taux"].widget.attrs["step"] = "0.01"
+        self.fields["ordre"].required = False
+
+    def clean_ordre(self):
+        return self.cleaned_data.get("ordre") or 0
+
+    def has_changed(self):
+        # Une ligne vide ajoutée reçoit un ordre du JS : ce n'est pas une saisie,
+        # sinon le formset exigerait la désignation sur une ligne laissée vide.
+        if self.instance._state.adding:  # pk UUID déjà rempli : on teste "pas encore en base"
+            return any(nom != "ordre" for nom in self.changed_data)
+        return super().has_changed()
 
 
 LigneFactureFormSet = inlineformset_factory(
@@ -65,22 +100,3 @@ LigneFactureFormSet = inlineformset_factory(
     extra=1, can_delete=True, min_num=1, validate_min=True,
 )
 
-
-class IncotermForm(forms.ModelForm):
-    class Meta:
-        model = Incoterm
-        fields = ["code", "libelle"]
-        labels = {"code": "Code", "libelle": "Libellé"}
-        help_texts = {"code": "3 lettres, ex. FOB, CIF, CFR.", "libelle": "Ex. FOB - Free On Board"}
- 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for champ in self.fields.values():
-            champ.widget.attrs["class"] = CHAMP
- 
-    def clean_code(self):
-        code = self.cleaned_data["code"].strip().upper()
-        # all_objects inclut les incoterms supprimés (soft delete) : l'unicité en base les compte
-        if Incoterm.all_objects.filter(code=code).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError("Ce code existe déjà (éventuellement dans les éléments supprimés).")
-        return code

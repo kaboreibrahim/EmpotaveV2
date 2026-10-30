@@ -68,6 +68,7 @@
       {% include "facturation/_champ.html" with field=form.destination %}
       {% include "facturation/_champ.html" with field=form.ref_dossier %}
     </div>
+    <p id="texte-incoterm" class="hidden px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-low text-body-md text-on-surface"></p>
   </section>
 
   <!-- Lignes -->
@@ -85,6 +86,7 @@
       <table class="w-full text-left">
         <thead class="text-label-md font-label-md text-on-surface-variant">
           <tr class="border-b border-outline-variant">
+            <th class="p-2"></th>
             <th class="p-2">Désignation</th>
             <th class="p-2">TVA (%)</th>
             <th class="p-2">P.U. HT (FCFA)</th>
@@ -115,6 +117,58 @@
 </form>
 
 <template id="empty-row">{% include "facturation/_ligne_form.html" with form=formset.empty_form %}</template>
+{{ form.textes_incoterm|json_script:"textes-incoterm" }}
+
+<script>
+// Aperçu du texte de l'option choisie (SS1 à SS5), mêmes règles que Facture.texte_incoterm
+(function () {
+  const { textes, unites, options_exw, champs_hors_exw } = JSON.parse(document.getElementById('textes-incoterm').textContent);
+  const zone = document.getElementById('texte-incoterm');
+  const val  = id => { const el = document.getElementById('id_' + id); return el ? el.value.trim() : ''; };
+  const lib  = id => { const el = document.getElementById('id_' + id); return el && el.value ? el.options[el.selectedIndex].text.trim() : ''; };
+  const milliers = n => String(Math.trunc(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  function afficher() {
+    // SS1 / SS2 = départ entrepôt : produit, ports et références sont masqués
+    const s1 = options_exw.includes(val('incoterm'));
+    champs_hors_exw.forEach(nom => {
+      const el = document.getElementById('id_' + nom);
+      if (el) el.closest('.space-y-1').classList.toggle('hidden', s1);
+    });
+
+    const modele = textes[val('incoterm')];
+    const qte = parseInt(val('quantite_unites'), 10);
+    const pu  = parseFloat(val('pu_fcfa_unite').replace(/\s/g, '').replace(',', '.'));
+    const produit = s1 ? '' : lib('produit'), pol = lib('port_livraison'), pod = lib('destination');
+    if (!modele || !(qte >= 1) || isNaN(pu) || (!s1 && (!produit || !pol || !pod))) {
+      zone.textContent = '';
+      zone.classList.add('hidden');
+      return;
+    }
+    const [singulier, pluriel] = unites[val('conditionnement')] || ['unité', 'unités'];
+    const taux  = parseFloat(val('taux_change').replace(',', '.')) || 655.957;
+    const puEur = Math.round(Math.round(pu / taux * 100) / 100);
+    const usine = val('usine');
+    const valeurs = {
+      designation: [String(qte).padStart(2, '0'), qte > 1 ? pluriel : singulier, produit,
+                    usine ? 'depuis usine de ' + usine : ''].filter(Boolean).join(' '),
+      client: lib('client'),
+      quantite: String(qte).padStart(2, '0'),
+      commodite: produit,
+      ex_usine: usine ? '-EX usine ' + usine : '',
+      port: pol,
+      port_dechargement: pod,
+      montant: `${milliers(pu)} FCFA/${singulier} soit ${milliers(puEur)} EUR/${singulier} - Total : ${milliers(puEur * qte)} EUR`,
+    };
+    zone.textContent = modele.replace(/\{(\w+)\}/g, (_, cle) => valeurs[cle] ?? '').replace(/\s+/g, ' ').trim();
+    zone.classList.remove('hidden');
+  }
+  const form = document.getElementById('facture-form');
+  form.addEventListener('input', afficher);
+  form.addEventListener('change', afficher);
+  afficher();
+})();
+</script>
 
 <script>
 (function () {
@@ -145,12 +199,63 @@
     set('tot-ttc-eur',  fmt(ttc / t, 2) + ' EUR');
   }
 
+  // Ordre des lignes : la position à l'écran est recopiée dans le champ caché "ordre"
+  function renumeroter() {
+    body.querySelectorAll('.ligne-row').forEach((row, i) => {
+      const champ = row.querySelector('[name$="-ordre"]');
+      if (champ) champ.value = i + 1;
+    });
+  }
+
   document.getElementById('add-ligne').addEventListener('click', () => {
     const idx = parseInt(total.value, 10);
     body.insertAdjacentHTML('beforeend', tpl.replace(/__prefix__/g, idx));
     total.value = idx + 1;
+    renumeroter();
     recalc();
   });
+
+  // Flèches monter / descendre
+  body.addEventListener('click', e => {
+    const haut = e.target.closest('.btn-monter');
+    const bas  = e.target.closest('.btn-descendre');
+    if (!haut && !bas) return;
+    const row = e.target.closest('.ligne-row');
+    if (haut && row.previousElementSibling) body.insertBefore(row, row.previousElementSibling);
+    if (bas && row.nextElementSibling) body.insertBefore(row.nextElementSibling, row);
+    renumeroter();
+  });
+
+  // Glisser-déposer : la ligne n'est déplaçable que depuis sa poignée
+  let enDeplacement = null;
+  body.addEventListener('mousedown', e => {
+    const row = e.target.closest('.ligne-row');
+    if (row) row.draggable = !!e.target.closest('.poignee');
+  });
+  body.addEventListener('dragstart', e => {
+    enDeplacement = e.target.closest('.ligne-row');
+    if (!enDeplacement) return;
+    e.dataTransfer.effectAllowed = 'move';
+    enDeplacement.classList.add('opacity-50');
+  });
+  body.addEventListener('dragover', e => {
+    if (!enDeplacement) return;
+    e.preventDefault();
+    const cible = e.target.closest('.ligne-row');
+    if (!cible || cible === enDeplacement) return;
+    const r = cible.getBoundingClientRect();
+    const apres = e.clientY > r.top + r.height / 2;
+    body.insertBefore(enDeplacement, apres ? cible.nextElementSibling : cible);
+  });
+  body.addEventListener('dragend', () => {
+    if (!enDeplacement) return;
+    enDeplacement.classList.remove('opacity-50');
+    enDeplacement.draggable = false;
+    enDeplacement = null;
+    renumeroter();
+  });
+
+  document.getElementById('facture-form').addEventListener('submit', renumeroter);
 
   body.addEventListener('click', e => {
     const btn = e.target.closest('.btn-suppr');
@@ -166,6 +271,7 @@
 
   body.addEventListener('input', recalc);
   taux.addEventListener('input', recalc);
+  renumeroter();
   recalc();
 })();
 </script>

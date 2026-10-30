@@ -34,11 +34,6 @@ def fmt_milliers(valeur):
     return f"{int(valeur):,}".replace(",", " ")
 
 
-def _de(nom):
-    """'Abidjan' -> "d'Abidjan" ; 'San Pedro' -> 'de San Pedro'."""
-    return f"d'{nom}" if nom[:1].lower() in "aeiouyéèêâîô" else f"de {nom}"
-
-
 class CompteurFacture(TimestampMixin):
     """Compteur technique : jamais supprimé (pas de soft delete), sinon get_or_create
     ne le verrait plus et recréerait la même clé -> IntegrityError."""
@@ -66,13 +61,54 @@ class CompteurFacture(TimestampMixin):
         return f"{prefixe}{date:%y%m}-{compteur.dernier_numero:04d}"
 
 
-class Incoterm(SafeDeleteModel, LifecycleModel, TimestampMixin):
-    """Incoterm (ex. FOB, CIF) — alimente la liste déroulante."""
-    code = models.CharField(max_length=10, unique=True)
-    libelle = models.CharField(max_length=100)
+class Incoterm(models.TextChoices):
+    """Les 5 options proposées au client (remplacent l'ancienne table des incoterms)."""
+    SS1 = "SS1", "SS1 — EXW (Départ entrepôt Oils of Africa)"
+    SS2 = "SS2", "SS2 — EXW + Assistance technique"
+    SS3 = "SS3", "SS3 — FOB (Free On Board)"
+    SS4 = "SS4", "SS4 — CFR (Cost and Freight)"
+    SS5 = "SS5", "SS5 — CIF (Cost, Insurance and Freight)"
 
-    def __str__(self):
-        return self.code
+
+# SS1 / SS2 = départ entrepôt (EXW) : ces champs ne sont ni demandés ni affichés
+OPTIONS_EXW = (Incoterm.SS1, Incoterm.SS2)
+CHAMPS_HORS_EXW = ("ref_client", "produit", "port_livraison", "destination", "ref_dossier")
+
+
+# Texte affiché sur la facture selon l'option choisie. Les {champs} sont remplis par
+# Facture.texte_incoterm (et par le JS du formulaire pour l'aperçu) :
+#   designation  "05 Isos PKO depuis usine de COPROIL"
+#   client       "Jean Dupont"   (nom du client de la facture)
+#   quantite     "05"
+#   commodite    "PKO"
+#   ex_usine     "-EX usine COPROIL"   (vide si l'usine n'est pas renseignée)
+#   port         "Abidjan, Côte d'Ivoire"   (port de chargement)
+#   port_dechargement "Anvers"
+#   montant      "645 768 FCFA/Iso soit 984 EUR/Iso - Total : 4 920 EUR"
+TEXTES_INCOTERM = {
+    Incoterm.SS1: (
+        "{designation} quittant l'entrepôt de Oils of Africa à destination du client "
+        "{client}, pour un montant de {montant}. Le client prend en charge l'enlèvement "
+        "des marchandises à l'entrepôt."
+    ),
+    Incoterm.SS2: (
+        "{designation} quittant l'entrepôt de Oils of Africa à destination du client "
+        "{client}, pour un montant de {montant}. Cette option comprend également la mise à "
+        "disposition d'une assistance technique pour accompagner le client."
+    ),
+    Incoterm.SS3: (
+        "SS3- FOB// {quantite} TC 20' STC {commodite} {ex_usine} rendu FOB {port}, "
+        "pour un montant de {montant}."
+    ),
+    Incoterm.SS4: (
+        "SS4- CFR// {quantite} TC 20' STC {commodite} {ex_usine} rendu CFR {port_dechargement}, "
+        "pour un montant de {montant}."
+    ),
+    Incoterm.SS5: (
+        "SS5- CIF// {quantite} TC 20' STC {commodite} {ex_usine} rendu CIF {port_dechargement} "
+        "destruction des flexitanks, pour un montant de {montant}."
+    ),
+}
 
 
 class Facture(SafeDeleteModel, LifecycleModel, TimestampMixin):
@@ -91,7 +127,7 @@ class Facture(SafeDeleteModel, LifecycleModel, TimestampMixin):
     # --- En-tête ---
     numero_proforma = models.CharField(max_length=15, unique=True, null=True, editable=False)
     numero = models.CharField(max_length=15, unique=True, null=True, editable=False)  # attribué à la validation
-    ref_client = models.CharField(max_length=30)  # TR fourni par le client, saisi à la main
+    ref_client = models.CharField(max_length=30, blank=True)  # TR fourni par le client (vide en SS1 / SS2)
     date_facturation = models.DateField(default=timezone.localdate)
     date_echeance = models.DateField(editable=False)
     client = models.ForeignKey("users.Client", on_delete=models.PROTECT)
@@ -99,20 +135,21 @@ class Facture(SafeDeleteModel, LifecycleModel, TimestampMixin):
     conditions_reglement = models.CharField(max_length=100, default="À réception")
 
     # --- Ligne Incoterm ---
-    incoterm = models.ForeignKey(Incoterm, on_delete=models.PROTECT)
+    incoterm = models.CharField(max_length=3, choices=Incoterm.choices)
     quantite_unites = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     conditionnement = models.CharField(
         max_length=20, default="ISO_TANKS",
         choices=[("FLEXITANKS", "Flexitanks"), ("ISO_TANKS", "ISO Tanks")],
     )
-    produit = models.ForeignKey("referentiels.Commodite", on_delete=models.PROTECT)
+    # produit, port_livraison, destination : vides en SS1 / SS2 (départ entrepôt)
+    produit = models.ForeignKey("referentiels.Commodite", on_delete=models.PROTECT, null=True, blank=True)
     usine = models.CharField(max_length=100, blank=True)  # COPROIL
-    port_livraison = models.ForeignKey("referentiels.POL", on_delete=models.PROTECT)
+    port_livraison = models.ForeignKey("referentiels.POL", on_delete=models.PROTECT, null=True, blank=True)
     pu_fcfa_unite = models.DecimalField(
         max_digits=14, decimal_places=0, validators=[MinValueValidator(0)],
     )
     ref_dossier = models.CharField(max_length=30, blank=True)  # PJ2605-0231
-    destination = models.ForeignKey("referentiels.POD", on_delete=models.PROTECT)
+    destination = models.ForeignKey("referentiels.POD", on_delete=models.PROTECT, null=True, blank=True)
 
     taux_change = models.DecimalField(
         max_digits=10, decimal_places=3, default=PARITE_XOF_EUR,
@@ -172,32 +209,40 @@ class Facture(SafeDeleteModel, LifecycleModel, TimestampMixin):
     # --- Texte Incoterm généré ---
     @property
     def texte_incoterm(self):
+        """Texte de l'option choisie (SS1 à SS5), complété avec les valeurs de la facture."""
         # Facture pas encore remplie (ex. page d'ajout de l'admin) : rien à afficher
         if (
-            self.quantite_unites is None
+            self.incoterm not in TEXTES_INCOTERM
+            or self.quantite_unites is None
             or self.pu_fcfa_unite is None
-            or not all([
-                self.incoterm_id, self.produit_id,
-                self.port_livraison_id, self.destination_id,
-            ])
+            or (self.incoterm not in OPTIONS_EXW and not all([
+                self.produit_id, self.port_livraison_id, self.destination_id,
+            ]))
         ):
             return "—"
         singulier, pluriel = UNITES.get(self.conditionnement, ("unité", "unités"))
         unite = pluriel if self.quantite_unites > 1 else singulier
         pu_eur = self.en_euro(self.pu_fcfa_unite).quantize(Decimal("1"), ROUND_HALF_UP)
         total_eur = pu_eur * self.quantite_unites
-        designation = " ".join(filter(None, [
-            f"{self.quantite_unites:02d}", unite, "STC", str(self.produit),
-            f"depuis usine de {self.usine}" if self.usine else "",
-        ]))
-        return (
-            f"Incoterm : {self.incoterm} - {designation} "
-            f"rendu port {_de(str(self.port_livraison))} "
-            f"pour un montant de {fmt_milliers(self.pu_fcfa_unite)} FCFA/{singulier} "
-            f"soit {fmt_milliers(pu_eur)} EUR/{singulier} - {fmt_milliers(total_eur)} "
-            f"{self.ref_client} {self.ref_dossier} "
-            f"// {self.port_livraison} - {self.destination}"
-        ).strip()
+        texte = TEXTES_INCOTERM[self.incoterm].format(
+            designation=" ".join(filter(None, [
+                f"{self.quantite_unites:02d}", unite,
+                str(self.produit) if self.produit_id else "",
+                f"depuis usine de {self.usine}" if self.usine else "",
+            ])),
+            client=str(self.client) if self.client_id else "",
+            quantite=f"{self.quantite_unites:02d}",
+            commodite=str(self.produit) if self.produit_id else "",
+            ex_usine=f"-EX usine {self.usine}" if self.usine else "",
+            # ports non utilisés par les textes SS1 / SS2 (ils peuvent alors être vides)
+            port=str(self.port_livraison),
+            port_dechargement=str(self.destination),
+            montant=(
+                f"{fmt_milliers(self.pu_fcfa_unite)} FCFA/{singulier} "
+                f"soit {fmt_milliers(pu_eur)} EUR/{singulier} - Total : {fmt_milliers(total_eur)} EUR"
+            ),
+        )
+        return " ".join(texte.split())  # retire les doubles espaces (usine vide…)
 
     def __str__(self):
         return self.reference or "—"
@@ -215,6 +260,11 @@ class LigneFacture(SafeDeleteModel, TimestampMixin):
         max_digits=10, decimal_places=2, default=1,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
+    ordre = models.PositiveIntegerField(default=0)  # position dans la facture (glisser-déposer)
+
+    class Meta:
+        # à ordre égal, les lignes restent dans l'ordre où elles ont été ajoutées
+        ordering = ["ordre", "date_created"]
 
     def __str__(self):
         return self.designation

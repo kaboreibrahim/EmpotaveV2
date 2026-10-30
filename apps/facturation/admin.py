@@ -1,26 +1,18 @@
 from django.contrib import admin
 from safedelete.admin import SafeDeleteAdmin, SafeDeleteAdminFilter, highlight_deleted
 
-from .models import CompteurFacture, Facture, Incoterm, LigneFacture, fmt_milliers
+from .models import CompteurFacture, Facture, LigneFacture, fmt_milliers
 
 
 class LigneFactureInline(admin.TabularInline):
     model = LigneFacture
     extra = 1
-    fields = ("designation", "tva_taux", "pu_ht", "quantite", "total_ht_affiche")
+    fields = ("ordre", "designation", "tva_taux", "pu_ht", "quantite", "total_ht_affiche")
     readonly_fields = ("total_ht_affiche",)
 
     @admin.display(description="Total HT (FCFA)")
     def total_ht_affiche(self, obj):
         return fmt_milliers(obj.total_ht) if obj.pk else "—"
-
-
-@admin.register(Incoterm)
-class IncotermAdmin(SafeDeleteAdmin):
-    list_display = (highlight_deleted, "code", "libelle")
-    list_filter = (SafeDeleteAdminFilter,)
-    search_fields = ("code", "libelle")
-    ordering = ("code",)
 
 
 @admin.register(Facture)
@@ -35,7 +27,8 @@ class FactureAdmin(SafeDeleteAdmin):
     inlines = [LigneFactureInline]
     actions = ["valider_proformas"]
     readonly_fields = (
-        "numero", "numero_proforma", "statut", "date_validation", "date_echeance", "texte_incoterm",
+        "numero", "numero_proforma", "statut", "date_validation", "date_echeance",
+        "texte_incoterm",
         "total_ht_fcfa_affiche", "total_ttc_fcfa_affiche",
         "total_ht_eur_affiche", "total_ttc_eur_affiche",
     )
@@ -66,7 +59,7 @@ class FactureAdmin(SafeDeleteAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            "client", "banque", "incoterm", "produit", "port_livraison", "destination",
+            "client", "banque", "produit", "port_livraison", "destination",
         ).prefetch_related("lignes")
 
     @admin.display(description="Total HT (FCFA)")

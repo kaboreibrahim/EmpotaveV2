@@ -1,4 +1,11 @@
 <tr class="ligne-row border-b border-outline-variant align-top">
+  <td class="p-2 w-16 whitespace-nowrap">
+    <span class="poignee material-symbols-outlined cursor-grab text-on-surface-variant align-middle pt-2" title="Glisser pour déplacer la ligne">drag_indicator</span>
+    <span class="inline-flex flex-col align-middle">
+      <button type="button" class="btn-monter leading-none text-on-surface-variant hover:text-primary" title="Monter"><span class="material-symbols-outlined text-base">keyboard_arrow_up</span></button>
+      <button type="button" class="btn-descendre leading-none text-on-surface-variant hover:text-primary" title="Descendre"><span class="material-symbols-outlined text-base">keyboard_arrow_down</span></button>
+    </span>
+  </td>
   <td class="p-2">
     {% for h in form.hidden_fields %}{{ h }}{% endfor %}
     {{ form.designation }}

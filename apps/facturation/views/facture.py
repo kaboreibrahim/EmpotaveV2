@@ -23,7 +23,7 @@ from apps.facturation.models import Facture
 
 def _qs_factures():
     return Facture.objects.select_related(
-        "client", "banque", "incoterm", "produit", "port_livraison", "destination",
+        "client", "banque", "produit", "port_livraison", "destination",
     ).prefetch_related("lignes")
 
 
@@ -47,7 +47,7 @@ class FactureListView(LoginRequiredMixin, ListView):
                 | Q(ref_dossier__icontains=q)
                 | Q(client__user__first_name__icontains=q)
                 | Q(client__user__last_name__icontains=q)
-                | Q(incoterm__code__icontains=q)
+                | Q(incoterm__iexact=q)
             )
         client = self.request.GET.get("client")
         if client:
@@ -248,7 +248,7 @@ def envoyer_facture_email(request, pk):
 
 Veuillez trouver ci-joint la {document.lower()} pour le client {nom_client}.
 
-Référence client : {facture.ref_client}
+Référence client : {facture.ref_client or "—"}
 Montant TTC : {facture.total_ttc_fcfa} FCFA
 
 Cordialement.""",

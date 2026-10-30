@@ -75,7 +75,7 @@
 <br/>
 
 <!-- Ligne Incoterm -->
-<p><b>{{ facture.texte_incoterm }}</b></p>
+<p><b>Incoterm : {{ facture.get_incoterm_display }}</b><br/>{{ facture.texte_incoterm }}</p>
 <p class="droite petit">Montants exprimés en Francs CFA BCEAO</p>
 
 <!-- Tableau des lignes -->

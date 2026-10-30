@@ -21,7 +21,7 @@
         <span class="align-middle ml-2 px-3 py-1 rounded-full text-label-md bg-primary/10 text-primary border border-primary/30">Validée</span>
         {% endif %}
       </h1>
-      <p class="text-body-md text-on-surface-variant">{{ facture.client }} — réf. client {{ facture.ref_client }}</p>
+      <p class="text-body-md text-on-surface-variant">{{ facture.client }}{% if facture.ref_client %} — réf. client {{ facture.ref_client }}{% endif %}</p>
     </div>
     <div class="flex flex-wrap gap-3">
       <a href="{% url 'facturation:pdf' facture.pk %}" target="_blank" class="flex items-center gap-2 px-5 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95">
@@ -68,7 +68,7 @@
         {% if facture.date_validation %}
         <dt class="text-on-surface-variant">Validée le</dt><dd class="text-on-surface">{{ facture.date_validation|date:"d/m/Y H:i" }}</dd>
         {% endif %}
-        <dt class="text-on-surface-variant">Réf. client</dt><dd class="text-on-surface">{{ facture.ref_client }}</dd>
+        <dt class="text-on-surface-variant">Réf. client</dt><dd class="text-on-surface">{{ facture.ref_client|default:"—" }}</dd>
         <dt class="text-on-surface-variant">Réf. dossier</dt><dd class="text-on-surface">{{ facture.ref_dossier|default:"—" }}</dd>
         <dt class="text-on-surface-variant">Facturation</dt><dd class="text-on-surface">{{ facture.date_facturation|date:"d/m/Y" }}</dd>
         <dt class="text-on-surface-variant">Échéance</dt><dd class="text-on-surface">{{ facture.date_echeance|date:"d/m/Y" }}</dd>
@@ -107,7 +107,7 @@
 
   <!-- Ligne Incoterm -->
   <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-2">
-    <h2 class="text-title-md font-bold text-on-surface">Incoterm</h2>
+    <h2 class="text-title-md font-bold text-on-surface">Incoterm — {{ facture.get_incoterm_display }}</h2>
     <p class="text-body-md text-on-surface">{{ facture.texte_incoterm }}</p>
   </section>
 
