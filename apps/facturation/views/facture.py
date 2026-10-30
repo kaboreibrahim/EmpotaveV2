@@ -3,8 +3,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.staticfiles import finders
 from django.core.mail import EmailMessage
 from django.db import transaction
@@ -17,8 +16,26 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from xhtml2pdf import pisa
 
+from apps.DashboardPersonnel.views.mixins import ModulePermissionRequiredMixin
 from apps.facturation.forms import FactureForm, LigneFactureFormSet
 from apps.facturation.models import Facture
+
+# Accès par permission Django (cochées par utilisateur dans Utilisateurs > Permissions,
+# ou via le groupe "Comptable") : view / add / change / delete_facture,
+# valider_facture (proforma -> facture) et envoyer_facture (email).
+
+
+class _FacturationMixin(ModulePermissionRequiredMixin):
+    """Permission du module + gabarit de l'espace de l'utilisateur (comptable ou personnel)."""
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["base_template"] = (
+            "comptabiliteDashboard/base_comptabilite.html"
+            if self.request.user.user_type == "comptable"
+            else "DashboardPersonnel/base_personnel.html"
+        )
+        return ctx
 
 
 def _qs_factures():
@@ -30,7 +47,7 @@ def _qs_factures():
 # --------------------------------------------------------------------------- #
 # Liste
 # --------------------------------------------------------------------------- #
-class FactureListView(LoginRequiredMixin, ListView):
+class FactureListView(_FacturationMixin, ListView):
     model = Facture
     template_name = "facturation/facture_list.html"
     context_object_name = "factures"
@@ -67,7 +84,7 @@ class FactureListView(LoginRequiredMixin, ListView):
 # --------------------------------------------------------------------------- #
 # Détail
 # --------------------------------------------------------------------------- #
-class FactureDetailView(LoginRequiredMixin, DetailView):
+class FactureDetailView(_FacturationMixin, DetailView):
     model = Facture
     template_name = "facturation/facture_detail.html"
     context_object_name = "facture"
@@ -79,7 +96,7 @@ class FactureDetailView(LoginRequiredMixin, DetailView):
 # --------------------------------------------------------------------------- #
 # Création / modification (facture + lignes en une seule page)
 # --------------------------------------------------------------------------- #
-class _FactureFormMixin(LoginRequiredMixin):
+class _FactureFormMixin(_FacturationMixin):
     model = Facture
     form_class = FactureForm
     template_name = "facturation/facture_form.html"
@@ -129,7 +146,7 @@ class FactureUpdateView(_FactureFormMixin, UpdateView):
 # --------------------------------------------------------------------------- #
 # Suppression (soft delete via SafeDeleteModel)
 # --------------------------------------------------------------------------- #
-class FactureDeleteView(LoginRequiredMixin, _ProformaSeulementMixin, DeleteView):
+class FactureDeleteView(_FacturationMixin, _ProformaSeulementMixin, DeleteView):
     model = Facture
     template_name = "facturation/facture_confirm_delete.html"
     success_url = reverse_lazy("facturation:liste")
@@ -143,6 +160,7 @@ class FactureDeleteView(LoginRequiredMixin, _ProformaSeulementMixin, DeleteView)
 # Validation client : proforma -> facture
 # --------------------------------------------------------------------------- #
 @login_required
+@permission_required("facturation.valider_facture", raise_exception=True)
 @require_POST
 def valider_facture(request, pk):
     facture = get_object_or_404(Facture, pk=pk)
@@ -207,6 +225,7 @@ def _contexte_pdf(facture):
 
 
 @login_required
+@permission_required("facturation.view_facture", raise_exception=True)
 def facture_pdf(request, pk):
     """PDF dans le navigateur ; ajouter ?download=1 pour forcer le téléchargement."""
     facture = get_object_or_404(_qs_factures(), pk=pk)
@@ -223,6 +242,7 @@ def facture_pdf(request, pk):
 
 
 @login_required
+@permission_required("facturation.envoyer_facture", raise_exception=True)
 def envoyer_facture_email(request, pk):
     """Envoie la facture par email aux destinataires comptabilité."""
     facture = get_object_or_404(_qs_factures(), pk=pk)

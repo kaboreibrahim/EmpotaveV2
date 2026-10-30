@@ -1,4 +1,4 @@
-{% extends 'DashboardPersonnel/base_personnel.html' %}
+{% extends base_template|default:'DashboardPersonnel/base_personnel.html' %}
 
 {% block title %}Supprimer la proforma {{ object.reference }}{% endblock %}
 

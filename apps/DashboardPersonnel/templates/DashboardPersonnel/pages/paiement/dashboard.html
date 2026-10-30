@@ -71,7 +71,7 @@
         <a href="{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}" class="flex items-center justify-between gap-3 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low transition-colors">
           <div class="min-w-0">
             <p class="font-bold text-on-surface truncate">{{ dossier.projet }}</p>
-            <p class="text-label-sm text-on-surface-variant font-mono-data">{{ dossier.TRD }} — {{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</p>
+            <p class="text-label-sm text-on-surface-variant font-mono-data">{{ dossier.TRD }} — {% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</p>
           </div>
           {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
         </a>

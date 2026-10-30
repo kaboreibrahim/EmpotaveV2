@@ -158,6 +158,10 @@ class Facture(SafeDeleteModel, LifecycleModel, TimestampMixin):
 
     class Meta:
         ordering = ["-date_facturation", "-date_created"]
+        permissions = [
+            ("valider_facture", "Peut valider une proforma (devient facture)"),
+            ("envoyer_facture", "Peut envoyer une facture par email"),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.numero_proforma and not self.numero:

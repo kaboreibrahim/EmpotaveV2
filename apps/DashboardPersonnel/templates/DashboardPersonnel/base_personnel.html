@@ -469,10 +469,12 @@
         <span class="material-symbols-outlined" data-icon="search">search</span>
         <span class="text-label-md">Recherche Conteneur</span>
       </a>
+      {% if perms.facturation.view_facture %}
       <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="{% url 'facturation:liste' %}">
         <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
         <span class="text-label-md">Facturation</span>
       </a>
+      {% endif %}
         {% comment %} <a class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300" href="#">
           <span class="material-symbols-outlined" data-icon="check_box">check_box</span>
           <span class="text-label-md">Sélection</span>

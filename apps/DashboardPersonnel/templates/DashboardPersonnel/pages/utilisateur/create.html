@@ -177,8 +177,7 @@
                             <th class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">Ajouter</th>
                             <th class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">Modifier</th>
                             <th class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">Supprimer</th>
-                            <th class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">Supprimer</th>
-                            <th class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">voir finance</th>
+                            <th colspan="2" class="py-3 px-2 font-semibold text-on-surface-variant text-xs uppercase tracking-wider text-center">Autres</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant/30">
@@ -191,7 +190,12 @@
                                 </div>
                             </td>
                             {% for row in group.rows %}
-                            <td class="py-3 px-2 text-center">{{ row.subwidget.tag }}</td>
+                            <td class="py-3 px-2 text-center">
+                                <label class="inline-flex flex-col items-center gap-1" title="{{ row.action_label }}">
+                                    {{ row.subwidget.tag }}
+                                    {% if forloop.counter > 4 %}<span class="text-[11px] text-on-surface-variant">{{ row.action_label }}</span>{% endif %}
+                                </label>
+                            </td>
                             {% endfor %}
                         </tr>
                         {% endfor %}

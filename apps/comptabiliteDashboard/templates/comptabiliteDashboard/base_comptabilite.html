@@ -463,6 +463,15 @@
         <span class="material-symbols-outlined" data-icon="payments">payments</span>
         <span class="text-label-md">Dossiers</span>
       </a>
+      {% if perms.facturation.view_facture %}
+      <a
+        class="flex items-center gap-3 {% if request.resolver_match.app_name == 'facturation' %}bg-secondary text-on-secondary{% else %}text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50{% endif %} px-4 py-3 rounded-lg transition-all duration-300"
+        href="{% url 'facturation:liste' %}"
+      >
+        <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        <span class="text-label-md">Facturation</span>
+      </a>
+      {% endif %}
       <a
         class="flex items-center gap-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/50 px-4 py-3 rounded-lg transition-all duration-300"
         href="{% url 'messaging:conversation-list' %}"

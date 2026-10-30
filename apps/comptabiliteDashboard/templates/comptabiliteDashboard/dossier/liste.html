@@ -80,7 +80,7 @@
           <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
             <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
             <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
-            <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+            <td class="px-4 py-standard-row text-body-sm">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</td>
             <td class="px-4 py-standard-row text-body-sm">{{ dossier.get_statut_display }}</td>
             <td class="px-4 py-standard-row">
               {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}
@@ -133,7 +133,7 @@
 
         <dl class="grid grid-cols-2 gap-y-2 text-body-sm">
           <dt class="text-on-surface-variant">Client</dt>
-          <dd class="text-right truncate">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</dd>
+          <dd class="text-right truncate">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</dd>
           <dt class="text-on-surface-variant">Statut</dt>
           <dd class="text-right">{{ dossier.get_statut_display }}</dd>
           <dt class="text-on-surface-variant">Créé le</dt>

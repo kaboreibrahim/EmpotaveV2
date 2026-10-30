@@ -70,7 +70,7 @@
           <tr class="hover:bg-primary/5 transition-colors cursor-pointer" onclick="window.location='{% url 'DashboardPersonnel:paiement-detail' dossier.pk %}'">
             <td class="px-6 py-4 font-mono-data text-primary font-bold">{{ dossier.TRD }}</td>
             <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.projet }}</td>
-            <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+            <td class="px-6 py-4 text-body-sm text-on-surface">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</td>
             <td class="px-6 py-4 text-body-sm text-on-surface">{{ dossier.get_statut_display }}</td>
             <td class="px-6 py-4">
               {% include 'comptabiliteDashboard/_badge_paiement.html' with dossier=dossier %}

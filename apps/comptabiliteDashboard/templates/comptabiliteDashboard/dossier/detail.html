@@ -66,7 +66,7 @@
       <dl class="space-y-2 text-body-md text-on-surface">
         <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Date de paiement</dt><dd class="font-bold text-right">{{ dossier.date_paiement|date:"d F Y H:i" }}</dd></div>
         <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Montant</dt><dd class="font-bold text-right">{% if dossier.montant_paiement %}{{ dossier.montant_paiement }}{% else %}—{% endif %}</dd></div>
-        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Validé par</dt><dd class="font-bold text-right">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</dd></div>
+        <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Validé par</dt><dd class="font-bold text-right">{% if dossier.utilisateur_paiement %}{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username }}{% else %}—{% endif %}</dd></div>
         <div class="flex flex-col gap-1"><dt class="text-on-surface-variant">Commentaire</dt><dd class="text-body-sm">{{ dossier.commentaire_paiement|default:"—" }}</dd></div>
         <div class="flex justify-between items-center gap-4">
           <dt class="text-on-surface-variant">Preuve de paiement</dt>

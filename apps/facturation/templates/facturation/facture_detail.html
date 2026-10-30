@@ -1,4 +1,4 @@
-{% extends 'DashboardPersonnel/base_personnel.html' %}
+{% extends base_template|default:'DashboardPersonnel/base_personnel.html' %}
 
 {% block title %}{{ facture.get_statut_display }} {{ facture.reference }}{% endblock %}
 
@@ -30,10 +30,12 @@
       <a href="{% url 'facturation:pdf' facture.pk %}?download=1" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">download</span> Télécharger
       </a>
+      {% if perms.facturation.envoyer_facture %}
       <a href="{% url 'facturation:envoyer_email' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">send</span> Envoyer par email
       </a>
-      {% if facture.est_proforma %}
+      {% endif %}
+      {% if facture.est_proforma and perms.facturation.valider_facture %}
       <form method="post" action="{% url 'facturation:valider' facture.pk %}"
             onsubmit="return confirm('Le client a validé la proforma {{ facture.reference }} ? Elle deviendra une facture définitive, datée d\'aujourd\'hui, et ne sera plus modifiable.');">
         {% csrf_token %}
@@ -42,10 +44,12 @@
         </button>
       </form>
       {% endif %}
+      {% if perms.facturation.change_facture %}
       <a href="{% url 'facturation:modifier' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-low">
         <span class="material-symbols-outlined">edit</span> Modifier
       </a>
-      {% if facture.est_proforma %}
+      {% endif %}
+      {% if facture.est_proforma and perms.facturation.delete_facture %}
       <a href="{% url 'facturation:supprimer' facture.pk %}" class="flex items-center gap-2 px-5 py-3 border border-outline-variant rounded-lg text-error hover:bg-surface-container-low">
         <span class="material-symbols-outlined">delete</span> Supprimer
       </a>

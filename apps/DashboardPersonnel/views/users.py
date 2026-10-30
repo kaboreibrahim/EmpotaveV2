@@ -29,6 +29,7 @@ PERMISSION_MODELS = [
     ('referentiels', 'siteempotage', "Site d'empotage", 'warehouse'),
     ('conteneurs', 'dossier', 'Dossiers', 'folder'),
     ('documents', 'document', 'Documents', 'description'),
+    ('facturation', 'facture', 'Facturation', 'receipt_long'),
     ('users', 'users', 'Utilisateurs', 'group'),
 ]
 
@@ -37,6 +38,8 @@ ACTION_LABELS = {
     'add': 'Ajouter',
     'change': 'Modifier',
     'delete': 'Supprimer',
+    'valider': 'Valider',   # facturation.valider_facture
+    'envoyer': 'Envoyer',   # facturation.envoyer_facture
 }
 
 
@@ -113,7 +116,8 @@ class UserForm(forms.ModelForm):
                 if permission.content_type.app_label != app_label or permission.content_type.model != model:
                     continue
                 action = permission.codename.split('_', 1)[0]
-                rows.append({'action_label': ACTION_LABELS.get(action, action), 'subwidget': subwidget})
+                # permission personnalisée sans libellé court : on affiche son nom complet
+                rows.append({'action_label': ACTION_LABELS.get(action, permission.name), 'subwidget': subwidget})
             rows.sort(key=lambda r: action_order.index(r['action_label']) if r['action_label'] in action_order else len(action_order))
             groups.append({'label': label, 'icon': icon, 'rows': rows})
         return groups

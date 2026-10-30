@@ -1,4 +1,4 @@
-{% extends 'DashboardPersonnel/base_personnel.html' %}
+{% extends base_template|default:'DashboardPersonnel/base_personnel.html' %}
 
 {% block title %}Gestion des Factures{% endblock %}
 
@@ -14,10 +14,12 @@
       <h1 class="text-headline-xl font-headline-xl text-primary tracking-tight">Gestion des factures</h1>
       <p class="text-body-md text-on-surface-variant max-w-2xl">Suivez les factures d'exportation.</p>
     </div>
+    {% if perms.facturation.add_facture %}
     <a href="{% url 'facturation:creer' %}" class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
       <span class="material-symbols-outlined">add_circle</span>
       <span class="font-label-md text-label-md uppercase">Nouvelle proforma</span>
     </a>
+    {% endif %}
   </div>
 
   <!-- Recherche -->
@@ -76,8 +78,10 @@
             <div class="flex justify-end gap-1">
               <a href="{% url 'facturation:detail' f.pk %}" title="Voir" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">visibility</span></a>
               <a href="{% url 'facturation:pdf' f.pk %}" target="_blank" title="Ouvrir le PDF" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">picture_as_pdf</span></a>
+              {% if perms.facturation.change_facture %}
               <a href="{% url 'facturation:modifier' f.pk %}" title="Modifier" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary"><span class="material-symbols-outlined">edit</span></a>
-              {% if f.est_proforma %}
+              {% endif %}
+              {% if f.est_proforma and perms.facturation.delete_facture %}
               <a href="{% url 'facturation:supprimer' f.pk %}" title="Supprimer" class="p-2 rounded-lg text-error hover:bg-surface-container-low"><span class="material-symbols-outlined">delete</span></a>
               {% endif %}
             </div>

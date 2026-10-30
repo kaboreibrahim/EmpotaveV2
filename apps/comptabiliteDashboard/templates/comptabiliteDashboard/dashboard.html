@@ -202,7 +202,7 @@
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
               <td class="px-4 py-standard-row text-body-sm">{% if dossier.montant_paiement %}{{ dossier.montant_paiement|floatformat:0 }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_paiement|date:"d/m/Y H:i" }}</td>
-              <td class="px-4 py-standard-row text-body-sm">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.utilisateur_paiement %}{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-right">
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase tracking-tight">
                   <span class="material-symbols-outlined text-[14px]">check_circle</span>Payé
@@ -248,7 +248,7 @@
             <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
               <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
-              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_created|date:"d/m/Y" }}</td>
               <td class="px-4 py-standard-row">
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-error/10 text-error uppercase tracking-tight">
@@ -295,7 +295,7 @@
             <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
               <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
-              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_created|date:"d/m/Y" }}</td>
               <td class="px-4 py-standard-row text-right">
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/10 text-secondary uppercase tracking-tight">
@@ -342,10 +342,10 @@
             <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="window.location='{% url 'comptabiliteDashboard:dossier-detail' dossier.pk %}'">
               <td class="px-4 py-standard-row font-mono-data font-bold">{{ dossier.TRD }}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.projet }}</td>
-              <td class="px-4 py-standard-row text-body-sm">{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.id_client %}{{ dossier.id_client.user.get_full_name|default:dossier.id_client.user.username }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-body-sm">{% if dossier.montant_paiement %}{{ dossier.montant_paiement|floatformat:0 }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-body-sm">{{ dossier.date_paiement|date:"d/m/Y H:i" }}</td>
-              <td class="px-4 py-standard-row text-body-sm">{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username|default:"—" }}</td>
+              <td class="px-4 py-standard-row text-body-sm">{% if dossier.utilisateur_paiement %}{{ dossier.utilisateur_paiement.get_full_name|default:dossier.utilisateur_paiement.username }}{% else %}—{% endif %}</td>
               <td class="px-4 py-standard-row text-right">
                 {% if dossier.preuve_paiement %}
                 <a href="{{ dossier.preuve_paiement.url }}" target="_blank" class="inline-flex p-1.5 text-on-surface-variant hover:text-primary transition-colors" title="Voir la preuve PDF" onclick="event.stopPropagation()">

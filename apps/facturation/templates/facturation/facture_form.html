@@ -1,4 +1,4 @@
-{% extends 'DashboardPersonnel/base_personnel.html' %}
+{% extends base_template|default:'DashboardPersonnel/base_personnel.html' %}
 
 {% block title %}{% if object %}Modifier {{ object.get_statut_display|lower }} {{ object.reference }}{% else %}Nouvelle proforma{% endif %}{% endblock %}
 
